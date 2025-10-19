@@ -1,0 +1,37 @@
+# Struktura Projektu ChemMan
+
+```
+chem_man/
+│
+├── app.py                 # Główny plik aplikacji
+├── config.py              # Konfiguracja aplikacji
+├── models.py              # Modele bazy danych
+├── utils.py               # Funkcje pomocnicze
+│
+├── routes/
+│   ├── __init__.py        # Inicjalizacja trasowania
+│   ├── auth.py            # Trasy związane z uwierzytelnianiem
+│   ├── locations.py       # Trasy do zarządzania lokalizacjami
+│   ├── substances.py      # Trasy do zarządzania substancjami
+│   ├── files.py           # Trasy do obsługi plików SDS
+│   ├── admin.py           # Trasy administracyjne
+│   └── export.py          # Trasy eksportu danych
+│
+├── instance/              # Dane specyficzne dla instancji
+│   ├── chem_man.db        # Baza danych SQLite
+│   └── uploads/           # Folder na przesłane pliki
+│       └── sds/           # Pliki SDS
+│
+├── static/                # Pliki statyczne (CSS, JS, obrazy)
+│
+└── templates/             # Szablony HTML
+    ├── base.html          # Szablon bazowy
+    ├── login.html         # Strona logowania
+    ├── change_password.html
+    ├── locations.html
+    ├── location_detail.html
+    ├── all_substances.html
+    └── admin/
+        ├── manage_users.html
+        └── changelog.html
+```

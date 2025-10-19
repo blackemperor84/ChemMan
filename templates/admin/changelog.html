@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Dziennik Zmian - Chem-Man{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/changelog.css') }}">
+{% endblock %}
+
+{% block header %}CHEM-MAN | DZIENNIK ZMIAN{% endblock %}
+
+{% block content %}
+<div class="actions-bar">
+    <h2>Historia Operacji</h2>
+    {% if logs %}
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.export_changelog_csv') }}" class="action-btn export-btn">
+                <span>⬇️</span> Eksportuj do CSV
+            </a>
+            <button id="clear-logs-btn" class="action-btn danger-btn">
+                <span>🗑️</span> Wyczyść Dziennik
+            </button>
+        </div>
+    {% endif %}
+</div>
+
+{% if logs %}
+    <table border="1" class="changelog-table">
+        <thead>
+            <tr>
+                <th>Czas</th>
+                <th>Użytkownik</th>
+                <th>Akcja</th>
+                <th>Typ Obiektu</th>
+                <th>ID Obiektu</th>
+                <th>Szczegóły</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="white-space: nowrap;">{{ convert_utc_to_local(log.timestamp) if log.timestamp else '---' }}</td>
+                <td>{{ log.username or 'N/A' }}</td>
+                <td>{{ log.action }}</td>
+                <td>{{ log.target_type or '---' }}</td>
+                <td>{{ log.target_id or '---' }}</td>
+                <td style="word-break: break-all;">{{ log.details or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Brak wpisów w dzienniku zmian.</p>
+{% endif %}
+
+<!-- Okno dialogowe potwierdzenia czyszczenia -->
+<div id="clear-logs-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Potwierdź czyszczenie</h3>
+        </div>
+        <div class="modal-body">
+            <p>Czy na pewno chcesz wyczyścić cały dziennik zmian? Ta operacja jest nieodwracalna!</p>
+            <p><strong>Uwaga:</strong> Zostanie zachowany tylko jeden wpis informujący o wyczyszczeniu dziennika.</p>
+            <p><strong>Wskazówka:</strong> Możesz najpierw wyeksportować dziennik do CSV, klikając "Eksportuj do CSV".</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-clear" class="modal-btn btn-cancel">Anuluj</button>
+            <form id="clear-logs-form" method="POST" action="{{ url_for('admin.clear_changelog') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="modal-btn btn-danger">Wyczyść dziennik</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Style dla okna modalnego */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 400px;
+    max-width: 80%;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.btn-cancel {
+    background-color: #f8f9fa;
+    border-color: #ddd;
+    color: #333;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #e2e6ea;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/changelog.js') }}" defer></script>
+{% endblock %}

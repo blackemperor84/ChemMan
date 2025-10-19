@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Lokalizacja: {{ location.name }} - CHEM MAN{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/location_detail.css') }}">
+{% endblock %}
+
+{% block header %}LOKALIZACJA: {{ location.name }}{% endblock %}
+
+{% block content %}
+<div id="substances-list"
+     data-is-admin="{{ current_user.is_admin|lower }}"
+     data-can-add="{{ (current_user.is_admin or current_user.can_add)|lower }}"
+     data-can-edit="{{ (current_user.is_admin or current_user.can_edit)|lower }}"
+     data-can-delete="{{ (current_user.is_admin or current_user.can_delete)|lower }}"
+     data-can-move="{{ (current_user.is_admin or current_user.can_move)|lower }}"
+     data-can-copy="{{ (current_user.is_admin or current_user.can_copy)|lower }}"
+     data-can-upload-sds="{{ (current_user.is_admin or current_user.can_upload_sds)|lower }}">
+     <!-- Dodana sekcja z datą ostatniej modyfikacji -->
+     <div class="last-modified-info" style="margin-bottom: 15px; font-style: italic; color: #666;">
+        Ostatnia aktualizacja: {{ convert_utc_to_local(location.last_modified) if location.last_modified else 'Brak danych' }}
+    </div>
+    
+     <h2>Substancje w tej lokalizacji:</h2>
+
+    {% if substances_data %}
+    <div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
+        <a href="{{ url_for('export.export_location_csv', location_id=location.id) }}" class="action-btn export-btn">
+            <span>⬇️</span> Eksportuj do CSV
+        </a>
+    </div>
+
+    {# --- PAGINACJA - PRZENIESIONA NAD TABELĘ --- #}
+    {% if pagination and pagination.pages > 1 %} {# Pokaż tylko jeśli jest więcej niż 1 strona #}
+    <div class="pagination-server">
+        <div class="pagination-info">
+            Wyświetlanie {{ pagination.items|length }} z {{ pagination.total }} substancji
+            (Strona {{ pagination.page }} z {{ pagination.pages }})
+        </div>
+        <div class="pagination-controls">
+            {# Przycisk Pierwsza #}
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=1, per_page=pagination.per_page) }}" class="pagination-button" title="Pierwsza strona">&lt;&lt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Pierwsza strona">&lt;&lt;</span>
+            {% endif %}
+
+            {# Przycisk Poprzednia #}
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.prev_num, per_page=pagination.per_page) }}" class="pagination-button" title="Poprzednia strona">&lt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Poprzednia strona">&lt;</span>
+            {% endif %}
+
+            {# Informacja o stronie (opcjonalnie można dodać więcej linków do stron) #}
+            <span class="page-info">Strona {{ pagination.page }}</span>
+
+            {# Przycisk Następna #}
+            {% if pagination.has_next %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.next_num, per_page=pagination.per_page) }}" class="pagination-button" title="Następna strona">&gt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Następna strona">&gt;</span>
+            {% endif %}
+
+             {# Przycisk Ostatnia #}
+            {% if pagination.has_next %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.pages, per_page=pagination.per_page) }}" class="pagination-button" title="Ostatnia strona">&gt;&gt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Ostatnia strona">&gt;&gt;</span>
+            {% endif %}
+        </div>
+        <div class="per-page-selector">
+            <label for="per-page-select">Rekordów na stronę:</label>
+            <select id="per-page-select" onchange="changeLocationPerPage(this.value)">
+                {% for option in [5, 10, 25, 50, 100] %} {# Możesz dostosować te wartości #}
+                    <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <script>
+        function changeLocationPerPage(perPage) {
+            // Pobierz bieżące parametry (głównie location_id) i zmień per_page
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', perPage);
+            url.searchParams.set('page', 1); // Zawsze resetuj do pierwszej strony po zmianie liczby rekordów
+            window.location.href = url.toString();
+        }
+    </script>
+    {% endif %}
+    {# --- KONIEC BLOKU PAGINACJI --- #}
+
+    <table id="substances-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;"><input type="checkbox" id="select-all-chk" title="Zaznacz/Odznacz wszystko"></th>
+                    <th>Nazwa chemiczna</th>
+                    <th>Nr CAS</th>
+                    <th>Nr WE</th>
+                    <th>Klasyfikacja</th>
+                    <th>Zwroty H</th>
+                    <th>SCL/ M-factor</th>
+                    <th>Lokalizacja</th>
+                    <th>Komentarz</th>
+                    <th>Karta SDS</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for sub_data in substances_data %}
+                <tr data-substance-row-id="{{ sub_data.id }}">
+                    <td><input type="checkbox" class="substance-checkbox" name="selected_substance" value="{{ sub_data.id }}"></td>
+                    <td>
+                        <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
+                        {% if sub_data.is_cmr %}
+                            <span class="cmr-badge">CMR</span>
+                        {% endif %}
+                        {% if sub_data.is_svhc %}
+                        <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
+
+                        {% endif %}
+                    </td>
+                    <td>{{ sub_data.cas or '---' }}</td>
+                    <td>{{ sub_data.ec_number or '---' }}</td>
+                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</td>
+                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</td>
+                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</td>
+                    <td>{{ sub_data.physical_location or 'Nieznana' }}</td>
+                    <td>
+                        <span class="comment-display" id="comment-display-{{ sub_data.id }}">{{ sub_data.comment or '' }}</span>
+                        <div class="comment-edit" id="comment-edit-{{ sub_data.id }}" style="display: none;">
+                            <textarea id="comment-input-{{ sub_data.id }}" rows="2">{{ sub_data.comment or '' }}</textarea><br>
+                            <button class="save-comment-btn" data-substance-id="{{ sub_data.id }}">Zapisz</button>
+                            <button type="button" class="cancel-comment-btn" data-substance-id="{{ sub_data.id }}">Anuluj</button>
+                        </div>
+                    </td>
+                    <!-- Sekcja zarządzania SDS -->
+                    <td class="sds-cell">
+                        {% if sub_data.sds_filename %}
+                            <div class="sds-cell-content">
+                                <a href="{{ url_for('files.download_sds', filename=sub_data.sds_filename) }}" target="_blank" title="Pobierz/Zobacz SDS" class="sds-link">
+                                Zobacz/ Pobierz
+                                </a>
+                                {% if current_user.is_admin or current_user.can_upload_sds %}
+                                    <div class="sds-button-row">
+                                        <button class="show-replace-sds-form" data-substance-id="{{ sub_data.id }}">Zmień</button>
+                                        <form method="POST" action="{{ url_for('files.delete_sds', substance_id=sub_data.id) }}" class="delete-sds-form" onsubmit="return confirm('Czy na pewno chcesz trwale usunąć załączony plik SDS dla tej substancji?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="delete-sds-btn">Usuń</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                                <small class="sds-timestamp">
+                                    Ost. akt.: {{ sub_data.sds_upload_timestamp_local }}
+                                </small>
+                            </div>
+                            {% if current_user.is_admin or current_user.can_upload_sds %}
+                                <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form" id="sds-form-{{ sub_data.id }}" style="display: none;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="file" name="sds_file" accept=".pdf" required>
+                                    <button type="submit">OK</button>
+                                    <button type="button" class="cancel-upload-btn" data-substance-id="{{ sub_data.id }}">Anuluj</button>
+                                </form>
+                            {% endif %}
+                        {% elif current_user.is_admin or current_user.can_upload_sds %}
+                            <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="file" name="sds_file" accept=".pdf" required>
+                                <button type="submit">Załaduj SDS</button>
+                            </form>
+                        {% else %}
+                            <span>Brak</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        {% if current_user.is_admin or current_user.can_edit %}
+                            <button class="edit-comment-btn" data-substance-id="{{ sub_data.id }}">Edytuj Kom.</button>
+                        {% endif %}
+                        {% if current_user.is_admin or current_user.can_delete %}
+                            <button class="delete-substance-btn" data-substance-id="{{ sub_data.id }}">Usuń</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% if substances_data %} {# <-- Przenieś ten warunek tutaj, aby sekcja dodawania nie znikała #}
+        <!-- Sekcja narzędzi masowych -->
+        {% if current_user.is_admin or current_user.can_move or current_user.can_copy %}
+            <div id="bulk-action-area" style="display: none;">
+                <form>
+                    Wybrano: <span id="selection-counter">0</span> substancji.
+                    <label for="target-location">Przenieś/Kopiuj do:</label>
+                    <select id="target-location" name="target_location" required>
+                        <option value="" disabled selected>-- Wybierz lokalizację --</option>
+                        {% for target_loc in other_locations %}
+                            <option value="{{ target_loc.id }}">{{ target_loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if current_user.is_admin or current_user.can_move %}
+                        <button type="button" id="move-substances-btn" disabled>Przenieś</button>
+                    {% endif %}
+                    {% if current_user.is_admin or current_user.can_copy %}
+                        <button type="button" id="copy-substances-btn" disabled>Kopiuj</button>
+                    {% endif %}
+                </form>
+            </div>
+        {% endif %}
+        {% endif %} {# <-- Koniec przeniesionego warunku #}
+    {% else %}
+        <p>Brak substancji przypisanych do tej lokalizacji.</p>
+    {% endif %}
+
+</div>
+
+<hr>
+
+<!-- Sekcja dodawania z bazy -->
+{% if current_user.is_admin or current_user.can_add %}
+<div class="grid">
+    <div style="border: 1px solid #eee; padding: 15px;">
+        <h4>Dodaj z Bazy (Excel)</h4>
+        <div class="search-section" data-location-id="{{ location.id }}">
+            <div class="search-row">
+                <input type="text" id="search-query" name="search_query" placeholder="Szukaj (Nazwa lub CAS)">
+                <select id="search-physical-location">
+                    <option value="">-- Wybierz lokalizację --</option>
+                    <option value="Bieruń">Bieruń</option>
+                    <option value="Krupski Młyn">Krupski Młyn</option>
+                </select>
+                <button id="search-button">Szukaj</button>
+            </div>
+            <div id="search-results" style="margin-top: 15px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+    <div style="border: 1px solid #eee; padding: 15px;">
+        <h4>Dodaj Ręcznie</h4>
+        <div id="manual-add-container">
+            <button id="show-manual-form-btn">Dodaj mieszaninę/substancję ręcznie</button>
+        </div>
+        <div id="manual-add-section" style="display: none; margin-top: 15px;">
+                <form id="manual-add-form">
+                    <label for="manual-name">Nazwa:*</label>
+                    <input type="text" id="manual-name" required>
+                    
+                    <label for="manual-cas">Nr CAS (opcjonalnie):</label>
+                    <input type="text" id="manual-cas">
+                    
+                    <label for="manual-ec">Nr WE (opcjonalnie):</label>
+                    <input type="text" id="manual-ec">
+                    
+                    <label for="manual-classification">Klasyfikacja:</label>
+                    <textarea id="manual-classification" rows="2"></textarea>
+                    
+                    <label for="manual-hphrases">Zwroty H:</label>
+                    <textarea id="manual-hphrases" rows="2"></textarea>
+                    
+                    <label for="manual-comment">Komentarz:</label>
+                    <textarea id="manual-comment" rows="2"></textarea>
+                    
+                    <label for="manual-physical-location">Lokalizacja fizyczna:</label>
+                    <select id="manual-physical-location">
+                        <option value="">-- Wybierz lokalizację --</option>
+                        <option value="Bieruń">Bieruń</option>
+                        <option value="Krupski Młyn">Krupski Młyn</option>
+                    </select>
+                    
+                    <div class="button-row">
+                        <button type="submit" id="save-mixture-button">Zapisz</button>
+                        <button type="button" id="cancel-manual-form-btn">Anuluj</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+<hr>
+<p><a href="{{ url_for('locations.index') }}">Powrót do listy lokalizacji</a></p>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} {# <--- DODAJ TĘ LINIĘ, aby załadować base.js #}
+    <script src="{{ url_for('static', filename='js/location_detail.js') }}" defer></script>
+{% endblock %}

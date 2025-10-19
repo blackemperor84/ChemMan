@@ -1,0 +1,1195 @@
+/* ==================== 1. IMPORTY I ZMIENNE ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* ==================== 2. STYLE PODSTAWOWE ==================== */
+body { 
+    font-family: 'Roboto', sans-serif; 
+    margin: 20px; 
+    padding-bottom: 50px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+hr { 
+    margin: 20px 0; 
+}
+
+/* Nazwy substancji z odstępem tylko między nazwami */
+.substance-name {
+    line-height: 1.4; /* Normalny odstęp między liniami */
+}
+
+.name-spacer {
+    display: block;
+    height: 8px; /* Kontrolowany odstęp - dostosuj wartość */
+}
+
+/* ==================== 3. UKŁAD STRONY ==================== */
+.grid { 
+    display: flex; 
+    gap: 20px; 
+    flex-wrap: nowrap; 
+}
+
+.grid > div {
+    flex: 1;
+    min-width: 250px; 
+}
+
+/* ==================== 4. NAWIGACJA ==================== */
+nav {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+nav a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: #3498db;
+    font-weight: 500;
+    padding: 5px 0;
+    position: relative;
+}
+
+nav a:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: #3498db;
+    transition: width 0.3s;
+}
+
+nav a:hover:after {
+    width: 100%;
+}
+
+/* ==================== 5. KOMUNIKATY I ALERTY ==================== */
+.flash { 
+    padding: 10px; 
+    margin-bottom: 15px; 
+    border: 1px solid transparent; 
+    border-radius: 4px; 
+}
+
+.flash.success { 
+    color: #155724; 
+    background-color: #d4edda; 
+    border-color: #c3e6cb; 
+}
+
+.flash.error { 
+    color: #721c24; 
+    background-color: #f8d7da; 
+    border-color: #f5c6cb; 
+}
+
+.flash.warning { 
+    color: #856404; 
+    background-color: #fff3cd; 
+    border-color: #ffeeba; 
+}
+
+.flash button.close { 
+    float: right; 
+    background: none; 
+    border: none; 
+    font-size: 1.2rem; 
+    cursor: pointer; 
+    line-height: 1; 
+    padding: 0 0.5rem;
+}
+
+/* =========== Ulepszone alerty (toast notifications) =========== */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.toast-message {
+    background-color: white;
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 10px;
+    position: relative;
+    animation: slideIn 0.3s ease-out forwards;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+}
+
+.toast-message.fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+}
+
+.toast-content {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #777;
+    padding: 0;
+    margin-left: 10px;
+    line-height: 1;
+}
+
+.toast-close-btn:hover {
+    color: #333;
+}
+
+.toast-message::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+}
+
+.toast-message.success {
+    background-color: #f1fff0;
+}
+
+.toast-message.success::before {
+    background-color: #4caf50;
+}
+
+.toast-message.error {
+    background-color: #fff0f0;
+}
+
+.toast-message.error::before {
+    background-color: #f44336;
+}
+
+.toast-message.warning {
+    background-color: #fffaf0;
+}
+
+.toast-message.warning::before {
+    background-color: #ff9800;
+}
+
+.toast-message.info {
+    background-color: #f0f8ff;
+}
+
+.toast-message.info::before {
+    background-color: #2196f3;
+}
+
+/* Toast timer line - wskaźnik czasu */
+.toast-message.with-timer::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scaleX(0);
+    transform-origin: right;
+    animation: timerProgress 3s linear forwards;
+}
+
+/* Animacje */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes timerProgress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* ============= Zakończenie stylów alertów ============= */
+
+/* ==================== 6. FORMULARZE I POLA WEJŚCIOWE ==================== */
+input[type="text"], 
+input[type="password"],
+select,
+textarea {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus, 
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    outline: none;
+}
+
+/* Formularz dodawania lokalizacji */
+#add-location-form {
+    margin-top: 30px;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    max-width: 600px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 15px;
+}
+
+#add-location-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #2c3e50;
+    width: 100%;
+}
+
+#add-location-form .form-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+#add-location-form input[type="text"] {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+#add-location-form button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    height: 44px; /* Dopasowanie wysokości do pola input */
+}
+
+#add-location-form button:hover {
+    background-color: #2980b9;
+}
+
+/* Formularz ręcznego dodawania */
+#manual-add-form {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);  /* Dodane minmax aby zapobiec przepełnieniu */
+    gap: 12px;
+    align-items: center;
+    margin: 0 0 20px 0;
+    max-width: 550px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    box-sizing: border-box; /* Upewnia się, że padding nie zwiększa szerokości */
+}
+
+#manual-add-form label {
+    font-weight: 600;  /* Półgruba czcionka */
+    margin-bottom: 0;
+    text-align: right;
+    padding-right: 10px;
+    color: #2c3e50;  /* Kolor zgodny z nagłówkami */
+}
+
+#manual-add-form input,
+#manual-add-form textarea,
+#manual-add-form select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box; /* Kluczowe dla spójnych wymiarów */
+    max-width: 100%; /* Zapobiega przepełnieniu */
+}
+
+#manual-add-form input:focus,
+#manual-add-form textarea:focus,
+#manual-add-form select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
+#manual-add-form textarea {
+    min-height: 80px;  /* Zwiększona wysokość */
+    resize: vertical;
+}
+
+#manual-add-form .button-row {
+    grid-column: 1 / 3;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;  /* Zwiększony odstęp */
+    margin-top: 20px;  /* Zwiększony margines */
+}
+
+/* Wyrównanie wysokości przycisku Zapisz i Anuluj */
+#manual-add-form .button-row button {
+    min-width: 120px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    height: 40px; /* Stała wysokość */
+    box-sizing: border-box;
+}
+
+#manual-add-form .button-row button[type="submit"] {
+    background-color: #3498db;
+    color: white;
+    border: none;
+}
+
+#manual-add-form .button-row button[type="submit"]:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#manual-add-form .button-row button[type="button"] {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+#manual-add-form .button-row button[type="button"]:hover {
+    background-color: #e5e5e5;
+}
+
+/* Container dla przycisków dodawania */
+#manual-add-container {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    margin-bottom: 15px;
+}
+
+/* Wyszukiwanie i wybór lokalizacji */
+.search-section .search-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Ujednolicenie wysokości elementów wyszukiwania i dodawania */
+.search-section .search-row input,
+.search-section .search-row select,
+.search-section .search-row button,
+#show-manual-form-btn {
+    height: 38px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+/* Style dla pola wyszukiwania */
+.search-section .search-row input {
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+}
+
+/* Style dla listy rozwijanej */
+.search-section .search-row select {
+    padding: 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+}
+
+/* Style dla przycisków */
+.search-section .search-row button,
+#show-manual-form-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    margin-top: 0;
+    transition: background-color 0.3s;
+    padding: 0 15px;
+}
+
+#show-manual-form-btn:hover {
+    background-color: #2980b9;
+}
+
+/* Formularz akcji masowych */
+#bulk-action-area {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#bulk-action-area form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+#bulk-action-area label {
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+#bulk-action-area select {
+    min-width: 200px;
+    padding: 6px 8px;
+    background-color: white;
+}
+
+#bulk-action-area button {
+    padding: 6px 15px;
+    margin: 0 5px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+#selection-counter {
+    font-weight: bold;
+    color: #495057;
+}
+
+/* ==================== 7. TABELE ==================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+th, td { 
+    border: 1px solid #ccc; 
+    padding: 8px; 
+    text-align: left; 
+    vertical-align: top; 
+}
+
+th { 
+    background-color: #2c3e50; 
+    color: white;
+    font-weight: 500;
+    text-align: center;
+}
+
+table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+table tr:hover {
+    background-color: #f0f0f0;
+}
+
+/* Wyrównanie nagłówków i zawartości tabel */
+#substances-table th, 
+#all-substances-table th {
+    text-align: center;
+    vertical-align: middle;
+    padding: 8px;
+}
+
+#substances-table td, 
+#all-substances-table td {
+    vertical-align: middle;
+}
+
+/* Style kolumny checkboxów */
+#substances-table th:first-child,
+#substances-table td:first-child {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0 5px;
+    text-align: center;
+}
+
+#substances-table input[type="checkbox"] {
+    margin: 0 auto;
+    display: block;
+}
+
+/* Wyrównanie kolumn w tabeli wszystkich substancji */
+#all-substances-table thead tr th:first-child,
+#all-substances-table tbody tr td:first-child {
+    text-align: left !important;
+}
+
+#all-substances-table thead tr th:nth-child(2),
+#all-substances-table tbody tr td:nth-child(2) {
+    text-align: center !important;
+}
+
+#all-substances-table thead tr th:nth-child(3),
+#all-substances-table tbody tr td:nth-child(3) {
+    text-align: center !important;
+}
+
+#all-substances-table thead tr th:nth-child(6),
+#all-substances-table tbody tr td:nth-child(6) {
+    text-align: center !important;
+}
+
+#all-substances-table thead tr th:nth-child(7),
+#all-substances-table tbody tr td:nth-child(7) {
+    text-align: center !important;
+}
+
+/* Wyrównanie kolumn w tabeli substancji danej lokalizacji */
+#substances-table thead tr th:nth-child(3),
+#substances-table tbody tr td:nth-child(3) {
+    text-align: center !important;
+}
+
+#substances-table thead tr th:nth-child(7),
+#substances-table tbody tr td:nth-child(7) {
+    text-align: center !important;
+}
+
+/* ==================== 8. PRZYCISKI I AKCJE ==================== */
+button {
+    margin-left: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(27, 27, 27, 0.2);
+}
+
+a[role="button"] { 
+    text-decoration: none; 
+    padding: 5px 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 3px; 
+    background-color: #eee; 
+    color: #333; 
+    font-size: 0.9em;
+}
+
+a[role="button"]:hover { 
+    background-color: #ddd;
+}
+
+/* Przyciski w kolumnie akcji */
+.actions-cell button {
+    display: block;
+    margin: 5px auto;
+    min-width: 100px;
+    padding: 4px 8px;
+}
+
+/* Przyciski akcji masowych */
+#move-substances-btn {
+    background-color: #e7f3ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+}
+
+#copy-substances-btn {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+/* Przyciski wyszukiwania */
+#search-results .add-substance-btn {
+    margin-left: 10px;
+    padding: 3px 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+#search-results .add-substance-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* ==================== 9. KOMPONENTY SPECYFICZNE ==================== */
+/* Komponent lokalizacji */
+#locations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#locations-list li {
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border: 1px solid #eaeaea;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    transition: background-color 0.2s;
+}
+
+#locations-list li:hover {
+    background-color: #f0f0f0;
+}
+
+#locations-list .location-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+#locations-list .location-name {
+    flex: 1;
+    margin-right: 15px;
+}
+
+#locations-list .location-display a {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+#locations-list .location-link {
+    display: block;
+    padding: 8px 12px;
+    background-color: transparent;
+    border-radius: 4px;
+    transition: color 0.2s;
+}
+
+#locations-list .location-link:hover {
+    color: #2980b9;
+}
+
+#locations-list .location-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+}
+
+/* Zwiększenie wysokości przycisków w liście lokalizacji */
+#locations-list .location-actions button {
+    padding: 8px 15px;  /* Zwiększone wypełnienie */
+    height: 36px;       /* Jawne określenie wysokości */
+    font-size: 14px;    /* Nieco większa czcionka */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#locations-list .edit-location-btn,
+#locations-list .cancel-location-btn,
+#locations-list .save-location-btn,
+#locations-list .delete-location-btn {
+    min-width: 80px;    /* Gwarantuje minimalną szerokość */
+}
+
+#locations-list .edit-location-btn,
+#locations-list .cancel-location-btn {
+    background-color: #e7f3ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+}
+
+#locations-list .save-location-btn {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+#locations-list .delete-location-btn {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+#locations-list .location-edit {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+#locations-list .location-edit input {
+    flex: 1;
+    padding: 6px 10px;
+    margin-right: 5px;
+}
+
+/* Wyniki wyszukiwania */
+#search-results ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#search-results li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#search-results li:last-child {
+    border-bottom: none;
+}
+
+#search-results .substance-info {
+    flex: 1;
+}
+
+/* Komponent SDS */
+.sds-cell, .action-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 8px;
+}
+
+.sds-link {
+    display: block;
+    text-align: center;
+    margin: 0 auto 8px auto;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.sds-timestamp {
+    display: block;
+    text-align: center;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Przyciski SDS */
+.sds-button-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 8px auto;
+    width: fit-content;
+}
+
+.sds-button-row > button,
+.sds-button-row > form {
+    margin: 0;
+}
+
+.sds-button-row button {
+    min-width: 60px;
+    padding: 2px 8px;
+    font-size: 0.85em;
+}
+
+.delete-sds-form {
+    margin: 0;
+    padding: 0;
+}
+
+.delete-sds-btn {
+    background-color: #f8d7da; 
+    border-color: #f5c6cb; 
+    color: #721c24;
+}
+
+/* Formularz uploadowania SDS */
+.sds-upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    margin: 0 auto;
+}
+
+.sds-upload-form button {
+    min-width: 100px;
+    margin: 4px 0;
+}
+
+.sds-upload-form input[type="file"] {
+    margin-bottom: 5px;
+}
+
+/* Footer */
+footer {
+    margin-top: 40px;
+    padding: 15px 0;
+    border-top: 1px solid #eee;
+    text-align: center;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+footer .version {
+    font-size: 0.85em;
+    color: #999;
+}
+
+/* ==================== 10. STRONA LOGOWANIA ==================== */
+body.login-page {
+    background-image: url('/static/images/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.login-container {
+    position: relative;
+    z-index: 10;
+    max-width: 500px;
+    margin: 60px auto; 
+    padding: 40px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.login-container h2 {
+    font-size: 36px;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.login-container h3 {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #7f8c8d;
+    font-weight: 400;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: 70%;
+    padding: 12px 15px;
+    margin: 8px auto 20px auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    font-size: 16px;
+}
+
+.login-container button[type="submit"] {
+    width: 50%;
+    padding: 12px;
+    margin-top: 25px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-container button[type="submit"]:hover {
+    background-color: #2980b9;
+}
+
+#network-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* ==================== 11. MEDIA QUERIES ==================== */
+@media (max-width: 768px) {
+    .login-container {
+        margin: 30px 20px;
+        padding: 25px;
+    }
+    
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+        width: 90%;
+    }
+    
+    .login-container button[type="submit"] {
+        width: 80%;
+    }
+    
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    nav a {
+        margin-right: 10px;
+    }
+
+    .grid {
+        flex-direction: column;
+    }
+
+    #add-location-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #add-location-form button {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    #locations-list .location-display {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #locations-list .location-actions {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* ==================== 12. PRZYCISKI AKCJI GLOBALNE ==================== */
+.action-btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    border: 1px solid;
+}
+
+.export-btn {
+    background-color: #e7f3ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+.export-btn:hover {
+    background-color: #cce5ff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.danger-btn {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.danger-btn:hover {
+    background-color: #f1b0b7;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+.success-btn {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.success-btn:hover {
+    background-color: #c3e6cb;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.info-btn {
+    background-color: #f0f8ff;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.info-btn:hover {
+    background-color: #d1ecf1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Style dla Paginacji (przeniesione z dynamicznych stylów JS) */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.pagination-left {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-left span {
+     margin-right: 5px;
+}
+
+.rows-per-page-select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.pagination-info {
+     text-align: center;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.page-info {
+     margin: 0 10px;
+}
+
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Style dla paginacji po stronie serwera */
+.pagination-server {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination-button:hover {
+    background-color: #f0f0f0;
+}
+
+.pagination-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    margin: 0 10px;
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.per-page-selector select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}

@@ -1,0 +1,9 @@
+Jak używać tego w przyszłości?
+
+Gdy będziesz chciał wprowadzić zmianę w strukturze bazy danych (np. dodać nową kolumnę do modelu Substance w models.py):
+
+Zmodyfikuj plik models.py.
+W terminalu uruchom: flask db migrate -m "Opis twojej zmiany" (np. "Add index to substance name"). Alembic wygeneruje nowy skrypt w migrations/versions/.
+(Opcjonalnie, ale zalecane na początku) Sprawdź wygenerowany skrypt .py, czy wygląda sensownie.
+W terminalu uruchom: flask db upgrade. Alembic zastosuje zmiany do Twojej bazy danych.
+Jeśli coś pójdzie nie tak, możesz spróbować cofnąć ostatnią migrację komendą flask db downgrade.

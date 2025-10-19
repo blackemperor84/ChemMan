@@ -1,0 +1,290 @@
+2025-04-11 21:03:37,935 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+2025-04-11 21:10:41,093 - app - WARNING: OSTRZE¯ENIE: Plik C:\Users\HP\Desktop\chem-man app\instance\uploads\sds\36f7427a674b45989373c6d723a87da5_brass_shell.pdf nie zosta³ znaleziony na dysku, ale usuwam wpis z bazy.
+2025-04-11 21:36:36,240 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: No filter named 'semicolon_to_linebreaks'.
+2025-04-11 21:50:20,882 - app - ERROR: B³¹d podczas zapisywania pliku SDS: type object 'datetime.datetime' has no attribute 'datetime'
+2025-04-12 17:58:35,645 - app - ERROR: B³¹d podczas dodawania kolumn uprawnieñ: Not an executable object: '\n                    UPDATE users \n                    SET can_view = 1, can_add = 1, can_edit = 1, can_delete = 1,\n                        can_move = 1, can_copy = 1, can_upload_sds = 1\n                    WHERE is_admin = 1\n                '
+2025-04-12 18:02:23,116 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:07:11,920 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:08:13,792 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:09:32,962 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:09:52,691 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:12:01,412 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Encountered unknown tag 'endblock'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.
+2025-04-12 18:59:43,536 - app - WARNING: Nieudane logowanie dla: testuser
+2025-04-12 22:30:49,322 - app - ERROR: B³¹d odczytu lokalizacji z DB: 'csrf_token' is undefined
+2025-04-12 22:52:12,128 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-12 23:13:43,852 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:13:49,128 - app - ERROR: B£¥D usuwania lokacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:13:52,801 - app - ERROR: B£¥D usuwania lokacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:14:21,272 - app - ERROR: B£¥D usuwania lokacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:15:16,296 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:15:19,782 - app - ERROR: B£¥D usuwania lokacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:15:22,486 - app - ERROR: B£¥D usuwania lokacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:15:23,753 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: (sqlite3.OperationalError) no such column: substances.physical_location
+[SQL: SELECT substances.id AS substances_id, substances.name AS substances_name, substances.cas AS substances_cas, substances.classification AS substances_classification, substances.h_phrases AS substances_h_phrases, substances.scl_mfactor AS substances_scl_mfactor, substances.comment AS substances_comment, substances.sds_filename AS substances_sds_filename, substances.sds_upload_timestamp AS substances_sds_upload_timestamp, substances.location_id AS substances_location_id, substances.physical_location AS substances_physical_location 
+FROM substances 
+WHERE ? = substances.location_id]
+[parameters: (1,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-12 23:19:15,110 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-13 15:13:11,541 - app - ERROR: B³¹d podczas kopiowania substancji: 'hysical_location' is an invalid keyword argument for Substance
+2025-04-13 20:29:57,102 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-14 17:50:25,796 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-14 17:53:51,801 - app - WARNING: Nieudane logowanie dla: Bedzio
+2025-04-14 20:56:27,275 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-14 21:11:03,488 - app - WARNING: Nieudane logowanie dla: admin
+2025-04-15 08:27:31,537 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-15 17:15:23,482 - app - WARNING: Nieudane logowanie dla: admin
+2025-04-15 17:16:15,412 - app - WARNING: Nieudane logowanie dla: admin
+2025-04-15 17:56:25,970 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-15 17:58:10,134 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-15 18:28:53,081 - app - WARNING: OSTRZE¯ENIE: Plik C:\Users\HP\Desktop\chem-man app\instance\uploads\sds\9eade086f6c14243a6aa6df9e7a3c08f_2.A.pdf nie zosta³ znaleziony na dysku, ale usuwam wpis z bazy.
+2025-04-16 08:52:53,723 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-16 08:52:59,585 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-16 16:52:58,351 - app - ERROR: B³¹d podczas globalnego eksportu CSV: name 'urllib' is not defined
+2025-04-16 16:52:58,352 - app - ERROR: B³¹d podczas globalnego eksportu CSV: name 'urllib' is not defined
+2025-04-16 16:52:58,356 - app - ERROR: B³¹d podczas globalnego eksportu CSV: name 'urllib' is not defined
+2025-04-16 18:14:54,240 - app - WARNING: Brak pola ec_number w wynikach
+2025-04-16 18:15:09,344 - app - WARNING: Brak pola ec_number w wynikach
+2025-04-20 15:00:55,169 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-20 15:04:09,818 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-20 15:16:16,152 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-20 15:16:19,761 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-20 15:43:42,250 - app - ERROR: B³¹d podczas dodawania kolumny last_modified: (sqlite3.OperationalError) Cannot add a column with non-constant default
+[SQL: ALTER TABLE locations ADD COLUMN last_modified DATETIME DEFAULT CURRENT_TIMESTAMP]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-20 15:44:45,997 - app - ERROR: B³¹d podczas dodawania kolumny last_modified: (sqlite3.OperationalError) Cannot add a column with non-constant default
+[SQL: ALTER TABLE locations ADD COLUMN last_modified DATETIME DEFAULT CURRENT_TIMESTAMP]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-04-20 16:00:18,174 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: type object 'Substance' has no attribute 'last_modified'
+2025-04-20 16:00:21,461 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: type object 'Substance' has no attribute 'last_modified'
+2025-04-20 16:03:05,855 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: type object 'Substance' has no attribute 'last_modified'
+2025-04-20 16:06:21,510 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: type object 'Substance' has no attribute 'last_modified'
+2025-04-20 17:05:10,199 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-21 00:58:25,830 - app - ERROR: B³¹d podczas zapisywania pliku SDS: No module named 'utils.file_manager'; 'utils' is not a package
+2025-04-21 01:02:23,606 - app - ERROR: B³¹d podczas zapisywania pliku SDS: No module named 'utils.file_manager'; 'utils' is not a package
+2025-04-21 01:04:30,539 - app - ERROR: B³¹d podczas zapisywania pliku SDS: No module named 'utils.file_manager'; 'utils' is not a package
+2025-04-21 01:04:50,069 - app - ERROR: B³¹d podczas zapisywania pliku SDS: No module named 'utils.file_manager'; 'utils' is not a package
+2025-04-21 01:09:20,579 - app - ERROR: B³¹d podczas zapisywania pliku SDS: No module named 'utils.file_manager'; 'utils' is not a package
+2025-04-21 01:14:35,448 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Could not build url for endpoint 'files.upload_sds' with values ['substance_id']. Did you mean 'files.download_sds' instead?
+2025-04-21 01:14:41,908 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Could not build url for endpoint 'files.upload_sds' with values ['substance_id']. Did you mean 'files.download_sds' instead?
+2025-04-21 01:17:57,166 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Could not build url for endpoint 'files.upload_sds' with values ['substance_id']. Did you mean 'files.download_sds' instead?
+2025-04-21 01:18:02,498 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: Could not build url for endpoint 'files.upload_sds' with values ['substance_id']. Did you mean 'files.download_sds' instead?
+2025-04-21 20:14:28,947 - app - ERROR: B£¥D usuwania lokacji: 'Request' object has no attribute 'is_xhr'
+2025-04-21 20:14:28,957 - app - ERROR: Exception on /location/9/delete [POST]
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\chem-man app\routes\locations.py", line 220, in delete_location
+    if request.is_xhr or request.content_type == 'application/json':
+       ^^^^^^^^^^^^^^
+AttributeError: 'Request' object has no attribute 'is_xhr'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\decorators.py", line 16, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\HP\Desktop\chem-man app\routes\locations.py", line 235, in delete_location
+    if request.is_xhr or request.content_type == 'application/json':
+       ^^^^^^^^^^^^^^
+AttributeError: 'Request' object has no attribute 'is_xhr'
+2025-04-21 20:14:35,570 - app - ERROR: B£¥D usuwania lokacji: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-04-21 20:14:35,690 - app - ERROR: Exception on /location/9/delete [POST]
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\chem-man app\routes\locations.py", line 199, in delete_location
+    location_to_delete = Location.query.get_or_404(location_id)
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask_sqlalchemy\query.py", line 33, in get_or_404
+    abort(404, description=description)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\helpers.py", line 284, in abort
+    current_app.aborter(code, *args, **kwargs)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\werkzeug\exceptions.py", line 876, in __call__
+    raise self.mapping[code](*args, **kwargs)
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\venv\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\chem-man app\decorators.py", line 16, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\HP\Desktop\chem-man app\routes\locations.py", line 235, in delete_location
+    if request.is_xhr or request.content_type == 'application/json':
+       ^^^^^^^^^^^^^^
+AttributeError: 'Request' object has no attribute 'is_xhr'
+2025-04-23 10:10:24,293 - app - WARNING: OSTRZE¯ENIE: Plik C:\Users\HP\Desktop\chem-man app\instance\uploads\sds\764b4a619e134740b631557390c1baa9_brass_shell.pdf nie zosta³ znaleziony na dysku.
+2025-05-06 17:27:58,946 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: name 'is_svhc_substance' is not defined
+2025-05-06 17:28:09,203 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: name 'is_svhc_substance' is not defined
+2025-05-06 17:28:30,535 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: name 'is_svhc_substance' is not defined
+2025-05-06 18:07:53,165 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: 'Substance' object has no attribute 'svhc_reason'
+2025-05-06 18:32:13,288 - app - ERROR: B³¹d podczas dodawania substancji z Excela: (builtins.TypeError) Not a boolean value: 'Endocrine disrupting properties (Article 57(f) - environment)'
+[SQL: INSERT INTO substances (name, cas, ec_number, classification, h_phrases, scl_mfactor, comment, is_cmr, is_svhc, sds_filename, sds_upload_timestamp, location_id, physical_location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: [{'classification': 'Skin Sens. 1\nAquatic Acute 1\nAquatic Chronic 1\n', 'is_svhc': 'Endocrine disrupting properties (Article 57(f) - environment)', ' ... (123 characters truncated) ... yl) phosphite', 'physical_location': 'Bieruñ', 'is_cmr': False, 'location_id': 9, 'comment': None, 'sds_filename': None, 'sds_upload_timestamp': None}]]
+2025-05-06 18:32:18,868 - app - ERROR: B³¹d podczas dodawania substancji z Excela: (builtins.TypeError) Not a boolean value: 'Endocrine disrupting properties (Article 57(f) - environment)'
+[SQL: INSERT INTO substances (name, cas, ec_number, classification, h_phrases, scl_mfactor, comment, is_cmr, is_svhc, sds_filename, sds_upload_timestamp, location_id, physical_location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: [{'classification': 'Skin Sens. 1\nAquatic Acute 1\nAquatic Chronic 1\n', 'is_svhc': 'Endocrine disrupting properties (Article 57(f) - environment)', ' ... (123 characters truncated) ... yl) phosphite', 'physical_location': 'Bieruñ', 'is_cmr': False, 'location_id': 9, 'comment': None, 'sds_filename': None, 'sds_upload_timestamp': None}]]
+2025-05-06 19:56:28,603 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,621 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,635 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,649 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,663 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,677 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,688 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,703 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,719 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,739 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,766 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,785 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,805 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,832 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,853 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,879 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,901 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,921 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,959 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:28,972 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,029 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,054 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,074 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,088 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,103 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,116 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,131 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,141 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,150 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,162 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,173 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,185 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,198 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,209 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,219 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,230 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,242 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,251 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,262 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:30,271 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,786 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,809 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,828 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,853 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,867 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,880 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,891 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,903 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,913 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,923 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,932 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,942 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,952 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,963 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,974 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,984 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:31,994 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:32,004 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:32,016 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:32,027 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,076 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,095 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,115 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,132 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,147 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,161 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,173 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,183 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,195 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,205 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,216 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,227 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,239 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,250 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,261 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,272 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,284 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,295 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,306 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:56:37,317 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,350 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,363 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,384 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,405 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,419 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,433 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,444 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,454 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,465 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,476 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,486 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,498 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,507 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,519 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,530 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,540 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,552 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,563 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,575 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-05-06 19:57:07,586 - app - ERROR: B³¹d podczas pobierania wszystkich substancji: type object 'Substance' has no attribute 'selectable'
+2025-10-17 20:12:57,003 - app - WARNING: Nieudane logowanie dla: admin
+2025-10-17 22:14:31,699 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: expected token ':', got '}'
+2025-10-17 22:14:33,300 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: expected token ':', got '}'
+2025-10-17 22:14:38,447 - app - ERROR: B³¹d podczas pobierania szczegó³ów lokalizacji: expected token ':', got '}'
+2025-10-17 23:35:04,441 - app - WARNING: U¿ytkownik admin próbowa³ usun¹æ chronion¹ lokalizacjê ID: 1
+2025-10-17 23:35:13,418 - app - WARNING: U¿ytkownik admin próbowa³ usun¹æ chronion¹ lokalizacjê ID: 1
+2025-10-17 23:36:14,883 - app - WARNING: U¿ytkownik admin próbowa³ usun¹æ chronion¹ lokalizacjê ID: 1
+2025-10-19 18:36:42,234 - app - WARNING: Nieudane logowanie dla: admin

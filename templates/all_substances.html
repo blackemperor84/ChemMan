@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}CHEM-MAN | WSZYSTKIE SUBSTANCJE{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/all_substances.css') }}">
+{% endblock %}
+
+{% block header %}CHEM-MAN | WSZYSTKIE SUBSTANCJE{% endblock %}
+
+{% block content %}
+<!-- Nagłówek z przyciskiem eksportu po prawej -->
+<div class="page-header">
+    <div></div> <!-- Pusty div dla flexbox, aby przycisk był po prawej -->
+    <a id="export-all-button" href="#" class="action-btn export-btn">
+        <span>⬇️</span> Eksportuj do CSV
+    </a>
+</div>
+
+<!-- Ulepszony formularz wyszukiwania z zaawansowanymi filtrami -->
+<div class="search-export-container">
+    <div class="search-row">
+        <input type="text" id="filter-input" placeholder="Filtruj (Nazwa, CAS, EC, Klasyfikacja, Lokalizacja...)">
+        <button id="filter-button" class="search-button">Filtruj</button>
+    </div>
+    
+    <div class="advanced-filter-buttons">
+        <button id="toggle-advanced-btn" class="toggle-advanced-btn">Pokaż zaawansowane filtry</button>
+        <button id="reset-filters-btn" class="reset-filters-btn" style="display: none;">Wyczyść filtry</button>
+    </div>
+    
+    <div id="advanced-filters" class="advanced-filters" style="display: none;">
+        <div class="filter-group">
+            <label for="physical-location-filter">Lokalizacja fizyczna:</label>
+            <select id="physical-location-filter">
+                <option value="">Wszystkie</option>
+                <option value="Bieruń">Bieruń</option>
+                <option value="Krupski Młyn">Krupski Młyn</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="user-location-filter">Użytkownik:</label>
+            <select id="user-location-filter">
+                <option value="">Wszyscy</option>
+                {% for loc in locations %}
+                    <option value="{{ loc.name }}">{{ loc.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="cmr-filter">Status CMR:</label>
+            <select id="cmr-filter">
+                <option value="">Wszystkie</option>
+                <option value="true">Tak (CMR)</option>
+                <option value="false">Nie</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="svhc-filter">Status SVHC:</label>
+            <select id="svhc-filter">
+                <option value="">Wszystkie</option>
+                <option value="true">Tak (SVHC)</option>
+                <option value="false">Nie</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="sds-filter">Karta SDS:</label>
+            <select id="sds-filter">
+                <option value="">Wszystkie</option>
+                <option value="true">Posiada</option>
+                <option value="false">Brak</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+{% if pagination %}
+<div class="pagination-server">
+    <div class="pagination-info">
+        Wyświetlanie {{ pagination.items|length }} z {{ pagination.total }} rekordów
+    </div>
+    <div class="pagination-controls">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('export.view_all_substances', page=pagination.prev_num, per_page=pagination.per_page, filter=filter_query, physical_location=physical_location, user_location=user_location, is_cmr=is_cmr, has_sds=has_sds) }}" class="pagination-button">Poprzednia</a>
+        {% else %}
+            <span class="pagination-button disabled">Poprzednia</span>
+        {% endif %}
+        
+        <span class="pagination-pages">
+            Strona {{ pagination.page }} z {{ pagination.pages }}
+        </span>
+        
+        {% if pagination.has_next %}
+            <a href="{{ url_for('export.view_all_substances', page=pagination.next_num, per_page=pagination.per_page, filter=filter_query, physical_location=physical_location, user_location=user_location, is_cmr=is_cmr, has_sds=has_sds) }}" class="pagination-button">Następna</a>
+        {% else %}
+            <span class="pagination-button disabled">Następna</span>
+        {% endif %}
+    </div>
+    <div class="per-page-selector">
+        <label for="per-page-select">Rekordów na stronę:</label>
+        <select id="per-page-select" onchange="changePerPage(this.value)">
+            {% for option in [10, 25, 50, 100] %}
+                <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<script>
+    function changePerPage(perPage) {
+        // Zachowaj wszystkie aktualne parametry i zmień tylko per_page
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('per_page', perPage);
+        urlParams.set('page', 1); // Resetuj do pierwszej strony
+        window.location.href = window.location.pathname + '?' + urlParams.toString();
+    }
+    
+    // Ukryj paginację JS, jeśli używamy paginacji serwerowej
+    document.addEventListener('DOMContentLoaded', function() {
+        const clientPagination = document.querySelector('.pagination-container');
+        if (clientPagination) {
+            clientPagination.style.display = 'none';
+        }
+    });
+</script>
+{% endif %}
+
+{% if all_substances_data %}
+    <table border="1" id="all-substances-table">
+        <thead>
+            <tr>
+                <th>Nazwa chemiczna</th>
+                <th>Nr CAS</th>
+                <th>Nr WE</th>
+                <th>Klasyfikacja</th>
+                <th>Zwroty H</th>
+                <th>SCL/M-factor</th>
+                <th>Użytkownik</th>
+                <th>Lokalizacja</th>
+                <th>Komentarz</th>
+                <th>Karta SDS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub_data in all_substances_data %}
+                <tr data-cmr="{{ sub_data.is_cmr|lower }}" data-svhc="{{ sub_data.is_svhc|lower }}" data-has-sds="{{ (sub_data.sds_filename is not none)|lower }}" data-physical-location="{{ sub_data.physical_location }}" data-user-location="{{ sub_data.location_name }}">
+                    <td>
+                        <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
+                        {% if sub_data.is_cmr %}
+                            <span class="cmr-badge">CMR</span>
+                        {% endif %}
+                        {% if sub_data.is_svhc %}
+                            <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sub_data.cas or '' }}</td>
+                    <td>{{ sub_data.ec_number or '' }}</td>
+                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</td>
+                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</td>
+                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</td>
+                    <td>{{ sub_data.location_name }}</td> <!-- Będzie wyśrodkowane przez CSS -->
+                    <td>{{ sub_data.physical_location }}</td> <!-- Będzie wyśrodkowane przez CSS -->
+                    <td>{{ sub_data.comment or '' }}</td>
+                    <td>
+                        {% if sub_data.sds_filename %}
+                            <a href="{{ url_for('files.download_sds', filename=sub_data.sds_filename) }}" target="_blank">Pobierz</a>
+                            <br><small>{{ sub_data.sds_upload_timestamp_local }}</small>
+                        {% else %}
+                            Brak
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Brak substancji w bazie danych do wyświetlenia.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/pagination.js') }}" defer></script>
+    <script>
+        const exportAllUrl = "{{ url_for('export.export_all_csv') }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/all_substances.js') }}" defer></script>
+{% endblock %}

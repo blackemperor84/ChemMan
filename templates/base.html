@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Chem-Man{% endblock %}</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    
+    {% block extra_styles %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <h1>{% block header %}Chem-Man{% endblock %}</h1>
+
+    {% if request.endpoint != 'auth.login' %}
+    <nav>
+        {% if current_user.is_authenticated and (current_user.is_admin or current_user.can_view) %}
+            <a href="{{ url_for('locations.index') }}">Lista Lokalizacji</a> |
+            <a href="{{ url_for('export.view_all_substances') }}">Wszystkie Substancje</a> |
+        {% endif %}
+        
+        {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.manage_users') }}">Zarządzaj Użtk.</a> |
+                <a href="{{ url_for('admin.view_changelog') }}">Dziennik Zmian</a> |
+            {% endif %}
+            <a href="{{ url_for('auth.change_password') }}">Zmień hasło</a> |
+            <a href="{{ url_for('auth.logout') }}">Wyloguj ({{ current_user.username }})</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">Zaloguj</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+    
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="toast-container">
+            {% for category, message in messages %}
+                <div class="toast-message {{ category }}" role="alert">
+                    <div class="toast-content">{{ message }}</div>
+                    <button type="button" class="toast-close-btn">&times;</button>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div id="content">
+        {% block content %}
+        <!-- Zawartość będzie wstawiana przez dziedziczące szablony -->
+        {% endblock %}
+    </div>
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='js/base.js') }}" defer></script>
+    {% endblock %}
+    <footer>
+        <div>NITROERG &copy; 2025</div>
+        <div class="version">Chem-Man v1.0</div>
+    </footer>
+
+    
+
+</body>
+</html>
