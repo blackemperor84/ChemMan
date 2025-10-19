@@ -52,7 +52,7 @@ Domyślne logowanie: `admin` / `admin`
 
 - [📘 Instalacja i konfiguracja](installation.md)
 - [🔧 Konserwacja i aktualizacje](maintenance.md)
-- [⚙️ Przewodnik backendu](backend guide.md)
+- [⚙️ Przewodnik backendu](backend_guide.md)
 - [👤 Instrukcja użytkownika](user_guide.md)
 
 ## Struktura projektu
