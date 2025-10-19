@@ -21,7 +21,7 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 
 ## Szybki start
 
-Zobacz [INSTALLATION.md](INSTALLATION.md) dla szczegółowej instrukcji instalacji.
+Zobacz [INSTALLATION.md](installation.md) dla szczegółowej instrukcji instalacji.
 ```bash
 # Sklonuj repozytorium
 git clone [URL]
