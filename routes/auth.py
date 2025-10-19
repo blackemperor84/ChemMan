@@ -1,23 +1,15 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
+from limiter import limiter
 from models import db, User
 from utils import log_action, handle_exception
 
 # Utworzenie blueprintu dla uwierzytelniania
 auth_bp = Blueprint('auth', __name__)
 
-# Rate limiter dla ochrony brute force
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
-)
-
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Max 5 prób logowania na minutę
+@limiter.limit("10 per minute")  # Max 10 prób logowania na minutę
 def login():
     """Obsługa logowania użytkownika."""
     # Jeśli użytkownik jest już zalogowany, przekieruj na stronę główną

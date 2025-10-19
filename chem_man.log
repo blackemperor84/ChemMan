@@ -288,3 +288,29 @@ AttributeError: 'Request' object has no attribute 'is_xhr'
 2025-10-17 23:35:13,418 - app - WARNING: U¿ytkownik admin próbowa³ usun¹æ chronion¹ lokalizacjê ID: 1
 2025-10-17 23:36:14,883 - app - WARNING: U¿ytkownik admin próbowa³ usun¹æ chronion¹ lokalizacjê ID: 1
 2025-10-19 18:36:42,234 - app - WARNING: Nieudane logowanie dla: admin
+2025-10-19 20:15:06,619 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:15:24,957 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:15:44,933 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:33:35,994 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:33:44,840 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:33:52,134 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:33:57,036 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:34:02,501 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:34:08,065 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:34:13,629 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:28,044 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:31,361 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:34,572 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:37,903 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:41,580 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:45,779 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 20:37:49,879 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:01:53,537 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:01:57,142 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:02:00,672 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:02:05,038 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:02:08,905 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:02:12,600 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:02:16,782 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:08:08,443 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów
+2025-10-19 21:08:11,933 - app - WARNING: Nieudane logowanie - b³êdy kredencja³ów

@@ -18,10 +18,13 @@ import pandas as pd
 from flask.cli import with_appcontext
 from flask import current_app
 
+from limiter import limiter
+
 
 def create_app(config_class=Config):
     """Fabryka aplikacji Flask"""
     app = Flask(__name__)
+    limiter.init_app(app)
     app.config.from_object(config_class)
     csrf = CSRFProtect(app)  # Inicjalizacja CSRF
     
@@ -237,5 +240,5 @@ def configure_logging(app):
 
 if __name__ == '__main__':
     app = create_app()
-    app.logger.info("Uruchamianie aplikacji Chem-Man (debug=True)")
-    app.run(debug=True, host='0.0.0.0')
+    app.logger.info("Uruchamianie aplikacji Chem-Man (debug=False)")
+    app.run(debug=False, host='0.0.0.0')
