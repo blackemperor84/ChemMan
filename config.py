@@ -49,7 +49,20 @@ class Config:
     JSON_AS_ASCII = False
     
     # Hasło domyślne dla administratora - Lepiej czytać z zmiennej środowiskowej
-    DEFAULT_ADMIN_PASSWORD = os.environ.get('CHEM_MAN_ADMIN_PASSWORD', 'admin')
+    # Hasło domyślne dla administratora - MUSISZ ustawić w zmiennych środowiskowych!
+    DEFAULT_ADMIN_PASSWORD = os.environ.get('CHEM_MAN_ADMIN_PASSWORD')
+    if not DEFAULT_ADMIN_PASSWORD:
+        if os.environ.get('FLASK_ENV') == 'production':
+            raise ValueError(
+                "❌ ERROR: Musisz ustawić zmienną środowiskową 'CHEM_MAN_ADMIN_PASSWORD' w produkcji! "
+                "Aplikacja nie będzie działać bez ustawienia bezpiecznego hasła administratora."
+            )
+        else:
+            # W developmencie - wygeneruj losowe hasło
+            import secrets
+            DEFAULT_ADMIN_PASSWORD = secrets.token_urlsafe(16)
+            print(f"⚠️  DEVELOPMENT: Wygenerowano tymczasowe hasło admina: {DEFAULT_ADMIN_PASSWORD}")
+            print("   W produkcji ustaw CHEM_MAN_ADMIN_PASSWORD w zmiennych środowiskowych!")
     
     # Liczba rekordów na stronie w widokach z paginacją
     ITEMS_PER_PAGE = 25
