@@ -50,10 +50,10 @@ Domyślne logowanie: `admin` / `admin`
 
 ## Dokumentacja
 
-- [📘 Instalacja i konfiguracja](INSTALLATION.md)
-- [🔧 Konserwacja i aktualizacje](MAINTENANCE.md)
-- [⚙️ Przewodnik backendu](BACKEND_GUIDE.md)
-- [👤 Instrukcja użytkownika](USER_GUIDE.md)
+- [📘 Instalacja i konfiguracja](installation.md)
+- [🔧 Konserwacja i aktualizacje](maintenance.md)
+- [⚙️ Przewodnik backendu](backend guideE.md)
+- [👤 Instrukcja użytkownika](user_guide.md)
 
 ## Struktura projektu
 ```
