@@ -1,0 +1,2 @@
+# ChemMan
+Chemical substances manager
