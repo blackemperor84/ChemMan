@@ -31,9 +31,9 @@ def login():
             flash('Nieprawidłowa nazwa użytkownika (3-50 znaków).', 'error')
             return redirect(url_for('auth.login'))
         
-        # WALIDACJA: Sprawdź długość hasła (min 4)
-        if len(password) < 4:
-            flash('Hasło jest za krótkie.', 'error')
+        # WALIDACJA: Sprawdź długość hasła (min 8)
+        if len(password) < 8:
+            flash('Hasło jest za krótkie (minimum 8 znaków).', 'error')
             return redirect(url_for('auth.login'))
 
         current_app.logger.debug(f"Próba logowania użytkownika")
@@ -85,9 +85,9 @@ def change_password():
         # Sprawdź, czy obecne hasło jest poprawne
         if not current_user.check_password(current_password):
             flash('Obecne hasło jest nieprawidłowe.', 'error')
-        # Sprawdź, czy nowe hasło ma odpowiednią długość (minimum 4 znaki)
-        elif len(new_password) < 4:
-            flash('Nowe hasło musi mieć co najmniej 4 znaki.', 'error')
+        # Sprawdź, czy nowe hasło ma odpowiednią długość (minimum 8 znaków)
+        elif len(new_password) < 8:
+            flash('Nowe hasło musi mieć co najmniej 8 znaków.', 'error')
         # Sprawdź maksymalną długość hasła (bezpieczeństwo)
         elif len(new_password) > 128:
             flash('Hasło jest za długie (max 128 znaków).', 'error')

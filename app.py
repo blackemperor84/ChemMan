@@ -3,10 +3,13 @@ import logging
 import datetime
 from flask import Flask
 from flask_login import LoginManager
-from markupsafe import Markup
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 from config import Config
-from models import db, bcrypt, User, Substance, ExcelSourceSubstance, SVHCSubstance
+from models import db, bcrypt, User, ExcelSourceSubstance, SVHCSubstance
 from routes import register_blueprints
 
 from flask_migrate import Migrate
@@ -32,9 +35,11 @@ def create_app(config_class=Config):
     db.init_app(app)
     bcrypt.init_app(app)
     migrate = Migrate(app, db)  # Inicjalizacja migracji bazy danych
-    
+
     # Konfiguracja logowania
-    configure_logging(app)
+    # NOTE: Logging is now configured in config.py (DevelopmentConfig/ProductionConfig)
+    # using RotatingFileHandler with automatic log rotation
+    # configure_logging(app)  # Disabled - using config.py logging instead
     
     # Inicjalizacja Login Managera
     login_manager = LoginManager()
@@ -239,6 +244,11 @@ def configure_logging(app):
 
 
 if __name__ == '__main__':
-    app = create_app()
-    app.logger.info("Uruchamianie aplikacji Chem-Man (debug=False)")
-    app.run(debug=False, host='0.0.0.0')
+    # Determine which config to use based on FLASK_ENV
+    from config import config
+    env = os.environ.get('FLASK_ENV', 'development')
+    config_class = config.get(env, config['development'])
+
+    app = create_app(config_class)
+    app.logger.info(f"Uruchamianie aplikacji Chem-Man (env={env}, debug={app.debug})")
+    app.run(debug=app.debug, host='0.0.0.0')

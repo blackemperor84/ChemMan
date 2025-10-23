@@ -1,23 +1,38 @@
-import os
 import traceback
 from datetime import datetime
-import pandas as pd
+from typing import Optional, Any, Callable, List
 import pytz
-from flask import current_app, flash, redirect, url_for, jsonify, request
+from flask import current_app, flash, redirect, jsonify, request
 from flask_login import current_user
 from sqlalchemy import or_
 
 from models import db, AuditLog, SVHCSubstance
 
 
-def allowed_file(filename):
-    """Sprawdza, czy rozszerzenie pliku jest dozwolone."""
+def allowed_file(filename: str) -> bool:
+    """
+    Sprawdza, czy rozszerzenie pliku jest dozwolone.
+
+    Args:
+        filename: Nazwa pliku do sprawdzenia
+
+    Returns:
+        bool: True jeśli rozszerzenie jest dozwolone, False w przeciwnym razie
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 
-def log_action(action, target_type=None, target_id=None, details=None):
-    """Zapisuje wpis do dziennika zmian i commituje go."""
+def log_action(action: str, target_type: Optional[str] = None, target_id: Optional[int] = None, details: Optional[str] = None) -> None:
+    """
+    Zapisuje wpis do dziennika zmian (audit log) i commituje go.
+
+    Args:
+        action: Opis wykonywanej akcji
+        target_type: Typ obiektu docelowego (np. 'Substance', 'Location')
+        target_id: ID obiektu docelowego
+        details: Dodatkowe szczegóły akcji
+    """
     try:
         user_id_log = current_user.id if current_user.is_authenticated else None
         username_log = current_user.username if current_user.is_authenticated else 'System/Unknown'
@@ -40,8 +55,16 @@ def log_action(action, target_type=None, target_id=None, details=None):
         traceback.print_exc()
 
 
-def convert_utc_to_local(utc_timestamp):
-    """Konwertuje czas UTC na lokalny czas Warsaw i formatuje go."""
+def convert_utc_to_local(utc_timestamp: Optional[datetime]) -> str:
+    """
+    Konwertuje czas UTC na lokalny czas Warsaw i formatuje go.
+
+    Args:
+        utc_timestamp: Timestamp w UTC (datetime object)
+
+    Returns:
+        str: Sformatowany czas lokalny (YYYY-MM-DD HH:MM) lub 'Brak danych'
+    """
     if not utc_timestamp:
         return 'Brak danych'
     
@@ -56,8 +79,18 @@ def convert_utc_to_local(utc_timestamp):
     return local_dt.strftime('%Y-%m-%d %H:%M')
 
 
-def handle_exception(e, operation_name, redirect_url=None):
-    """Obsługuje wyjątki w jednolity sposób."""
+def handle_exception(e: Exception, operation_name: str, redirect_url: Optional[str] = None) -> Any:
+    """
+    Obsługuje wyjątki w jednolity sposób.
+
+    Args:
+        e: Wyjątek do obsługi
+        operation_name: Nazwa operacji, która spowodowała wyjątek
+        redirect_url: URL do przekierowania (opcjonalny)
+
+    Returns:
+        Response: Redirect lub JSON response z błędem
+    """
     db.session.rollback()
     error_message = f'Błąd podczas {operation_name}: {e}'
     current_app.logger.error(error_message)
@@ -190,10 +223,18 @@ def handle_exception(e, operation_name, redirect_url=None):
 #         return []
 
 
-def validate_json_data(required_fields):
-    """Dekorator do walidacji danych JSON w request."""
-    def decorator(f):
-        def wrapped(*args, **kwargs):
+def validate_json_data(required_fields: List[str]) -> Callable:
+    """
+    Dekorator do walidacji danych JSON w request.
+
+    Args:
+        required_fields: Lista wymaganych pól w JSON
+
+    Returns:
+        Callable: Dekorator funkcji
+    """
+    def decorator(f: Callable) -> Callable:
+        def wrapped(*args: Any, **kwargs: Any) -> Any:
             data = request.get_json()
             if not data:
                 return jsonify({'status': 'error', 'message': 'Brak danych JSON.'}), 400
@@ -209,16 +250,21 @@ def validate_json_data(required_fields):
         return wrapped
     return decorator
 
-def is_cmr_substance(h_phrases):
+def is_cmr_substance(h_phrases: Optional[str]) -> bool:
     """
     Sprawdza, czy substancja jest klasyfikowana jako CMR na podstawie zwrotów H.
-    CMR to substancje: Carcenogenic, Mutagenic, Reprotoxic.
-    
-    Parametry:
-    - h_phrases: string zawierający zwroty H (może być None)
-    
-    Zwraca:
-    - bool: True jeśli substancja jest CMR, False w przeciwnym razie
+    CMR to substancje: Carcinogenic (rakotwórcze), Mutagenic (mutagenne), Reprotoxic (działające szkodliwie na rozrodczość).
+
+    Sprawdza obecność następujących zwrotów H:
+    - H340: Może powodować wady genetyczne (mutagenne)
+    - H350: Może powodować raka (rakotwórcze)
+    - H360: Może działać szkodliwie na płodność lub dziecko w łonie matki (reprotoksyczne)
+
+    Args:
+        h_phrases: String zawierający zwroty H (może być None)
+
+    Returns:
+        bool: True jeśli substancja jest CMR, False w przeciwnym razie
     """
     if not h_phrases:
         return False
@@ -245,17 +291,24 @@ def is_cmr_substance(h_phrases):
     return False
 
 
-def is_svhc_substance(cas=None, ec_number=None, name=None):
+def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None, name: Optional[str] = None) -> Optional[str]:
     """
-    Sprawdza, czy substancja jest na liście SVHC i zwraca powód, jeśli tak.
+    Sprawdza, czy substancja jest na liście SVHC (Substance of Very High Concern) i zwraca powód, jeśli tak.
 
-    Parametry:
-    - cas: Numer CAS substancji (opcjonalny)
-    - ec_number: Numer EC substancji (opcjonalny)
-    - name: Nazwa substancji (opcjonalna)
+    SVHC to substancje budzące szczególnie duże obawy zgodnie z rozporządzeniem REACH.
 
-    Zwraca:
-    - str | None: Powód włączenia na listę SVHC jako string, lub None jeśli nie znaleziono.
+    Wyszukiwanie odbywa się według priorytetu:
+    1. Numer CAS (dokładne dopasowanie lub bez separatorów)
+    2. Numer EC (dokładne dopasowanie lub bez separatorów)
+    3. Nazwa (częściowe dopasowanie, tylko jeśli brak CAS/EC)
+
+    Args:
+        cas: Numer CAS substancji (opcjonalny)
+        ec_number: Numer EC substancji (opcjonalny)
+        name: Nazwa substancji (opcjonalna)
+
+    Returns:
+        Optional[str]: Powód włączenia na listę SVHC jako string, lub None jeśli nie znaleziono.
     """
     try:
         if not cas and not ec_number and not name:

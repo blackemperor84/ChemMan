@@ -35,20 +35,30 @@ with app.app_context():
     # Zachowaj tylko zmapowane kolumny
     df = df[['name', 'cas', 'ec_number', 'reason', 'date_inclusion']]
     
-    # Import
+    # Import - convert all values to strings, handle NaN
     count = 0
     for idx, row in df.iterrows():
+        # Convert to string and handle NaN/None
+        def safe_str(val):
+            if pd.isna(val):
+                return None
+            return str(val)
+
         substance = SVHCSubstance(
-            name=row['name'],
-            cas=row['cas'],
-            ec_number=row['ec_number'],
-            reason=row['reason'],
-            date_inclusion=row['date_inclusion']
+            name=safe_str(row['name']),
+            cas=safe_str(row['cas']),
+            ec_number=safe_str(row['ec_number']),
+            reason=safe_str(row['reason']),
+            date_inclusion=safe_str(row['date_inclusion'])
         )
         db.session.add(substance)
         count += 1
         if count % 50 == 0:
             print(f"Zaimportowano {count}...")
-    
-    db.session.commit()
+            db.session.commit()  # Commit in batches
+
+    # Final commit for remaining records
+    if count % 50 != 0:
+        db.session.commit()
+
     print(f"Gotowe! Zaimportowano {count} substancji SVHC!")

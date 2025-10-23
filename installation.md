@@ -5,7 +5,8 @@ Pełna instrukcja instalacji, konfiguracji i uruchomienia aplikacji ChemMan od z
 ## Wymagania systemowe
 
 - **System operacyjny:** Windows 10/11, Linux, macOS
-- **Python:** 3.8 lub nowszy
+- **Python:** 3.11 lub nowszy
+- **PostgreSQL:** 14 lub nowszy (zalecane 18)
 - **Pamięć RAM:** minimum 2GB
 - **Miejsce na dysku:** minimum 1GB
 - **Przeglądarka:** Chrome, Firefox, Edge (najnowsze wersje)
@@ -39,7 +40,74 @@ brew install python3
 
 ---
 
-## Krok 2: Pobranie aplikacji
+## Krok 2: Instalacja PostgreSQL
+
+ChemMan wymaga PostgreSQL jako bazy danych dla środowiska produkcyjnego.
+
+### Windows
+
+1. Pobierz PostgreSQL z [postgresql.org](https://www.postgresql.org/download/windows/)
+2. Zainstaluj PostgreSQL 18 (lub nowszy)
+3. Podczas instalacji:
+   - Ustaw hasło dla użytkownika `postgres` (zapamiętaj!)
+   - Zaakceptuj domyślny port (5432)
+
+4. Utwórz bazę danych i użytkownika:
+
+```powershell
+# Otwórz pgAdmin lub użyj psql
+psql -U postgres
+
+# W psql:
+CREATE DATABASE chemman_dev;
+CREATE USER chemman_user WITH PASSWORD 'twoje_silne_haslo';
+GRANT ALL PRIVILEGES ON DATABASE chemman_dev TO chemman_user;
+\q
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Instalacja PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Uruchom PostgreSQL
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Utwórz bazę danych i użytkownika
+sudo -u postgres psql
+
+# W psql:
+CREATE DATABASE chemman_dev;
+CREATE USER chemman_user WITH PASSWORD 'twoje_silne_haslo';
+GRANT ALL PRIVILEGES ON DATABASE chemman_dev TO chemman_user;
+\q
+```
+
+### macOS
+
+```bash
+# Instalacja przez Homebrew
+brew install postgresql
+
+# Uruchom PostgreSQL
+brew services start postgresql
+
+# Utwórz bazę danych i użytkownika
+psql postgres
+
+# W psql:
+CREATE DATABASE chemman_dev;
+CREATE USER chemman_user WITH PASSWORD 'twoje_silne_haslo';
+GRANT ALL PRIVILEGES ON DATABASE chemman_dev TO chemman_user;
+\q
+```
+
+---
+
+## Krok 3: Pobranie aplikacji
 
 ### Opcja A: Z GitHub (jeśli masz Git)
 
@@ -56,7 +124,43 @@ cd ChemMan
 
 ---
 
-## Krok 3: Utworzenie środowiska wirtualnego
+## Krok 4: Konfiguracja aplikacji
+
+### 4.1 Utwórz plik .env
+
+Skopiuj przykładowy plik konfiguracji:
+
+```bash
+cp .env.example .env
+```
+
+### 4.2 Edytuj .env
+
+Otwórz `.env` w edytorze tekstu i skonfiguruj:
+
+```bash
+# Database Configuration
+DATABASE_URL=postgresql://chemman_user:twoje_silne_haslo@localhost:5432/chemman_dev
+
+# Flask Configuration
+FLASK_ENV=development
+SECRET_KEY=wygeneruj_losowy_klucz_tutaj
+FLASK_DEBUG=1
+
+# Admin User (first login)
+DEFAULT_PASSWORD=F23pADFE!
+```
+
+**Wygeneruj SECRET_KEY:**
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Skopiuj wynik do `SECRET_KEY` w pliku `.env`.
+
+---
+
+## Krok 5: Utworzenie środowiska wirtualnego
 
 ### Windows (PowerShell)
 
@@ -82,7 +186,7 @@ source venv/bin/activate
 
 ---
 
-## Krok 4: Instalacja zależności
+## Krok 6: Instalacja zależności
 
 Z aktywnym `venv`:
 
@@ -112,220 +216,91 @@ pip list | grep flask     # Linux/Mac
 
 ---
 
-## Krok 5: Inicjalizacja bazy danych
+## Krok 7: Inicjalizacja bazy danych
 
-Baza danych nie istnieje na starcie. Musisz ją utworzyć:
-
-### Windows (PowerShell)
-
-```powershell
-python -c "from app import create_app; from models import db; app = create_app(); app.app_context().push(); db.create_all(); print('✅ Baza danych utworzona!')"
-```
-
-### Linux/macOS
+Utwórz schemat bazy danych w PostgreSQL:
 
 ```bash
-python -c "from app import create_app; from models import db; app = create_app(); app.app_context().push(); db.create_all(); print('✅ Baza danych utworzona!')"
+python -c "from app import create_app; from models import db; from config import DevelopmentConfig; app = create_app(DevelopmentConfig); app.app_context().push(); db.create_all(); print('✅ Tabele utworzone')"
 ```
 
 **Oczekiwany wynik:**
 ```
-✅ Baza danych utworzona!
+✅ Tabele utworzone
 ```
 
 ---
 
-## Krok 6: Utworzenie użytkownika administratora
+## Krok 8: Utworzenie użytkownika administratora
 
-### Automatyczne (szybkie)
+Użyj dedykowanego skryptu do utworzenia użytkownika admin:
 
-```powershell
-# Windows
-python -c "
-from app import create_app
-from models import db, User
-
-app = create_app()
-ctx = app.app_context()
-ctx.push()
-
-admin_password = 'admin'  # Zmień to na bezpieczne hasło!
-admin = User(
-    username='admin',
-    is_admin=True,
-    can_view=True,
-    can_add=True,
-    can_edit=True,
-    can_delete=True,
-    can_move=True,
-    can_copy=True,
-    can_upload_sds=True,
-    can_add_location=True,
-    can_delete_location=True
-)
-admin.set_password(admin_password)
-db.session.add(admin)
-db.session.commit()
-print(f'✅ Admin user created! Username: admin, Password: {admin_password}')
-"
+```bash
+python create_admin.py
 ```
 
 **Oczekiwany wynik:**
 ```
-✅ Admin user created! Username: admin, Password: admin
+Admin user created successfully!
+Username: admin
+Password: F23pADFE!
 ```
 
-**Zmień hasło admina!** Użyj hasła zawierającego:
-- Co najmniej 8 znaków
-- Wielkie i małe litery
-- Cyfry
-- Znaki specjalne (!@#$%^&*)
+**WAŻNE:** Zmień hasło po pierwszym logowaniu!
+
+Hasło jest pobierane z pliku `.env` (zmienna `DEFAULT_PASSWORD`). Możesz je zmienić przed utworzeniem admina.
 
 ---
 
-## Krok 7: Import danych - Baza CLP
+## Krok 9: Import danych - Baza CLP
 
 Upewnij się że plik `substancje_baza.xlsx` jest w głównym katalogu projektu!
 
-### Import substancji z Excela
-
-```powershell
-# Windows
-python -c "
-from app import create_app
-from models import db, ExcelSourceSubstance
-import pandas as pd
-import os
-
-app = create_app()
-ctx = app.app_context()
-ctx.push()
-
-excel_path = os.path.join(os.getcwd(), 'substancje_baza.xlsx')
-
-if not os.path.exists(excel_path):
-    print(f'❌ Błąd: Plik {excel_path} nie istnieje')
-else:
-    print('📊 Wczytywanie substancji z Excela...')
-    df = pd.read_excel(excel_path, header=0, skiprows=[1])
-    print(f'📝 Wczytano {len(df)} wierszy')
-    
-    column_map = {
-        'International Chemical Identification': 'name',
-        'CAS No': 'cas',
-        'EC No': 'ec_number',
-        'Classification': 'classification',
-        'Unnamed: 5': 'h_phrases',
-        'Specific Conc. Limits, M-factors': 'scl_mfactor'
-    }
-    
-    df.rename(columns=column_map, inplace=True)
-    df = df[list(column_map.values())]
-    
-    print('🗑️ Czyszczenie starej bazy...')
-    db.session.query(ExcelSourceSubstance).delete()
-    db.session.commit()
-    
-    print('📥 Importowanie nowych danych...')
-    data = df.to_dict(orient='records')
-    db.session.bulk_insert_mappings(ExcelSourceSubstance, data)
-    db.session.commit()
-    
-    print(f'✅ Import CLP ukończony! Dodano {len(data)} substancji.')
-"
+```bash
+python import_excel.py
 ```
 
 **Oczekiwany wynik:**
 ```
 📊 Wczytywanie substancji z Excela...
 📝 Wczytano 4400 wierszy
-🗑️ Czyszczenie starej bazy...
-📥 Importowanie nowych danych...
+📥 Importowanie danych...
 ✅ Import CLP ukończony! Dodano 4400 substancji.
 ```
 
 ---
 
-## Krok 8: Import danych - Lista SVHC
+## Krok 10: Import danych - Lista SVHC
 
 Upewnij się że plik `svhc.xlsx` jest w głównym katalogu projektu!
 
-### Import SVHC
-
-```powershell
-# Windows
-python -c "
-from app import create_app
-from models import db, SVHCSubstance
-import pandas as pd
-import os
-
-app = create_app()
-ctx = app.app_context()
-ctx.push()
-
-svhc_path = os.path.join(os.getcwd(), 'svhc.xlsx')
-
-if not os.path.exists(svhc_path):
-    print(f'❌ Błąd: Plik {svhc_path} nie istnieje')
-else:
-    print('📊 Wczytywanie SVHC z Excela...')
-    df = pd.read_excel(svhc_path, header=0)
-    print(f'📝 Wczytano {len(df)} wierszy')
-    
-    column_map = {
-        'Nazwa substancji ': 'name',
-        'Nr WE': 'ec_number',
-        'Nr CAS': 'cas',
-        'Powód włączenia ': 'reason',
-        'Data włączenia ': 'date_inclusion'
-    }
-    
-    df.rename(columns=column_map, inplace=True)
-    
-    for col in ['name', 'cas', 'ec_number', 'reason', 'date_inclusion']:
-        if col not in df.columns:
-            df[col] = None
-    
-    df = df[['name', 'cas', 'ec_number', 'reason', 'date_inclusion']]
-    
-    print('🗑️ Czyszczenie starej listy SVHC...')
-    db.session.query(SVHCSubstance).delete()
-    db.session.commit()
-    
-    print('📥 Importowanie SVHC...')
-    data = df.to_dict(orient='records')
-    db.session.bulk_insert_mappings(SVHCSubstance, data)
-    db.session.commit()
-    
-    print(f'✅ Import SVHC ukończony! Dodano {len(data)} substancji SVHC.')
-"
+```bash
+python import_svhc.py
 ```
 
 **Oczekiwany wynik:**
 ```
 📊 Wczytywanie SVHC z Excela...
 📝 Wczytano 492 wierszy
-🗑️ Czyszczenie starej listy SVHC...
 📥 Importowanie SVHC...
 ✅ Import SVHC ukończony! Dodano 492 substancji SVHC.
 ```
 
 ---
 
-## Krok 9: Uruchomienie aplikacji
+## Krok 11: Uruchomienie aplikacji
 
 ### Tryb deweloperski (development)
 
-```powershell
+```bash
 python app.py
 ```
 
 Powinieneś zobaczyć:
 
 ```
-UWAGA: Wygenerowano tymczasowy SECRET_KEY dla środowiska developerskiego.
  * Running on http://127.0.0.1:5000
+ * Debug mode: on
 ```
 
 Otwórz przeglądarkę: `http://127.0.0.1:5000`
@@ -334,7 +309,20 @@ Otwórz przeglądarkę: `http://127.0.0.1:5000`
 
 - **URL:** `http://127.0.0.1:5000`
 - **Login:** `admin`
-- **Hasło:** to hasło które ustawiłeś w Kroku 6
+- **Hasło:** `F23pADFE!` (lub hasło z pliku `.env`)
+
+### Testy (opcjonalnie)
+
+Sprawdź czy wszystko działa poprawnie:
+
+```bash
+# Uruchom wszystkie testy
+python -m pytest tests/ -v
+
+# Oczekiwany wynik: 242 passed
+```
+
+Jeśli wszystkie testy przechodzą - aplikacja jest gotowa! ✅
 
 ---
 
@@ -475,6 +463,6 @@ W razie trwałych problemów zachowaj:
 
 ---
 
-**Data aktualizacji:** 19.10.2025
+**Data aktualizacji:** 22.10.2025
 
-**Wersja:** 2.0 (z zabezpieczeniami i rate limitingiem)
+**Wersja:** 2.0.0 (PostgreSQL, testy automatyczne, production-ready)

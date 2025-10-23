@@ -54,15 +54,15 @@ class Config:
     if not DEFAULT_ADMIN_PASSWORD:
         if os.environ.get('FLASK_ENV') == 'production':
             raise ValueError(
-                "❌ ERROR: Musisz ustawić zmienną środowiskową 'CHEM_MAN_ADMIN_PASSWORD' w produkcji! "
-                "Aplikacja nie będzie działać bez ustawienia bezpiecznego hasła administratora."
+                "ERROR: Musisz ustawic zmienna srodowiskowa 'CHEM_MAN_ADMIN_PASSWORD' w produkcji! "
+                "Aplikacja nie bedzie dzialac bez ustawienia bezpiecznego hasla administratora."
             )
         else:
             # W developmencie - wygeneruj losowe hasło
             import secrets
             DEFAULT_ADMIN_PASSWORD = secrets.token_urlsafe(16)
-            print(f"⚠️  DEVELOPMENT: Wygenerowano tymczasowe hasło admina: {DEFAULT_ADMIN_PASSWORD}")
-            print("   W produkcji ustaw CHEM_MAN_ADMIN_PASSWORD w zmiennych środowiskowych!")
+            print(f"WARNING: DEVELOPMENT: Wygenerowano tymczasowe haslo admina: {DEFAULT_ADMIN_PASSWORD}")
+            print("         W produkcji ustaw CHEM_MAN_ADMIN_PASSWORD w zmiennych srodowiskowych!")
     
     # Liczba rekordów na stronie w widokach z paginacją
     ITEMS_PER_PAGE = 25
@@ -91,21 +91,47 @@ class DevelopmentConfig(Config):
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        
+
         # Dodatkowa konfiguracja dla trybu debug
         app.logger.setLevel('DEBUG')
+
+        # Konfiguracja logowania do pliku (również w developmencie)
+        import logging
+        from logging.handlers import RotatingFileHandler
+
+        log_folder = os.path.join(basedir, 'logs')
+        os.makedirs(log_folder, exist_ok=True)
+
+        # Mniejsze pliki logów dla developmentu (5 MB, 5 kopii)
+        file_handler = RotatingFileHandler(
+            os.path.join(log_folder, 'chem_man_dev.log'),
+            maxBytes=5 * 1024 * 1024,  # 5 MB
+            backupCount=5
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+        ))
+        file_handler.setLevel(logging.DEBUG)
+
+        app.logger.addHandler(file_handler)
 
 
 # Konfiguracja dla środowiska testowego
 class TestingConfig(Config):
     """Konfiguracja dla środowiska testowego."""
     TESTING = True
-    
+
     # Użyj bazy danych w pamięci dla testów
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    
+
     # Upewnij się, że hasło testowe jest bezpieczne
     DEFAULT_ADMIN_PASSWORD = 'test_admin'
+
+    # Disable CSRF protection for testing
+    WTF_CSRF_ENABLED = False
+
+    # Disable rate limiting for testing
+    RATELIMIT_ENABLED = False
     
     @classmethod
     def init_app(cls, app):

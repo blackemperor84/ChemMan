@@ -124,8 +124,8 @@ def add_user():
     # Walidacja
     if not new_username or not new_password:
         flash('Nazwa użytkownika i hasło są wymagane.', 'error')
-    elif len(new_password) < 4:  # Przykładowa minimalna długość hasła
-        flash('Hasło musi mieć co najmniej 4 znaki.', 'error')
+    elif len(new_password) < 8:  # Minimalna długość hasła
+        flash('Hasło musi mieć co najmniej 8 znaków.', 'error')
     elif User.query.filter_by(username=new_username).first():
         flash(f'Użytkownik "{new_username}" już istnieje.', 'error')
     else:

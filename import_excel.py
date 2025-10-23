@@ -31,21 +31,31 @@ with app.app_context():
     # Zachowaj tylko zmapowane kolumny
     df = df[list(column_map.values())]
     
-    # Import
+    # Import - convert all values to strings, handle NaN
     count = 0
     for idx, row in df.iterrows():
+        # Convert to string and handle NaN/None
+        def safe_str(val):
+            if pd.isna(val):
+                return None
+            return str(val)
+
         substance = ExcelSourceSubstance(
-            name=row['name'],
-            cas=row['cas'],
-            ec_number=row['ec_number'],
-            classification=row['classification'],
-            h_phrases=row['h_phrases'],
-            scl_mfactor=row['scl_mfactor']
+            name=safe_str(row['name']),
+            cas=safe_str(row['cas']),
+            ec_number=safe_str(row['ec_number']),
+            classification=safe_str(row['classification']),
+            h_phrases=safe_str(row['h_phrases']),
+            scl_mfactor=safe_str(row['scl_mfactor'])
         )
         db.session.add(substance)
         count += 1
         if count % 100 == 0:
             print(f"Zaimportowano {count}...")
-    
-    db.session.commit()
+            db.session.commit()  # Commit in batches
+
+    # Final commit for remaining records
+    if count % 100 != 0:
+        db.session.commit()
+
     print(f"Gotowe! Zaimportowano {count} substancji!")

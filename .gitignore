@@ -1,0 +1,77 @@
+# ==========================================
+# ChemMan - Git Ignore File
+# ==========================================
+
+# Environment variables (SECURITY: NEVER commit .env!)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Uploaded files (SDS PDFs)
+# Note: You may want to back these up separately!
+uploads/
+instance/uploads/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Backup files
+*_backup.py
+*.bak
+
+# OS
+Thumbs.db
+.DS_Store

@@ -19,12 +19,17 @@ class Location(db.Model):
     # cascade="all, delete-orphan" zapewnia usunięcie substancji przy usuwaniu lokalizacji
     substances = db.relationship('Substance', backref='location', lazy=True, cascade="all, delete-orphan")
 
-    def update_modification_time(self):
-        """Aktualizuje pole last_modified na aktualny czas."""
+    def update_modification_time(self) -> 'Location':
+        """
+        Aktualizuje pole last_modified na aktualny czas.
+
+        Returns:
+            Location: Zwraca samego siebie dla łańcuchowania metod
+        """
         self.last_modified = datetime.utcnow()
         return self
-    
-    def __repr__(self):
+
+    def __repr__(self) -> str:
         return f'<Location {self.name}>'
 
 class Substance(db.Model):
@@ -32,9 +37,9 @@ class Substance(db.Model):
     __tablename__ = 'substances'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    cas = db.Column(db.String(20), nullable=True)
-    ec_number = db.Column(db.String(20), nullable=True)  # Dodanie numeru WE
+    name = db.Column(db.Text, nullable=False)  # TEXT dla bardzo długich nazw (do 2048 chars)
+    cas = db.Column(db.Text, nullable=True)  # TEXT dla list numerów CAS (do 484 chars)
+    ec_number = db.Column(db.Text, nullable=True)  # TEXT dla list numerów EC (do 441 chars)
     classification = db.Column(db.Text, nullable=True)
     h_phrases = db.Column(db.Text, nullable=True)
     scl_mfactor = db.Column(db.Text, nullable=True)
@@ -46,7 +51,7 @@ class Substance(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
     physical_location = db.Column(db.String(50), nullable=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Substance {self.name} (CAS: {self.cas}) in Loc {self.location_id}>'
 
 class User(db.Model, UserMixin):
@@ -59,11 +64,26 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)  # Dodane pole dla uprawnień administratora
 
     # Metoda ustawiająca (hashująca) hasło
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
+        """
+        Ustawia hasło użytkownika (hashuje i zapisuje).
+
+        Args:
+            password: Hasło w formie jawnej (plaintext)
+        """
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
     # Metoda sprawdzająca hasło
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
+        """
+        Sprawdza, czy podane hasło jest poprawne.
+
+        Args:
+            password: Hasło w formie jawnej do sprawdzenia
+
+        Returns:
+            bool: True jeśli hasło poprawne, False w przeciwnym razie
+        """
         return bcrypt.check_password_hash(self.password_hash, password)
     
     # Pola uprawnień
@@ -77,7 +97,7 @@ class User(db.Model, UserMixin):
     can_add_location = db.Column(db.Boolean, default=False)  # Może dodawać lokalizacje
     can_delete_location = db.Column(db.Boolean, default=False)  # Może usuwać lokalizacje
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<User {self.username}>'
 
 class AuditLog(db.Model):
@@ -96,7 +116,7 @@ class AuditLog(db.Model):
     # Relacja do użytkownika (opcjonalna)
     user = db.relationship('User', backref='audit_logs', lazy=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<AuditLog {self.timestamp} - {self.username} - {self.action}>'
     
 
@@ -106,14 +126,14 @@ class ExcelSourceSubstance(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     # Kolumny odpowiadające tym w Excelu, które chcesz przeszukiwać/wyświetlać
-    name = db.Column(db.String(255), index=True) # Dodajemy indeks dla szybszego wyszukiwania
-    cas = db.Column(db.String(20), index=True)   # Dodajemy indeks
-    ec_number = db.Column(db.String(20), index=True) # Dodajemy indeks
+    name = db.Column(db.Text)  # TEXT dla bardzo długich nazw (do 2048 chars)
+    cas = db.Column(db.Text)  # TEXT dla list numerów CAS (do 484 chars)
+    ec_number = db.Column(db.Text)  # TEXT dla list numerów EC (do 441 chars)
     classification = db.Column(db.Text, nullable=True)
     h_phrases = db.Column(db.Text, nullable=True)
     scl_mfactor = db.Column(db.Text, nullable=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<ExcelSourceSubstance {self.name} (CAS: {self.cas})>'
 
 class SVHCSubstance(db.Model):
@@ -121,11 +141,11 @@ class SVHCSubstance(db.Model):
     __tablename__ = 'svhc_substances'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True)
-    cas = db.Column(db.String(20), index=True)
-    ec_number = db.Column(db.String(20), index=True)
+    name = db.Column(db.Text)  # TEXT dla bardzo długich nazw
+    cas = db.Column(db.Text)  # TEXT dla list numerów CAS
+    ec_number = db.Column(db.Text)  # TEXT dla list numerów EC
     reason = db.Column(db.Text, nullable=True)
     date_inclusion = db.Column(db.String(50), nullable=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<SVHCSubstance {self.name} (CAS: {self.cas})>'
