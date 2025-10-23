@@ -75,3 +75,11 @@ htmlcov/
 # OS
 Thumbs.db
 .DS_Store
+
+# Claude Code
+.claude/
+
+# Demo build artifacts
+DEMO/dist/
+DEMO/build/
+DEMO/__pycache__/

@@ -21,6 +21,9 @@ def init_db_command():
         
         # Tworzenie domyślnego konta administratora
         try:
+            # Pobierz hasło administratora z konfiguracji (z .env)
+            admin_password = current_app.config.get('DEFAULT_ADMIN_PASSWORD', 'admin')
+
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:
                 admin_user = User(
@@ -34,10 +37,10 @@ def init_db_command():
                     can_copy=True,
                     can_upload_sds=True
                 )
-                admin_user.set_password('admin')  # Domyślne hasło
+                admin_user.set_password(admin_password)
                 db.session.add(admin_user)
                 db.session.commit()
-                current_app.logger.info("Domyślne konto administratora zostało utworzone.")
+                current_app.logger.info(f"Domyślne konto administratora zostało utworzone z hasłem z konfiguracji.")
             else:
                 # Upewnij się, że admin ma wszystkie uprawnienia
                 admin_user.is_admin = True
@@ -48,8 +51,10 @@ def init_db_command():
                 admin_user.can_move = True
                 admin_user.can_copy = True
                 admin_user.can_upload_sds = True
+                # Zaktualizuj hasło do tego z konfiguracji
+                admin_user.set_password(admin_password)
                 db.session.commit()
-                current_app.logger.info("Uprawnienia konta administratora zaktualizowane.")
+                current_app.logger.info(f"Uprawnienia i hasło konta administratora zaktualizowane z konfiguracji.")
         except Exception as admin_err:
             current_app.logger.error(f"Błąd podczas konfiguracji konta admin: {admin_err}")
         
