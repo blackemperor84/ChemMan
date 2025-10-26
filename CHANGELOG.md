@@ -227,33 +227,6 @@ Pierwsza stabilna wersja systemu ChemMan.
 
 ---
 
-## [Niezwydane] - W przygotowaniu
-
-### 🔮 Planowane funkcje
-
-**v1.1.0 (Q2 2025):**
-- [ ] Filtrowanie po dacie dodania substancji
-- [ ] Historia zmian dla pojedynczej substancji
-- [ ] Eksport do Excel (XLSX) zamiast CSV
-- [ ] Powiadomienia email dla administratorów
-- [ ] Integracja z zewnętrznym API ECHA (aktualizacje)
-
-**v1.2.0 (Q3 2025):**
-- [ ] Moduł raportowania (raporty PDF)
-- [ ] Zaawansowane statystyki i wykresy
-- [ ] Multi-tenancy (wiele firm w jednej instancji)
-- [ ] REST API dla integracji z innymi systemami
-- [ ] Import substancji z CSV
-
-**v2.0.0 (Q4 2025):**
-- [ ] Przeprojektowanie UI (nowoczesny framework)
-- [ ] Migracja z SQLite na PostgreSQL
-- [ ] System powiadomień wewnętrznych
-- [ ] Moduł zarządzania terminami ważności
-- [ ] Skanowanie kodów QR/kreskowych
-
----
-
 ## Typy zmian
 
 - **✨ Dodano** - nowe funkcje
