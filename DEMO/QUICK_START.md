@@ -1,102 +1,102 @@
-# ChemMan Demo - Quick Start Guide
+# ChemMan Demo - Szybki Start
 
-## 🎯 Goal
+## 🎯 Cel
 
-Create a **standalone demo package** that runs without any installation.
+Utworzenie **samodzielnego pakietu demo**, który działa bez instalacji.
 
 ---
 
-## 🚀 Building the Demo Package
+## 🚀 Budowanie pakietu demo
 
-### Prerequisites
+### Wymagania wstępne
 
-You only need:
-- Python 3.11+ (already installed if you're running the dev version)
-- All dependencies from `requirements.txt` (already installed)
+Potrzebujesz tylko:
+- Python 3.11+ (już zainstalowany, jeśli uruchamiasz wersję deweloperską)
+- Wszystkie zależności z `requirements.txt` (już zainstalowane)
 
-### Step-by-Step Build Process
+### Krok po kroku budowania
 
 #### Windows
 
 ```powershell
-# 1. Go to DEMO folder
+# 1. Przejdź do folderu DEMO
 cd DEMO
 
-# 2. Run the build script
+# 2. Uruchom skrypt budowania
 build_demo_package.bat
 
-# 3. Wait for build to complete (3-5 minutes)
+# 3. Poczekaj na zakończenie budowania (3-5 minut)
 
-# 4. Package is ready in: dist\ChemMan_Demo\
+# 4. Pakiet gotowy w: dist\ChemMan_Demo\
 ```
 
 #### Linux/Mac
 
 ```bash
-# 1. Go to DEMO folder
+# 1. Przejdź do folderu DEMO
 cd DEMO
 
-# 2. Make script executable
+# 2. Nadaj uprawnienia wykonywania skryptowi
 chmod +x build_demo_package.sh
 
-# 3. Run the build script
+# 3. Uruchom skrypt budowania
 ./build_demo_package.sh
 
-# 4. Wait for build to complete (3-5 minutes)
+# 4. Poczekaj na zakończenie budowania (3-5 minut)
 
-# 5. Package is ready in: dist/ChemMan_Demo/
+# 5. Pakiet gotowy w: dist/ChemMan_Demo/
 ```
 
 ---
 
-## 📦 What Gets Created
+## 📦 Co zostanie utworzone
 
-After building, you'll have:
+Po zbudowaniu będziesz mieć:
 
 ```
 dist/ChemMan_Demo/
-├── START_CHEMMAN_DEMO.bat     # ← Double-click this to run (Windows)
-├── START_CHEMMAN_DEMO.sh      # ← Run this on Linux/Mac
-├── chemman_demo.exe           # Main executable (Windows)
-├── chemman_demo               # Main executable (Linux/Mac)
-├── demo_chemman.db            # Database with all data
-├── static/                    # Web assets
-├── templates/                 # HTML templates
-├── substancje_baza.xlsx       # CLP data (backup)
-├── svhc.xlsx                  # SVHC data (backup)
-├── README.txt                 # Instructions
-└── [many DLL/SO files]        # Dependencies
+├── START_CHEMMAN_DEMO.bat     # ← Dwukrotnie kliknij, aby uruchomić (Windows)
+├── START_CHEMMAN_DEMO.sh      # ← Uruchom na Linux/Mac
+├── chemman_demo.exe           # Główny plik wykonywalny (Windows)
+├── chemman_demo               # Główny plik wykonywalny (Linux/Mac)
+├── demo_chemman.db            # Baza danych ze wszystkimi danymi
+├── static/                    # Zasoby webowe
+├── templates/                 # Szablony HTML
+├── substancje_baza.xlsx       # Dane CLP (backup)
+├── svhc.xlsx                  # Dane SVHC (backup)
+├── README.txt                 # Instrukcje
+└── [wiele plików DLL/SO]      # Zależności
 
-Total size: ~150 MB
+Całkowity rozmiar: ~150 MB
 ```
 
 ---
 
-## ✅ Testing the Demo
+## ✅ Testowanie demo
 
-### On Your Machine (Before Distribution)
+### Na Twoim komputerze (przed dystrybucją)
 
 ```bash
-# 1. Go to the built package
+# 1. Przejdź do zbudowanego pakietu
 cd dist/ChemMan_Demo
 
-# 2. Windows: Double-click START_CHEMMAN_DEMO.bat
+# 2. Windows: Dwukrotnie kliknij START_CHEMMAN_DEMO.bat
 #    Linux/Mac: ./START_CHEMMAN_DEMO.sh
 
-# 3. Browser opens automatically to http://127.0.0.1:5000
+# 3. Przeglądarka otworzy się automatycznie na http://127.0.0.1:5000
 
-# 4. Login:
-#    Username: admin
-#    Password: Demo1234
+# 4. Logowanie:
+#    Nazwa użytkownika: admin
+#    Hasło: Demo1234
 
-# 5. Test all features!
+# 5. Przetestuj wszystkie funkcje!
 ```
 
 ---
 
-## 📤 Distributing the Demo
+## 📤 Dystrybucja demo
 
-### Option 1: ZIP File (Recommended)
+### Opcja 1: Plik ZIP (zalecane)
 
 ```powershell
 # Windows
@@ -106,174 +106,174 @@ Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.0.0.zi
 tar -czf ChemMan_Demo_v2.0.0.tar.gz -C dist ChemMan_Demo
 ```
 
-Send this ZIP file to anyone:
-- ✅ No installation needed
-- ✅ Works offline
-- ✅ Portable (can run from USB)
+Wyślij ten plik ZIP do każdego:
+- ✅ Nie wymaga instalacji
+- ✅ Działa offline
+- ✅ Przenośny (może działać z USB)
 
-### Option 2: Network Share
+### Opcja 2: Udział sieciowy
 
-Copy `ChemMan_Demo/` folder to:
-- Company network drive
+Skopiuj folder `ChemMan_Demo/` do:
+- Dysku sieciowego firmy
 - SharePoint
-- USB stick
+- Pendrive USB
 
-### Option 3: Cloud Storage
+### Opcja 3: Przechowywanie w chmurze
 
-Upload ZIP to:
+Prześlij ZIP do:
 - Google Drive
 - OneDrive
-- Company file server
+- Serwera plików firmy
 
 ---
 
-## 🎬 Demo Scenarios
+## 🎬 Scenariusze demo
 
-### Quick Demo (5 min)
+### Szybkie demo (5 min)
 
-1. Start application
-2. Login as admin
-3. Show dashboard
-4. Add a location
-5. Search for "Benzene" and add to location
-6. Show CMR automatic detection
-7. Export data to CSV
+1. Uruchom aplikację
+2. Zaloguj się jako admin
+3. Pokaż panel główny
+4. Dodaj lokalizację
+5. Wyszukaj "Benzen" i dodaj do lokalizacji
+6. Pokaż automatyczną detekcję CMR
+7. Eksportuj dane do CSV
 
-### Full Demo (15 min)
+### Pełne demo (15 min)
 
-1. All of above, plus:
-2. Show all 4400+ substances
-3. Demonstrate advanced filters
-4. Upload SDS file
-5. Show user management
-6. Show audit log
-7. Demonstrate bilingual interface
+1. Wszystko powyżej, plus:
+2. Pokaż wszystkie 4400+ substancji
+3. Zademonstruj zaawansowane filtry
+4. Prześlij plik SDS
+5. Pokaż zarządzanie użytkownikami
+6. Pokaż dziennik audytu
+7. Zademonstruj dwujęzyczny interfejs
 
 ---
 
-## 🛠️ Troubleshooting Build Issues
+## 🛠️ Rozwiązywanie problemów z budowaniem
 
-### Issue: "PyInstaller not found"
+### Problem: "PyInstaller nie znaleziony"
 
-**Solution:**
+**Rozwiązanie:**
 ```bash
 pip install pyinstaller
 ```
 
-### Issue: "ModuleNotFoundError during build"
+### Problem: "ModuleNotFoundError podczas budowania"
 
-**Solution:**
+**Rozwiązanie:**
 ```bash
-# Reinstall all dependencies
+# Przeinstaluj wszystkie zależności
 cd ..
 pip install -r requirements.txt
 cd DEMO
 ```
 
-### Issue: "substancje_baza.xlsx not found"
+### Problem: "substancje_baza.xlsx nie znaleziony"
 
-**Solution:**
-- Make sure Excel files are in parent directory
-- Check file names are exactly:
+**Rozwiązanie:**
+- Upewnij się, że pliki Excel są w katalogu nadrzędnym
+- Sprawdź, czy nazwy plików są dokładnie:
   - `substancje_baza.xlsx`
   - `svhc.xlsx`
 
-### Issue: "Build takes too long (>10 min)"
+### Problem: "Budowanie trwa zbyt długo (>10 min)"
 
-**Solution:**
-- This is normal on first build
-- Subsequent builds are faster
-- Close antivirus temporarily (it slows down PyInstaller)
+**Rozwiązanie:**
+- To normalne przy pierwszym budowaniu
+- Kolejne budowania są szybsze
+- Tymczasowo zamknij antywirus (spowalnia PyInstaller)
 
-### Issue: "Executable doesn't run"
+### Problem: "Plik wykonywalny się nie uruchamia"
 
-**Solution:**
-1. Check antivirus - add exception for ChemMan_Demo folder
-2. Run from command line to see error messages
-3. Check `demo_chemman.log` file
+**Rozwiązanie:**
+1. Sprawdź antywirus - dodaj wyjątek dla folderu ChemMan_Demo
+2. Uruchom z linii poleceń, aby zobaczyć komunikaty błędów
+3. Sprawdź plik `demo_chemman.log`
 
 ---
 
-## 🔄 Updating the Demo
+## 🔄 Aktualizacja demo
 
-When you update the main application:
+Gdy aktualizujesz główną aplikację:
 
 ```bash
-# 1. Pull latest changes
+# 1. Pobierz najnowsze zmiany
 git pull origin master
 
-# 2. Rebuild demo
+# 2. Przebuduj demo
 cd DEMO
-build_demo_package.bat  # or .sh
+build_demo_package.bat  # lub .sh
 
-# 3. New package ready in dist/
+# 3. Nowy pakiet gotowy w dist/
 ```
 
 ---
 
-## ⚠️ Important Notes
+## ⚠️ Ważne uwagi
 
-### Demo Limitations
+### Ograniczenia demo
 
-- ❌ **Not for production use!**
-- ✅ Demo/presentation purposes only
-- ⚠️ Data persists (unless you delete database)
-- ⚠️ No network access (runs locally only)
+- ❌ **Nie do użytku produkcyjnego!**
+- ✅ Tylko do celów demo/prezentacyjnych
+- ⚠️ Dane są trwałe (chyba że usuniesz bazę danych)
+- ⚠️ Brak dostępu sieciowego (działa tylko lokalnie)
 
-### Security
+### Bezpieczeństwo
 
-- Demo password is **simple by design** (Demo1234 - meets 8-char requirement)
-- Don't use demo package for real data
-- For production, use full deployment (DEPLOYMENT_GUIDE.md)
+- Hasło demo jest **proste z założenia** (Demo1234 - spełnia wymaganie 8 znaków)
+- Nie używaj pakietu demo do rzeczywistych danych
+- Do produkcji użyj pełnego wdrożenia (DEPLOYMENT_GUIDE.md)
 
-### Performance
+### Wydajność
 
-- First startup may be slow (2-3 seconds)
-- Subsequent starts are faster
-- SQLite is slower than PostgreSQL (expected)
-
----
-
-## 📊 Build Time Estimates
-
-| Task | Time |
-|------|------|
-| Install PyInstaller | 30 sec |
-| Build demo database | 1 min |
-| PyInstaller build | 2-5 min |
-| **Total** | **3-7 min** |
-
-### File Sizes
-
-| Item | Size |
-|------|------|
-| Executable + DLLs | ~100 MB |
-| Database | ~40 MB |
-| Static files | ~5 MB |
-| **Total Package** | **~150 MB** |
-| **ZIP file** | **~50 MB** |
+- Pierwsze uruchomienie może być wolne (2-3 sekundy)
+- Kolejne uruchomienia są szybsze
+- SQLite jest wolniejsze niż PostgreSQL (oczekiwane)
 
 ---
 
-## ✅ Checklist Before Distribution
+## 📊 Szacowany czas budowania
 
-- [ ] Built package successfully
-- [ ] Tested startup script
-- [ ] Logged in with admin/Demo1234
-- [ ] Tested key features (add location, search, export)
-- [ ] Checked database has data (4400+ CLP, 492 SVHC)
-- [ ] Zipped package
-- [ ] Included README_DEMO.md
-- [ ] Prepared presentation/demo script
+| Zadanie | Czas |
+|---------|------|
+| Zainstaluj PyInstaller | 30 sek |
+| Zbuduj bazę danych demo | 1 min |
+| Budowanie PyInstaller | 2-5 min |
+| **Razem** | **3-7 min** |
+
+### Rozmiary plików
+
+| Element | Rozmiar |
+|---------|---------|
+| Plik wykonywalny + DLL | ~100 MB |
+| Baza danych | ~40 MB |
+| Pliki statyczne | ~5 MB |
+| **Pakiet całkowity** | **~150 MB** |
+| **Plik ZIP** | **~50 MB** |
 
 ---
 
-## 🎉 You're Ready!
+## ✅ Lista kontrolna przed dystrybucją
 
-Your standalone demo package is ready to:
-- Show to management
-- Present to clients
-- Demonstrate at meetings
-- Send to remote users
+- [ ] Zbudowano pakiet pomyślnie
+- [ ] Przetestowano skrypt startowy
+- [ ] Zalogowano się danymi admin/Demo1234
+- [ ] Przetestowano kluczowe funkcje (dodaj lokalizację, wyszukaj, eksportuj)
+- [ ] Sprawdzono obecność danych w bazie (4400+ CLP, 492 SVHC)
+- [ ] Spakowano do ZIP
+- [ ] Dołączono README_DEMO.md
+- [ ] Przygotowano scenariusz prezentacji/demo
 
-**Good luck with your presentation!** 🚀
+---
+
+## 🎉 Gotowe!
+
+Twój samodzielny pakiet demo jest gotowy do:
+- Pokazania zarządowi
+- Prezentacji klientom
+- Demonstracji na spotkaniach
+- Wysłania do zdalnych użytkowników
+
+**Powodzenia z prezentacją!** 🚀

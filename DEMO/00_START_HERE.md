@@ -1,54 +1,54 @@
-# ChemMan Demo Package - START HERE! 🚀
+# Pakiet Demo ChemMan - ZACZNIJ TUTAJ! 🚀
 
-**Welcome!** This folder contains everything you need to create a **standalone demo version** of ChemMan that runs without any installation.
-
----
-
-## 🎯 What is This?
-
-This is a **portable demo package system** that converts your ChemMan application into:
-
-- ✅ **Standalone .exe** (Windows) or binary (Linux/Mac)
-- ✅ **No installation required** - just double-click and run
-- ✅ **Pre-loaded with data** - 4400+ CLP + 492 SVHC substances
-- ✅ **Portable** - can run from USB stick
-- ✅ **Perfect for demos/presentations**
+**Witamy!** Ten folder zawiera wszystko, czego potrzebujesz, aby stworzyć **samodzielną wersję demo** ChemMan, która działa bez instalacji.
 
 ---
 
-## 📁 Files in This Folder
+## 🎯 Co to jest?
 
-| File | Purpose |
-|------|---------|
-| `00_START_HERE.md` | This file - read first! |
-| `QUICK_START.md` | Fast build guide |
-| `README_DEMO.md` | Full demo documentation |
-| `build_demo_package.bat` | **Build script (Windows)** ⭐ |
-| `build_demo_package.sh` | Build script (Linux/Mac) |
-| `test_demo.bat` | Test configuration before building |
-| `build_demo.py` | Creates demo database |
-| `config_demo.py` | Demo configuration (SQLite) |
-| `run_demo.py` | Demo application entry point |
-| `chemman_demo.spec` | PyInstaller configuration |
+To jest **przenośny system pakietu demo**, który przekształca Twoją aplikację ChemMan w:
+
+- ✅ **Samodzielny plik .exe** (Windows) lub plik binarny (Linux/Mac)
+- ✅ **Nie wymaga instalacji** - wystarczy dwukrotnie kliknąć i uruchomić
+- ✅ **Wstępnie załadowany z danymi** - 4400+ substancji CLP + 492 substancje SVHC
+- ✅ **Przenośny** - może działać z pendrive USB
+- ✅ **Idealny do demonstracji/prezentacji**
 
 ---
 
-## 🚀 Quick Start (3 Steps)
+## 📁 Pliki w tym folderze
 
-### Step 1: Test Configuration (Optional but Recommended)
+| Plik | Przeznaczenie |
+|------|---------------|
+| `00_START_HERE.md` | Ten plik - przeczytaj jako pierwszy! |
+| `QUICK_START.md` | Szybki przewodnik budowania |
+| `README_DEMO.md` | Pełna dokumentacja demo |
+| `build_demo_package.bat` | **Skrypt budowania (Windows)** ⭐ |
+| `build_demo_package.sh` | Skrypt budowania (Linux/Mac) |
+| `test_demo.bat` | Test konfiguracji przed budowaniem |
+| `build_demo.py` | Tworzy bazę danych demo |
+| `config_demo.py` | Konfiguracja demo (SQLite) |
+| `run_demo.py` | Punkt wejścia aplikacji demo |
+| `chemman_demo.spec` | Konfiguracja PyInstaller |
+
+---
+
+## 🚀 Szybki Start (3 kroki)
+
+### Krok 1: Test konfiguracji (opcjonalnie, ale zalecane)
 
 ```bash
 # Windows
 test_demo.bat
 
-# This checks:
-# - Python is installed
-# - All dependencies present
-# - Excel files exist
-# - Database can be created
+# To sprawdza:
+# - Python jest zainstalowany
+# - Wszystkie zależności obecne
+# - Pliki Excel istnieją
+# - Baza danych może być utworzona
 ```
 
-### Step 2: Build Demo Package
+### Krok 2: Zbuduj pakiet demo
 
 ```bash
 # Windows
@@ -58,220 +58,220 @@ build_demo_package.bat
 chmod +x build_demo_package.sh
 ./build_demo_package.sh
 
-# Wait 3-5 minutes while it builds...
+# Czekaj 3-5 minut podczas budowania...
 ```
 
-### Step 3: Test the Demo
+### Krok 3: Przetestuj demo
 
 ```bash
-# Go to built package
+# Przejdź do zbudowanego pakietu
 cd dist\ChemMan_Demo
 
-# Windows: Double-click
+# Windows: Dwukrotnie kliknij
 START_CHEMMAN_DEMO.bat
 
-# Linux/Mac: Run
+# Linux/Mac: Uruchom
 ./START_CHEMMAN_DEMO.sh
 
-# Browser opens automatically
-# Login: admin / Demo1234
+# Przeglądarka otworzy się automatycznie
+# Logowanie: admin / Demo1234
 ```
 
-**That's it!** 🎉
+**To wszystko!** 🎉
 
 ---
 
-## 📦 What You'll Get
+## 📦 Co otrzymasz
 
-After building, you'll have a `dist/ChemMan_Demo/` folder (~150 MB) containing:
+Po zbudowaniu będziesz mieć folder `dist/ChemMan_Demo/` (~150 MB) zawierający:
 
-- ✅ Executable application
-- ✅ Pre-loaded database (4400 CLP + 492 SVHC)
-- ✅ Admin user (admin/Demo1234)
-- ✅ All templates and static files
-- ✅ Easy startup script
+- ✅ Aplikację wykonywalną
+- ✅ Wstępnie załadowaną bazę danych (4400 CLP + 492 SVHC)
+- ✅ Użytkownika admin (admin/Demo1234)
+- ✅ Wszystkie szablony i pliki statyczne
+- ✅ Łatwy skrypt startowy
 
-**Just ZIP this folder and send to anyone!**
+**Po prostu spakuj ten folder do ZIP i wyślij do kogokolwiek!**
 
 ---
 
-## 📤 Distribution Options
+## 📤 Opcje dystrybucji
 
-### For Internal Demo (Colleagues)
+### Do wewnętrznego demo (koledzy)
 
 ```bash
-# Zip the folder
+# Spakuj folder do ZIP
 # Windows PowerShell:
 Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.0.0.zip
 
-# Send via:
-# - Email (if < 25 MB after compression)
-# - Network share
-# - Cloud storage
+# Wyślij przez:
+# - Email (jeśli < 25 MB po kompresji)
+# - Udział sieciowy
+# - Przechowywanie w chmurze
 ```
 
-### For External Demo (Clients/Partners)
+### Do zewnętrznego demo (klienci/partnerzy)
 
-1. Zip `ChemMan_Demo/` folder
-2. Include `README_DEMO.md` with instructions
-3. Optionally add presentation materials
-4. Send with clear instructions
+1. Spakuj folder `ChemMan_Demo/` do ZIP
+2. Dołącz `README_DEMO.md` z instrukcjami
+3. Opcjonalnie dodaj materiały prezentacyjne
+4. Wyślij z jasnymi instrukcjami
 
-### For Presentation
+### Do prezentacji
 
-1. Copy to presentation laptop
-2. Test before meeting
-3. Have backup on USB stick
-4. Demo login: admin / Demo1234
-
----
-
-## ⏱️ Time Estimates
-
-| Task | Time |
-|------|------|
-| First-time setup | 5-7 min |
-| Subsequent builds | 3-5 min |
-| Distribution (ZIP) | 1 min |
-| **Total** | **6-8 min** |
+1. Skopiuj na laptop prezentacyjny
+2. Przetestuj przed spotkaniem
+3. Miej backup na pendrive USB
+4. Logowanie demo: admin / Demo1234
 
 ---
 
-## 🎬 Use Cases
+## ⏱️ Szacowany czas
 
-### ✅ Perfect For:
-
-- **Management presentations** - "Here's what the system can do"
-- **Client demos** - Show before deployment
-- **Training sessions** - Let users practice
-- **Trade shows** - Portable demo on laptop
-- **Remote evaluation** - Send to decision-makers
-- **Offline demos** - No internet needed
-
-### ❌ Not For:
-
-- Production use
-- Real data storage
-- Multi-user environments
-- Network deployments
-
-**For production:** Use `DEPLOYMENT_GUIDE.md` instead!
+| Zadanie | Czas |
+|---------|------|
+| Pierwsze ustawienie | 5-7 min |
+| Kolejne budowania | 3-5 min |
+| Dystrybucja (ZIP) | 1 min |
+| **Razem** | **6-8 min** |
 
 ---
 
-## 🛠️ Troubleshooting
+## 🎬 Przypadki użycia
 
-### "PyInstaller not found"
+### ✅ Idealne do:
+
+- **Prezentacji dla zarządu** - "Oto co system potrafi"
+- **Demo dla klientów** - Pokaż przed wdrożeniem
+- **Sesje szkoleniowe** - Pozwól użytkownikom ćwiczyć
+- **Targi** - Przenośne demo na laptopie
+- **Zdalna ewaluacja** - Wyślij do decydentów
+- **Demo offline** - Nie wymaga internetu
+
+### ❌ Nie do:
+
+- Użytku produkcyjnego
+- Rzeczywistego przechowywania danych
+- Środowisk wieloużytkownikowych
+- Wdrożeń sieciowych
+
+**Do produkcji:** Użyj `DEPLOYMENT_GUIDE.md` zamiast tego!
+
+---
+
+## 🛠️ Rozwiązywanie problemów
+
+### "PyInstaller nie znaleziony"
 
 ```bash
 pip install pyinstaller
 ```
 
-### "Excel files not found"
+### "Pliki Excel nie znalezione"
 
-Make sure these files are in the **parent directory**:
+Upewnij się, że te pliki są w **katalogu nadrzędnym**:
 - `substancje_baza.xlsx`
 - `svhc.xlsx`
 
-### "Antivirus blocks demo"
+### "Antywirus blokuje demo"
 
-- This is normal for PyInstaller executables
-- Add exception for `ChemMan_Demo` folder
-- Or run `test_demo.bat` first to verify everything works
+- To normalne dla plików wykonywalnych PyInstaller
+- Dodaj wyjątek dla folderu `ChemMan_Demo`
+- Lub uruchom najpierw `test_demo.bat`, aby sprawdzić, czy wszystko działa
 
-### "Build fails"
+### "Budowanie się nie udaje"
 
-1. Run `test_demo.bat` to check configuration
-2. Make sure all dependencies are installed:
+1. Uruchom `test_demo.bat`, aby sprawdzić konfigurację
+2. Upewnij się, że wszystkie zależności są zainstalowane:
    ```bash
    cd ..
    pip install -r requirements.txt
    ```
-3. Check error message in console
+3. Sprawdź komunikat błędu w konsoli
 
 ---
 
-## 📚 Documentation
+## 📚 Dokumentacja
 
-- **`QUICK_START.md`** - Fast building guide
-- **`README_DEMO.md`** - Complete demo documentation
-- **Parent `DEPLOYMENT_GUIDE.md`** - Production deployment
+- **`QUICK_START.md`** - Szybki przewodnik budowania
+- **`README_DEMO.md`** - Kompletna dokumentacja demo
+- **Nadrzędny `DEPLOYMENT_GUIDE.md`** - Wdrożenie produkcyjne
 
 ---
 
-## 🔄 Updating Demo
+## 🔄 Aktualizacja demo
 
-When main application is updated:
+Gdy główna aplikacja zostanie zaktualizowana:
 
 ```bash
-# 1. Pull latest changes (if using git)
+# 1. Pobierz najnowsze zmiany (jeśli używasz git)
 git pull origin master
 
-# 2. Rebuild demo
+# 2. Przebuduj demo
 cd DEMO
 build_demo_package.bat
 
-# 3. New package in dist/
+# 3. Nowy pakiet w dist/
 ```
 
 ---
 
-## ✅ Pre-Distribution Checklist
+## ✅ Lista kontrolna przed dystrybucją
 
-Before sending demo to others:
+Przed wysłaniem demo do innych:
 
-- [ ] Built package successfully
-- [ ] Tested startup (double-click works)
-- [ ] Logged in (admin/Demo1234)
-- [ ] Tested main features:
-  - [ ] Add location
-  - [ ] Search substance
-  - [ ] View CMR detection
-  - [ ] Export to CSV
-- [ ] Checked data is present (4400+ substances)
-- [ ] Created ZIP file
-- [ ] Tested ZIP extraction
-- [ ] Included README
+- [ ] Zbudowano pakiet pomyślnie
+- [ ] Przetestowano uruchomienie (dwukrotne kliknięcie działa)
+- [ ] Zalogowano się (admin/Demo1234)
+- [ ] Przetestowano główne funkcje:
+  - [ ] Dodaj lokalizację
+  - [ ] Wyszukaj substancję
+  - [ ] Zobacz detekcję CMR
+  - [ ] Eksportuj do CSV
+- [ ] Sprawdzono obecność danych (4400+ substancji)
+- [ ] Utworzono plik ZIP
+- [ ] Przetestowano rozpakowanie ZIP
+- [ ] Dołączono README
 
 ---
 
-## 💡 Pro Tips
+## 💡 Wskazówki
 
-1. **Build once, distribute many times** - No need to rebuild for each recipient
+1. **Zbuduj raz, dystrybuuj wiele razy** - Nie trzeba przebudowywać dla każdego odbiorcy
 
-2. **Test on clean machine** - If possible, test on computer without Python/development tools
+2. **Testuj na czystym komputerze** - Jeśli możliwe, przetestuj na komputerze bez Pythona/narzędzi deweloperskich
 
-3. **Prepare demo script** - Know what features to show (see README_DEMO.md for scenarios)
+3. **Przygotuj skrypt demo** - Wiedz, jakie funkcje pokazać (zobacz README_DEMO.md dla scenariuszy)
 
-4. **Keep original** - Save one copy as reference
+4. **Zachowaj oryginał** - Zapisz jedną kopię jako odniesienie
 
-5. **Version your demos** - Add date to ZIP filename:
+5. **Wersjonuj swoje demo** - Dodaj datę do nazwy pliku ZIP:
    ```
    ChemMan_Demo_v2.0.0_2025-10-23.zip
    ```
 
 ---
 
-## 🎯 Next Steps
+## 🎯 Następne kroki
 
-1. **Now:** Run `build_demo_package.bat`
-2. **Test:** Try the demo yourself
-3. **Distribute:** ZIP and send to stakeholders
-4. **Present:** Use demo for your meeting
-5. **Deploy:** When approved, use `DEPLOYMENT_GUIDE.md` for production
-
----
-
-## 📞 Need Help?
-
-- Check `QUICK_START.md` for detailed instructions
-- Review `README_DEMO.md` for full documentation
-- Run `test_demo.bat` to diagnose issues
-- Check parent directory `DEPLOYMENT_GUIDE.md` for production setup
+1. **Teraz:** Uruchom `build_demo_package.bat`
+2. **Testuj:** Wypróbuj demo samodzielnie
+3. **Dystrybuuj:** Spakuj do ZIP i wyślij do interesariuszy
+4. **Prezentuj:** Użyj demo do swojego spotkania
+5. **Wdróż:** Gdy zatwierdzone, użyj `DEPLOYMENT_GUIDE.md` do produkcji
 
 ---
 
-## 🎉 Ready to Build?
+## 📞 Potrzebujesz pomocy?
+
+- Sprawdź `QUICK_START.md` dla szczegółowych instrukcji
+- Przejrzyj `README_DEMO.md` dla pełnej dokumentacji
+- Uruchom `test_demo.bat`, aby zdiagnozować problemy
+- Sprawdź katalog nadrzędny `DEPLOYMENT_GUIDE.md` dla konfiguracji produkcyjnej
+
+---
+
+## 🎉 Gotowy do budowania?
 
 ```bash
 # Windows
@@ -281,9 +281,9 @@ build_demo_package.bat
 ./build_demo_package.sh
 ```
 
-**Good luck with your demo!** 🚀
+**Powodzenia z Twoim demo!** 🚀
 
 ---
 
-**ChemMan v2.0.0 - Demo Package System**
+**ChemMan v2.0.0 - System pakietu demo**
 © 2025 NITROERG
