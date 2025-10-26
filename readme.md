@@ -144,7 +144,7 @@ chem-man/
 
 ## Wsparcie
 
-W razie problemów sprawdź [backend_guide.md](backend_guide.md) - sekcja "Rozwiązywanie problemów".
+W razie problemów sprawdź [BACKEND_GUIDE.md](BACKEND_GUIDE.md) - sekcja "Rozwiązywanie problemów".
 
 ## Licencja
 
