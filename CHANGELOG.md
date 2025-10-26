@@ -286,7 +286,7 @@ Projekt stosuje [Semantic Versioning](https://semver.org/):
 ## Kontakt
 
 Zgłaszanie błędów i propozycji funkcji:
-- Email: [admin@example.com]
+- Email: [l.wichary@nitroerg.pl]
 - GitHub Issues: [URL jeśli jest repo]
 
 ---
