@@ -120,7 +120,7 @@ Obejmuje:
 
 - [📘 Instalacja i konfiguracja](installation.md)
 - [🔧 Konserwacja i aktualizacje](maintenance.md)
-- [⚙️ Przewodnik backendu](backend_guide.md)
+- [⚙️ Przewodnik backendu](BACKEND_GUIDE.md)
 - [👤 Instrukcja użytkownika](user_guide.md)
 
 ## Struktura projektu
