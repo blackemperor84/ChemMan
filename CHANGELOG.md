@@ -287,7 +287,7 @@ Projekt stosuje [Semantic Versioning](https://semver.org/):
 
 Zgłaszanie błędów i propozycji funkcji:
 - Email: [l.wichary@nitroerg.pl]
-- GitHub Issues: [URL jeśli jest repo]
+- GitHub Issues: [https://github.com/blackemperor84/ChemMan/issues](https://github.com/blackemperor84/ChemMan/issues)
 
 ---
 
