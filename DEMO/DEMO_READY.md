@@ -1,365 +1,313 @@
-# ✅ ChemMan Demo Package - READY FOR USE!
+# ✅ Pakiet Demo ChemMan - GOTOWY DO UŻYCIA!
 
-**Build Date:** 2025-10-23
-**Version:** ChemMan v2.0.0 Demo
-**Status:** ✅ **FULLY FUNCTIONAL**
-
----
-
-## 🎉 Success!
-
-Your standalone ChemMan demo is complete and **fully tested**. The demo has been successfully:
-- ✅ Built with PyInstaller
-- ✅ Tested and verified working
-- ✅ Login page loads successfully
-- ✅ All static files serving correctly
-- ✅ Database pre-loaded with 4,892 substances
-- ✅ Ready for distribution
+**Data budowania:** 2025-10-23
+**Wersja:** ChemMan v2.0.0 Demo
+**Status:** ✅ **W PEŁNI FUNKCJONALNY**
 
 ---
 
-## 📦 Package Location
+## 🎉 Sukces!
+
+Twoje samodzielne demo ChemMan jest gotowe i **w pełni przetestowane**. Demo zostało pomyślnie:
+- ✅ Zbudowane z PyInstaller
+- ✅ Przetestowane i zweryfikowane jako działające
+- ✅ Strona logowania ładuje się pomyślnie
+- ✅ Wszystkie pliki statyczne serwowane poprawnie
+- ✅ Baza danych wstępnie załadowana z 4,892 substancjami
+- ✅ Gotowe do dystrybucji
+
+---
+
+## 📦 Lokalizacja pakietu
 
 ```
 DEMO/dist/ChemMan_Demo/
 ```
 
-**Package Size:** 119 MB (uncompressed)
-**Compressed Size:** ~90-100 MB (when zipped)
+**Rozmiar pakietu:** 119 MB (nieskompresowane)
+**Rozmiar skompresowany:** ~90-100 MB (gdy spakowane do ZIP)
 
 ---
 
-## 📋 Package Contents
+## 📋 Zawartość pakietu
 
 ```
 ChemMan_Demo/
-├── START_CHEMMAN_DEMO.bat    ← Double-click to run!
+├── START_CHEMMAN_DEMO.bat    ← Dwukrotnie kliknij, aby uruchomić!
 ├── chemman_demo.exe           (18 MB)
-├── README.txt                 (User documentation)
+├── README.txt                 (Dokumentacja użytkownika)
 └── _internal/
-    ├── demo_chemman.db        (1.7 MB - 4,892 substances)
-    ├── templates/             (HTML templates)
-    ├── static/                (CSS, JS, images)
-    ├── routes/                (Python routes)
-    ├── utils/                 (Utility modules)
-    ├── substancje_baza.xlsx   (CLP database backup)
-    ├── svhc.xlsx              (SVHC database backup)
-    └── [Python libraries]     (Flask, SQLAlchemy, etc.)
+    ├── demo_chemman.db        (1.7 MB - 4,892 substancje)
+    ├── templates/             (Szablony HTML)
+    ├── static/                (CSS, JS, obrazy)
+    ├── routes/                (Trasy Python)
+    ├── utils/                 (Moduły narzędziowe)
+    ├── substancje_baza.xlsx   (Backup bazy CLP)
+    ├── svhc.xlsx              (Backup bazy SVHC)
+    └── [Biblioteki Python]    (Flask, SQLAlchemy, itp.)
 ```
 
 ---
 
-## 🚀 Quick Test (For You)
+## 🚀 Szybki test (dla Ciebie)
 
-**Test the demo right now:**
+**Przetestuj demo teraz:**
 
 ```bash
 cd "DEMO/dist/ChemMan_Demo"
 START_CHEMMAN_DEMO.bat
 ```
 
-- Browser should open automatically to http://127.0.0.1:5000
-- Login page should display correctly
-- Login: **admin** / **Demo1234**
-- Full application ready!
+- Przeglądarka powinna otworzyć się automatycznie na http://127.0.0.1:5000
+- Strona logowania powinna wyświetlić się poprawnie
+- Logowanie: **admin** / **Demo1234**
+- Pełna aplikacja gotowa!
 
-**Expected behavior:**
-1. Console window opens with ChemMan branding
-2. Flask server starts on port 5000
-3. Browser opens automatically after 3 seconds
-4. Login page displays with CSS styling
-5. Login works with admin/Demo1234
-6. Full application interface loads
+**Oczekiwane zachowanie:**
+1. Okno konsoli otwiera się z brandingiem ChemMan
+2. Serwer Flask uruchamia się na porcie 5000
+3. Przeglądarka otwiera się automatycznie po 3 sekundach
+4. Strona logowania wyświetla się ze stylami CSS
+5. Logowanie działa z admin/Demo1234
+6. Interfejs pełnej aplikacji się ładuje
 
 ---
 
-## 📤 Distribution Options
+## 📤 Opcje dystrybucji
 
-### Option 1: ZIP for Email/Download
+### Opcja 1: ZIP do Email/Pobrania
 
 ```powershell
-# Create ZIP file
+# Utwórz plik ZIP
 Compress-Archive -Path "DEMO/dist/ChemMan_Demo" -DestinationPath "ChemMan_Demo_v2.0.0.zip"
 ```
 
-**Recipients:**
-1. Extract ZIP to any location
-2. Double-click `START_CHEMMAN_DEMO.bat`
-3. Login with admin/Demo1234
-4. Demo away!
+**Odbiorcy:**
+1. Rozpakuj ZIP do dowolnej lokalizacji
+2. Dwukrotnie kliknij `START_CHEMMAN_DEMO.bat`
+3. Zaloguj się danymi admin/Demo1234
+4. Demo gotowe!
 
-### Option 2: USB Drive
+### Opcja 2: Pendrive USB
 
-Simply copy the entire `ChemMan_Demo` folder to a USB drive.
-The demo is fully portable and runs from USB without installation.
+Po prostu skopiuj cały folder `ChemMan_Demo` na pendrive USB.
+Demo jest w pełni przenośne i działa z USB bez instalacji.
 
-### Option 3: Network Share
+### Opcja 3: Udział sieciowy
 
-Place the folder on a network share for easy access by multiple people.
-(Note: Each person runs their own instance - not multi-user)
-
----
-
-## ✨ What's Included
-
-### Database
-- ✅ **4,400 CLP substances** (European chemical regulations)
-- ✅ **492 SVHC substances** (Substances of Very High Concern)
-- ✅ **Admin user** (username: admin, password: Demo1234)
-- ✅ **Complete substance data** with hazard classifications
-
-### Functionality
-- ✅ Full search (CLP + SVHC databases)
-- ✅ CMR detection (automatic flagging)
-- ✅ SVHC detection (automatic flagging)
-- ✅ Location management
-- ✅ Substance CRUD operations
-- ✅ File upload (SDS PDFs)
-- ✅ Export to CSV
-- ✅ User management
-- ✅ Audit log
-- ✅ Bilingual interface (Polish/English)
-
-### Technical
-- ✅ No Python installation required
-- ✅ No database installation required
-- ✅ No configuration required
-- ✅ Portable (runs from USB)
-- ✅ Offline (no internet needed)
-- ✅ Windows 7+ compatible
+Umieść folder na udziale sieciowym dla łatwego dostępu wielu osób.
+(Uwaga: Każda osoba uruchamia własną instancję - nie wieloużytkownikowe)
 
 ---
 
-## 🎬 Suggested Demo Script
+## ✨ Co zawiera
 
-### 5-Minute Quick Demo
+### Baza danych
+- ✅ **4,400 substancji CLP** (Europejskie przepisy chemiczne)
+- ✅ **492 substancje SVHC** (Substancje wzbudzające bardzo duże obawy)
+- ✅ **Użytkownik admin** (nazwa użytkownika: admin, hasło: Demo1234)
+- ✅ **Kompletne dane substancji** z klasyfikacjami zagrożeń
 
-1. **Start** (30 sec)
-   - Double-click START_CHEMMAN_DEMO.bat
-   - Login: admin / Demo1234
-   - Show main dashboard
+### Funkcjonalność
+- ✅ Pełne wyszukiwanie (bazy CLP + SVHC)
+- ✅ Detekcja CMR (automatyczne oznaczanie)
+- ✅ Detekcja SVHC (automatyczne oznaczanie)
+- ✅ Zarządzanie lokalizacjami
+- ✅ Operacje CRUD substancji
+- ✅ Przesyłanie plików (PDF SDS)
+- ✅ Eksport do CSV
+- ✅ Zarządzanie użytkownikami
+- ✅ Dziennik audytu
+- ✅ Dwujęzyczny interfejs (Polski/Angielski)
 
-2. **Search** (1.5 min)
-   - Search for "Benzene"
-   - Show CLP database (4400+ substances)
-   - Highlight automatic CMR detection (red indicator)
-   - Show SVHC detection for a SVHC substance
-
-3. **Location Management** (1.5 min)
-   - Navigate to "Lokalizacje" (Locations)
-   - Add location "Main Warehouse"
-   - Add "Benzene" to location
-   - Show substance details with hazard info
-
-4. **Features** (1 min)
-   - Demonstrate search filters
-   - Show export to CSV
-   - Browse substance database
-
-5. **Admin** (30 sec)
-   - Show user management
-   - Show audit log (all activities tracked)
-   - Demonstrate bilingual interface
+### Techniczne
+- ✅ Nie wymaga instalacji Python
+- ✅ Nie wymaga instalacji bazy danych
+- ✅ Nie wymaga konfiguracji
+- ✅ Przenośny (działa z USB)
+- ✅ Offline (nie wymaga internetu)
+- ✅ Kompatybilny z Windows 7+
 
 ---
 
-## ⚠️ Important Notes
+## 🎬 Sugerowany scenariusz demo
 
-### Demo Limitations
-1. **Password is simple** - Demo1234 (intentional for easy demos, meets 8-char requirement)
-2. **SQLite database** - Not PostgreSQL (simpler for standalone demo)
-3. **Single user** - No concurrent users (each instance independent)
-4. **Local only** - No network access between instances
+### 5-minutowe szybkie demo
 
-### Known Issues & Solutions
+1. **Start** (30 sek)
+   - Dwukrotnie kliknij START_CHEMMAN_DEMO.bat
+   - Logowanie: admin / Demo1234
+   - Pokaż główny panel
 
-**Issue: Antivirus may flag the executable**
-- **Cause:** PyInstaller executables sometimes trigger false positives
-- **Solution:** Add exception for ChemMan_Demo folder
-- **Safe:** This is normal and the demo is completely safe
+2. **Wyszukiwanie** (1.5 min)
+   - Wyszukaj "Benzen"
+   - Pokaż bazę CLP (4400+ substancji)
+   - Podkreśl automatyczną detekcję CMR (czerwony wskaźnik)
+   - Pokaż detekcję SVHC dla substancji SVHC
 
-**Issue: Port 5000 must be free**
-- **Cause:** Another app is using port 5000
-- **Solution:** Close apps using port 5000, or wait and try again
+3. **Zarządzanie lokalizacjami** (1.5 min)
+   - Przejdź do "Lokalizacje"
+   - Dodaj lokalizację "Magazyn Główny"
+   - Dodaj "Benzen" do lokalizacji
+   - Pokaż szczegóły substancji z informacjami o zagrożeniach
 
-**Issue: First startup may be slow (2-3 seconds)**
-- **Cause:** Windows unpacking the executable
-- **Solution:** Normal - subsequent starts will be faster
+4. **Funkcje** (1 min)
+   - Zademonstruj filtry wyszukiwania
+   - Pokaż eksport do CSV
+   - Przeglądaj bazę substancji
 
-### Security Notice
-- ✅ Demo is completely separate from production code
-- ✅ No risk to main application
-- ✅ Safe to distribute publicly
-- ✅ No sensitive data included
-- ✅ Default demo password is intentionally weak
-
----
-
-## 📊 Build Statistics
-
-| Metric | Value |
-|--------|-------|
-| **Total Package Size** | 119 MB |
-| **Compressed Size (ZIP)** | ~90-100 MB |
-| **Executable Size** | 18 MB |
-| **Database Size** | 1.7 MB |
-| **CLP Substances** | 4,400 |
-| **SVHC Substances** | 492 |
-| **Python Version** | 3.13.2 (bundled) |
-| **PyInstaller Version** | 6.16.0 |
-| **Build Time** | ~2-3 minutes |
+5. **Admin** (30 sek)
+   - Pokaż zarządzanie użytkownikami
+   - Pokaż dziennik audytu (wszystkie działania śledzone)
+   - Zademonstruj dwujęzyczny interfejs
 
 ---
 
-## 🔧 How It Was Built
+## ⚠️ Ważne uwagi
 
-The demo was built using these components:
+### Ograniczenia demo
+1. **Hasło jest proste** - Demo1234 (celowo dla łatwych demo, spełnia wymaganie 8 znaków)
+2. **Baza danych SQLite** - Nie PostgreSQL (prostsze dla samodzielnego demo)
+3. **Jeden użytkownik** - Brak równoczesnych użytkowników (każda instancja niezależna)
+4. **Tylko lokalnie** - Brak dostępu sieciowego między instancjami
 
-1. **app_demo_wrapper.py** - Mock module wrapper
-   - Mocks flask_migrate and flask_wtf for standalone use
-   - Provides mock CSRF protection with csrf_token
+### Znane problemy i rozwiązania
 
-2. **config_demo.py** - Demo-specific configuration
-   - Uses SQLite instead of PostgreSQL
-   - Sets demo mode flags
-   - Simplified security for demo purposes
+**Problem: Antywirus może flagować plik wykonywalny**
+- **Przyczyna:** Pliki wykonywalne PyInstaller czasami wywołują fałszywe pozytywne
+- **Rozwiązanie:** Dodaj wyjątek dla folderu ChemMan_Demo
+- **Bezpieczne:** To normalne i demo jest całkowicie bezpieczne
 
-3. **demo_chemman.db** - Pre-populated database
-   - Built with build_demo.py script
-   - 4,400 CLP substances imported
-   - 492 SVHC substances imported
-   - Admin user created
+**Problem: Port 5000 musi być wolny**
+- **Przyczyna:** Inna aplikacja używa portu 5000
+- **Rozwiązanie:** Zamknij aplikacje używające portu 5000 lub poczekaj i spróbuj ponownie
 
-4. **chemman_demo.spec** - PyInstaller configuration
-   - Bundles all dependencies
-   - Includes templates, static files, routes
-   - Packages database and Excel files
-   - Creates standalone executable
+**Problem: Pierwsze uruchomienie może być wolne (2-3 sekundy)**
+- **Przyczyna:** Windows rozpakowuje plik wykonywalny
+- **Rozwiązanie:** Normalne - kolejne uruchomienia będą szybsze
 
-5. **run_demo.py** - Entry point
-   - Auto-opens browser
-   - Starts Flask server
-   - User-friendly console output
-
----
-
-## 🎯 Use Cases
-
-### Perfect For:
-- ✅ Management presentations
-- ✅ Client demonstrations
-- ✅ Sales presentations
-- ✅ Training sessions
-- ✅ Trade shows / conferences
-- ✅ Remote evaluation by clients
-- ✅ Proof of concept demos
-- ✅ Quick feature showcases
-
-### Not For:
-- ❌ Production use
-- ❌ Real data storage
-- ❌ Multi-user environments
-- ❌ Network deployments
-- ❌ Long-term operation
-
-**For production:** See `DEPLOYMENT_GUIDE.md` in parent folder
+### Uwaga dotycząca bezpieczeństwa
+- ✅ Demo jest całkowicie oddzielone od kodu produkcyjnego
+- ✅ Brak ryzyka dla głównej aplikacji
+- ✅ Bezpieczne do dystrybucji publicznie
+- ✅ Brak wrażliwych danych
+- ✅ Domyślne hasło demo jest celowo słabe
 
 ---
 
-## 📞 Next Steps
+## 📊 Statystyki budowania
 
-### To Test Now:
+| Metryka | Wartość |
+|---------|---------|
+| **Całkowity rozmiar pakietu** | 119 MB |
+| **Rozmiar skompresowany (ZIP)** | ~90-100 MB |
+| **Rozmiar pliku wykonywalnego** | 18 MB |
+| **Rozmiar bazy danych** | 1.7 MB |
+| **Substancje CLP** | 4,400 |
+| **Substancje SVHC** | 492 |
+| **Wersja Python** | 3.13.2 (w pakiecie) |
+| **Wersja PyInstaller** | 6.16.0 |
+| **Czas budowania** | ~2-3 minuty |
+
+---
+
+## 🎯 Przypadki użycia
+
+### Idealne do:
+- ✅ Prezentacji dla zarządu
+- ✅ Demonstracji klientom
+- ✅ Prezentacji sprzedażowych
+- ✅ Sesji szkoleniowych
+- ✅ Targów / konferencji
+- ✅ Zdalnej ewaluacji przez klientów
+- ✅ Demo proof of concept
+- ✅ Szybkich prezentacji funkcji
+
+### Nie do:
+- ❌ Użytku produkcyjnego
+- ❌ Rzeczywistego przechowywania danych
+- ❌ Środowisk wieloużytkownikowych
+- ❌ Wdrożeń sieciowych
+- ❌ Długotrwałej pracy
+
+**Do produkcji:** Zobacz `DEPLOYMENT_GUIDE.md` w folderze nadrzędnym
+
+---
+
+## 📞 Następne kroki
+
+### Aby przetestować teraz:
 ```bash
 cd "DEMO/dist/ChemMan_Demo"
 START_CHEMMAN_DEMO.bat
 ```
 
-### To Distribute:
+### Aby dystrybuować:
 ```powershell
-# Create ZIP
+# Utwórz ZIP
 Compress-Archive -Path "DEMO/dist/ChemMan_Demo" -DestinationPath "ChemMan_Demo_v2.0.0.zip"
 
-# Share the ZIP file with clients/colleagues
-# File size: ~90-100 MB
+# Udostępnij plik ZIP klientom/kolegom
+# Rozmiar pliku: ~90-100 MB
 ```
 
-### To Rebuild (if needed):
+### Aby przebudować (jeśli potrzebne):
 ```bash
 cd DEMO
 
-# Step 1: Rebuild database (if Excel files changed)
+# Krok 1: Przebuduj bazę danych (jeśli pliki Excel się zmieniły)
 python build_demo.py
 
-# Step 2: Rebuild executable
+# Krok 2: Przebuduj plik wykonywalny
 pyinstaller chemman_demo.spec -y
 
-# Demo will be in: dist/ChemMan_Demo/
+# Demo będzie w: dist/ChemMan_Demo/
 ```
 
 ---
 
-## ✅ Success Checklist
+## ✅ Lista kontrolna sukcesu
 
-Your demo is ready when you can check all these:
+Twoje demo jest gotowe, gdy możesz zaznaczyć wszystkie te:
 
-- [x] Package size is ~119 MB
-- [x] START_CHEMMAN_DEMO.bat exists
-- [x] chemman_demo.exe is 18 MB
-- [x] README.txt is present
-- [x] Double-clicking bat file starts app
-- [x] Browser opens automatically
-- [x] Login works (admin/Demo1234)
-- [x] Login page loads with styling
-- [x] Search finds substances
-- [x] Data present (4400+ CLP, 492 SVHC)
+- [x] Rozmiar pakietu wynosi ~119 MB
+- [x] START_CHEMMAN_DEMO.bat istnieje
+- [x] chemman_demo.exe ma 18 MB
+- [x] README.txt jest obecny
+- [x] Dwukrotne kliknięcie pliku bat uruchamia aplikację
+- [x] Przeglądarka otwiera się automatycznie
+- [x] Logowanie działa (admin/Demo1234)
+- [x] Strona logowania ładuje się ze stylami
+- [x] Wyszukiwanie znajduje substancje
+- [x] Dane obecne (4400+ CLP, 492 SVHC)
 
-**All criteria met!** ✅
-
----
-
-## 🎉 Congratulations!
-
-Your standalone ChemMan demo is **complete, tested, and ready** for distribution!
-
-**Package:** `DEMO/dist/ChemMan_Demo/`
-**Status:** ✅ **READY FOR USE**
-**Next Step:** Test it yourself, then share with your team or clients!
+**Wszystkie kryteria spełnione!** ✅
 
 ---
 
-## 🔗 Related Documentation
+## 🎉 Gratulacje!
 
-- **DEMO/README_DEMO.md** - Complete demo documentation
-- **DEMO/QUICK_START.md** - Fast build guide
-- **DEMO/00_START_HERE.md** - Overview
-- **DEMO/BUILD_SUCCESS.md** - Build verification checklist
-- **DEPLOYMENT_GUIDE.md** - Production deployment (parent folder)
-- **installation.md** - Development setup (parent folder)
+Twoje samodzielne demo ChemMan jest **gotowe, przetestowane i gotowe** do dystrybucji!
 
----
-
-**Built on:** 2025-10-23
-**Built by:** Claude Code + PyInstaller
-**Version:** ChemMan v2.0.0 Demo
-
-**Status:** ✅ READY FOR DISTRIBUTION
+**Pakiet:** `DEMO/dist/ChemMan_Demo/`
+**Status:** ✅ **GOTOWE DO UŻYCIA**
+**Następny krok:** Przetestuj samodzielnie, a następnie udostępnij zespołowi lub klientom!
 
 ---
 
-## 📝 Technical Notes
+## 🔗 Powiązana dokumentacja
 
-### Issues Resolved During Build:
-1. ✅ flask_wtf import errors → Fixed with mock modules
-2. ✅ numpy import errors → Removed from excludes list
-3. ✅ Unicode encoding errors → Removed emoji from print statements
-4. ✅ decorators module missing → Added to spec file
-5. ✅ csrf_token undefined → Added MockCSRFProtect with csrf_token function
-
-### Key Files Modified:
-- `app_demo_wrapper.py` - Created mock modules with CSRF support
-- `run_demo.py` - Removed emoji characters for Windows compatibility
-- `chemman_demo.spec` - Added decorators.py, removed numpy from excludes
+- **DEMO/README_DEMO.md** - Kompletna dokumentacja demo
+- **DEMO/QUICK_START.md** - Szybki przewodnik budowania
+- **DEMO/00_START_HERE.md** - Przegląd
+- **DEMO/BUILD_SUCCESS.md** - Lista kontrolna weryfikacji budowania
+- **DEPLOYMENT_GUIDE.md** - Wdrożenie produkcyjne (folder nadrzędny)
+- **INSTALLATION.md** - Konfiguracja deweloperska (folder nadrzędny)
 
 ---
 
-**Enjoy your new standalone demo!** 🚀
+**Zbudowano:** 2025-10-23
+**Zbudowane przez:** Claude Code + PyInstaller
+**Wersja:** ChemMan v2.0.0 Demo
+
+**Status:** ✅ GOTOWE DO DYSTRYBUCJI
