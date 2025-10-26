@@ -22,7 +22,7 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 
 ## Szybki start (Development)
 
-Zobacz [installation.md](installation.md) dla szczegółowej instrukcji instalacji.
+Zobacz [INSTALLATION.md](INSTALLATION.md) dla szczegółowej instrukcji instalacji.
 
 ### Wymagania wstępne
 - Python 3.11+
@@ -118,10 +118,10 @@ Obejmuje:
 
 ## Dokumentacja
 
-- [📘 Instalacja i konfiguracja](installation.md)
-- [🔧 Konserwacja i aktualizacje](maintenance.md)
+- [📘 Instalacja i konfiguracja](INSTALLATION.md)
+- [🔧 Konserwacja i aktualizacje](MAINTENANCE.md)
 - [⚙️ Przewodnik backendu](BACKEND_GUIDE.md)
-- [👤 Instrukcja użytkownika](user_guide.md)
+- [👤 Instrukcja użytkownika](USER_GUIDE.md)
 
 ## Struktura projektu
 ```
