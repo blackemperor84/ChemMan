@@ -1,62 +1,62 @@
-# Chem-Man Deployment Guide
+# Przewodnik Wdrożeniowy Chem-Man
 
-Complete guide for deploying the Chem-Man chemical substance management application to production.
-
----
-
-## Table of Contents
-
-1. [Prerequisites](#prerequisites)
-2. [Server Setup](#server-setup)
-3. [Database Installation (PostgreSQL)](#database-installation-postgresql)
-4. [Application Installation](#application-installation)
-5. [Configuration](#configuration)
-6. [Data Import](#data-import)
-7. [Production Deployment (WSGI Server)](#production-deployment-wsgi-server)
-8. [Reverse Proxy Setup (nginx/Apache)](#reverse-proxy-setup)
-9. [SSL/TLS Configuration](#ssltls-configuration)
-10. [Backup Strategy](#backup-strategy)
-11. [Monitoring & Maintenance](#monitoring--maintenance)
-12. [Troubleshooting](#troubleshooting)
+Kompletny przewodnik wdrażania aplikacji do zarządzania substancjami chemicznymi Chem-Man w środowisku produkcyjnym.
 
 ---
 
-## Prerequisites
+## Spis Treści
 
-### Server Requirements
-
-- **OS:** Windows Server 2019/2022 or Linux (Ubuntu 20.04/22.04, CentOS 8+)
-- **RAM:** 4GB minimum, 8GB recommended
-- **Storage:** 20GB minimum (including database and logs)
-- **CPU:** 2 cores minimum, 4 cores recommended
-
-### Software Requirements
-
-- **Python:** 3.11 or higher
-- **PostgreSQL:** 14 or higher (18 recommended)
-- **pip:** Latest version
-- **virtualenv:** For Python environment isolation
-
-### Network Requirements
-
-- **Port 5432:** PostgreSQL database (internal only)
-- **Port 80:** HTTP (redirects to HTTPS)
-- **Port 443:** HTTPS (public access)
-- **Port 5000:** Flask development server (internal only, not for production)
+1. [Wymagania Wstępne](#wymagania-wstępne)
+2. [Konfiguracja Serwera](#konfiguracja-serwera)
+3. [Instalacja Bazy Danych (PostgreSQL)](#instalacja-bazy-danych-postgresql)
+4. [Instalacja Aplikacji](#instalacja-aplikacji)
+5. [Konfiguracja](#konfiguracja)
+6. [Import Danych](#import-danych)
+7. [Wdrożenie Produkcyjne (Serwer WSGI)](#wdrożenie-produkcyjne-serwer-wsgi)
+8. [Konfiguracja Reverse Proxy (nginx/Apache)](#konfiguracja-reverse-proxy)
+9. [Konfiguracja SSL/TLS](#konfiguracja-ssltls)
+10. [Strategia Backupu](#strategia-backupu)
+11. [Monitoring i Utrzymanie](#monitoring-i-utrzymanie)
+12. [Rozwiązywanie Problemów](#rozwiązywanie-problemów)
 
 ---
 
-## Server Setup
+## Wymagania Wstępne
 
-### 1. Update System (Linux)
+### Wymagania Serwerowe
+
+- **System Operacyjny:** Windows Server 2019/2022 lub Linux (Ubuntu 20.04/22.04, CentOS 8+)
+- **RAM:** Minimum 4GB, zalecane 8GB
+- **Dysk:** Minimum 20GB (włącznie z bazą danych i logami)
+- **CPU:** Minimum 2 rdzenie, zalecane 4 rdzenie
+
+### Wymagania Oprogramowania
+
+- **Python:** 3.11 lub wyższy
+- **PostgreSQL:** 14 lub wyższy (zalecane 18)
+- **pip:** Najnowsza wersja
+- **virtualenv:** Do izolacji środowiska Python
+
+### Wymagania Sieciowe
+
+- **Port 5432:** Baza danych PostgreSQL (tylko wewnętrzny)
+- **Port 80:** HTTP (przekierowanie na HTTPS)
+- **Port 443:** HTTPS (dostęp publiczny)
+- **Port 5000:** Serwer deweloperski Flask (tylko wewnętrzny, nie dla produkcji)
+
+---
+
+## Konfiguracja Serwera
+
+### 1. Aktualizacja Systemu (Linux)
 
 ```bash
 sudo apt update && sudo apt upgrade -y  # Ubuntu/Debian
-# OR
+# LUB
 sudo yum update -y  # CentOS/RHEL
 ```
 
-### 2. Install System Dependencies
+### 2. Instalacja Zależności Systemowych
 
 #### Ubuntu/Debian:
 ```bash
@@ -69,121 +69,121 @@ sudo yum install -y python3 python3-pip postgresql-server postgresql-contrib ngi
 ```
 
 #### Windows Server:
-- Download and install Python 3.13+ from [python.org](https://www.python.org/downloads/)
-- Download and install PostgreSQL 18 from [postgresql.org](https://www.postgresql.org/download/windows/)
-- Download and install nginx from [nginx.org](http://nginx.org/en/download.html)
+- Pobierz i zainstaluj Python 3.13+ z [python.org](https://www.python.org/downloads/)
+- Pobierz i zainstaluj PostgreSQL 18 z [postgresql.org](https://www.postgresql.org/download/windows/)
+- Pobierz i zainstaluj nginx z [nginx.org](http://nginx.org/en/download.html)
 
 ---
 
-## Database Installation (PostgreSQL)
+## Instalacja Bazy Danych (PostgreSQL)
 
-### Linux Installation
+### Instalacja Linux
 
-#### 1. Initialize PostgreSQL (first time only)
+#### 1. Inicjalizacja PostgreSQL (tylko przy pierwszej instalacji)
 
 ```bash
-# Ubuntu/Debian - already initialized during installation
+# Ubuntu/Debian - automatycznie zainicjalizowane podczas instalacji
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
-# CentOS/RHEL - manual initialization required
+# CentOS/RHEL - wymagana ręczna inicjalizacja
 sudo postgresql-setup --initdb
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 ```
 
-#### 2. Create Database and User
+#### 2. Utworzenie Bazy Danych i Użytkownika
 
 ```bash
 sudo -u postgres psql
 
-# Inside PostgreSQL prompt:
+# W terminalu PostgreSQL:
 CREATE DATABASE chemman_prod;
-CREATE USER chemman_user WITH PASSWORD 'STRONG_PASSWORD_HERE';
+CREATE USER chemman_user WITH PASSWORD 'SILNE_HASŁO_TUTAJ';
 GRANT ALL PRIVILEGES ON DATABASE chemman_prod TO chemman_user;
 \q
 ```
 
-### Windows Installation
+### Instalacja Windows
 
-#### 1. Install PostgreSQL
+#### 1. Instalacja PostgreSQL
 
-- Run the PostgreSQL installer
-- Set a strong password for the `postgres` superuser
-- Accept default port (5432)
+- Uruchom instalator PostgreSQL
+- Ustaw silne hasło dla superużytkownika `postgres`
+- Zaakceptuj domyślny port (5432)
 
-#### 2. Create Database and User
+#### 2. Utworzenie Bazy Danych i Użytkownika
 
-Using pgAdmin or command line:
+Używając pgAdmin lub linii poleceń:
 
 ```sql
--- Open SQL Query window and run:
+-- Otwórz okno zapytania SQL i wykonaj:
 CREATE DATABASE chemman_prod;
-CREATE USER chemman_user WITH PASSWORD 'STRONG_PASSWORD_HERE';
+CREATE USER chemman_user WITH PASSWORD 'SILNE_HASŁO_TUTAJ';
 GRANT ALL PRIVILEGES ON DATABASE chemman_prod TO chemman_user;
 ```
 
-### Database Security
+### Zabezpieczenie Bazy Danych
 
-Edit `postgresql.conf` and `pg_hba.conf`:
+Edytuj pliki `postgresql.conf` i `pg_hba.conf`:
 
 ```bash
 # Linux:
 sudo nano /etc/postgresql/18/main/postgresql.conf
 
-# Set:
-listen_addresses = 'localhost'  # Only accept local connections
+# Ustaw:
+listen_addresses = 'localhost'  # Akceptuj tylko połączenia lokalne
 max_connections = 100
 ```
 
-Edit `pg_hba.conf`:
+Edytuj `pg_hba.conf`:
 ```
-# TYPE  DATABASE        USER            ADDRESS                 METHOD
+# TYP   BAZA DANYCH     UŻYTKOWNIK      ADRES                   METODA
 local   chemman_prod    chemman_user                            md5
 host    chemman_prod    chemman_user    127.0.0.1/32            md5
 ```
 
-Restart PostgreSQL:
+Zrestartuj PostgreSQL:
 ```bash
 sudo systemctl restart postgresql  # Linux
-# Windows: Restart service via Services panel
+# Windows: Zrestartuj usługę przez Panel Usług
 ```
 
 ---
 
-## Application Installation
+## Instalacja Aplikacji
 
-### 1. Create Application User (Linux only)
+### 1. Utworzenie Użytkownika Aplikacji (tylko Linux)
 
 ```bash
 sudo useradd -m -s /bin/bash chemman
 sudo su - chemman
 ```
 
-### 2. Clone/Copy Application Files
+### 2. Skopiowanie Plików Aplikacji
 
 ```bash
-# Create directory
+# Utwórz katalog
 mkdir -p /opt/chemman  # Linux
-# OR
+# LUB
 mkdir C:\chemman  # Windows
 
-# Copy all application files to this directory
+# Skopiuj wszystkie pliki aplikacji do tego katalogu
 cd /opt/chemman  # Linux
 cd C:\chemman  # Windows
 ```
 
-### 3. Create Python Virtual Environment
+### 3. Utworzenie Wirtualnego Środowiska Python
 
 ```bash
 python3 -m venv venv
 
-# Activate environment
+# Aktywuj środowisko
 source venv/bin/activate  # Linux
 venv\Scripts\activate  # Windows
 ```
 
-### 4. Install Python Dependencies
+### 4. Instalacja Zależności Python
 
 ```bash
 pip install --upgrade pip
@@ -192,138 +192,138 @@ pip install -r requirements.txt
 
 ---
 
-## Configuration
+## Konfiguracja
 
-### 1. Create Production Configuration File
+### 1. Utworzenie Pliku Konfiguracyjnego Produkcyjnego
 
-Create `.env` file in application root:
+Utwórz plik `.env` w głównym katalogu aplikacji:
 
 ```bash
-# Database Configuration
-DATABASE_URL=postgresql://chemman_user:STRONG_PASSWORD_HERE@localhost:5432/chemman_prod
+# Konfiguracja Bazy Danych
+DATABASE_URL=postgresql://chemman_user:SILNE_HASŁO_TUTAJ@localhost:5432/chemman_prod
 
-# Flask Configuration
+# Konfiguracja Flask
 FLASK_ENV=production
-SECRET_KEY=GENERATE_RANDOM_SECRET_KEY_HERE
+SECRET_KEY=WYGENERUJ_LOSOWY_KLUCZ_TUTAJ
 FLASK_DEBUG=0
 
-# Admin User (first login)
-DEFAULT_PASSWORD=CHANGE_THIS_IMMEDIATELY
+# Użytkownik Admin (pierwsze logowanie)
+DEFAULT_PASSWORD=ZMIEŃ_TO_NATYCHMIAST
 
 # Rate Limiting
 RATELIMIT_STORAGE_URL=redis://localhost:6379
 
-# Security Headers
+# Nagłówki Bezpieczeństwa
 SESSION_COOKIE_SECURE=True
 SESSION_COOKIE_HTTPONLY=True
 SESSION_COOKIE_SAMESITE=Lax
 ```
 
-### 2. Generate Secret Key
+### 2. Generowanie Klucza Sekretnego
 
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Copy the output to `SECRET_KEY` in `.env` file.
+Skopiuj wynik do `SECRET_KEY` w pliku `.env`.
 
-### 3. Set File Permissions (Linux)
+### 3. Ustawienie Uprawnień Plików (Linux)
 
 ```bash
-chmod 600 .env  # Only owner can read
+chmod 600 .env  # Tylko właściciel może odczytać
 chown chemman:chemman .env
 ```
 
 ---
 
-## Data Import
+## Import Danych
 
-### 1. Create Database Tables
+### 1. Utworzenie Tabel w Bazie Danych
 
 ```bash
-python -c "from app import create_app; from models import db; from config import ProductionConfig; app = create_app(ProductionConfig); app.app_context().push(); db.create_all(); print('Tables created')"
+python -c "from app import create_app; from models import db; from config import ProductionConfig; app = create_app(ProductionConfig); app.app_context().push(); db.create_all(); print('Tabele utworzone')"
 ```
 
-### 2. Import CLP Database (4400 substances)
+### 2. Import Bazy CLP (4400 substancji)
 
 ```bash
 python import_excel.py
 ```
 
-Expected output: `Gotowe! Zaimportowano 4400 substancji!`
+Oczekiwany wynik: `Gotowe! Zaimportowano 4400 substancji!`
 
-### 3. Import SVHC Database (492 substances)
+### 3. Import Bazy SVHC (492 substancje)
 
 ```bash
 python import_svhc.py
 ```
 
-Expected output: `Gotowe! Zaimportowano 492 substancji SVHC!`
+Oczekiwany wynik: `Gotowe! Zaimportowano 492 substancji SVHC!`
 
-### 4. Create Admin User
+### 4. Utworzenie Użytkownika Admin
 
 ```bash
 python create_admin.py
 ```
 
-Expected output: `Admin user created successfully!`
+Oczekiwany wynik: `Admin user created successfully!`
 
-### 5. Verify Import
+### 5. Weryfikacja Importu
 
 ```bash
-python -c "from app import create_app; from models import db, ExcelSourceSubstance, SVHCSubstance, User; from config import ProductionConfig; app = create_app(ProductionConfig); app.app_context().push(); print(f'CLP: {ExcelSourceSubstance.query.count()}'); print(f'SVHC: {SVHCSubstance.query.count()}'); print(f'Users: {User.query.count()}')"
+python -c "from app import create_app; from models import db, ExcelSourceSubstance, SVHCSubstance, User; from config import ProductionConfig; app = create_app(ProductionConfig); app.app_context().push(); print(f'CLP: {ExcelSourceSubstance.query.count()}'); print(f'SVHC: {SVHCSubstance.query.count()}'); print(f'Użytkownicy: {User.query.count()}')"
 ```
 
-Expected output:
+Oczekiwany wynik:
 ```
 CLP: 4400
 SVHC: 492
-Users: 1
+Użytkownicy: 1
 ```
 
 ---
 
-## Production Deployment (WSGI Server)
+## Wdrożenie Produkcyjne (Serwer WSGI)
 
-### Option 1: Gunicorn (Linux - Recommended)
+### Opcja 1: Gunicorn (Linux - Zalecane)
 
-#### 1. Install Gunicorn
+#### 1. Instalacja Gunicorn
 
 ```bash
 pip install gunicorn
 ```
 
-#### 2. Create Gunicorn Configuration
+#### 2. Utworzenie Konfiguracji Gunicorn
 
-Create `gunicorn_config.py`:
+Utwórz plik `gunicorn_config.py`:
 
 ```python
-# Gunicorn configuration file
+# Plik konfiguracyjny Gunicorn
 bind = "127.0.0.1:8000"
-workers = 4  # (2 x CPU cores) + 1
+workers = 4  # (2 x liczba rdzeni CPU) + 1
 worker_class = "sync"
 worker_connections = 1000
 timeout = 120
 keepalive = 5
 
-# Logging
+# Logowanie
 accesslog = "/var/log/chemman/access.log"
 errorlog = "/var/log/chemman/error.log"
 loglevel = "info"
 
-# Security
+# Bezpieczeństwo
 limit_request_line = 4096
 limit_request_fields = 100
 limit_request_field_size = 8190
 ```
 
-#### 3. Create Systemd Service
+#### 3. Utworzenie Usługi Systemd
 
-Create `/etc/systemd/system/chemman.service`:
+Utwórz plik `/etc/systemd/system/chemman.service`:
 
 ```ini
 [Unit]
-Description=Chem-Man Chemical Management Application
+Description=Aplikacja Chem-Man do Zarządzania Substancjami Chemicznymi
 After=network.target postgresql.service
 
 [Service]
@@ -343,7 +343,7 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-#### 4. Start and Enable Service
+#### 4. Uruchomienie i Włączenie Usługi
 
 ```bash
 sudo systemctl daemon-reload
@@ -352,20 +352,20 @@ sudo systemctl enable chemman
 sudo systemctl status chemman
 ```
 
-### Option 2: Waitress (Windows - Recommended)
+### Opcja 2: Waitress (Windows - Zalecane)
 
-#### 1. Install Waitress
+#### 1. Instalacja Waitress
 
 ```bash
 pip install waitress
 ```
 
-#### 2. Create Startup Script
+#### 2. Utworzenie Skryptu Startowego
 
-Create `start_production.py`:
+Utwórz plik `start_production.py`:
 
 ```python
-"""Production server startup script using Waitress"""
+"""Skrypt startowy serwera produkcyjnego używający Waitress"""
 from waitress import serve
 from app import create_app
 from config import ProductionConfig
@@ -373,15 +373,15 @@ from config import ProductionConfig
 app = create_app(ProductionConfig)
 
 if __name__ == '__main__':
-    print("Starting Chem-Man on http://localhost:8000")
+    print("Uruchamianie Chem-Man na http://localhost:8000")
     serve(app, host='127.0.0.1', port=8000, threads=4)
 ```
 
-#### 3. Create Windows Service
+#### 3. Utworzenie Usługi Windows
 
-Install NSSM (Non-Sucking Service Manager):
+Zainstaluj NSSM (Non-Sucking Service Manager):
 ```bash
-# Download from https://nssm.cc/download
+# Pobierz z https://nssm.cc/download
 nssm install ChemMan "C:\chemman\venv\Scripts\python.exe" "C:\chemman\start_production.py"
 nssm set ChemMan AppDirectory "C:\chemman"
 nssm start ChemMan
@@ -389,49 +389,49 @@ nssm start ChemMan
 
 ---
 
-## Reverse Proxy Setup
+## Konfiguracja Reverse Proxy
 
-### nginx Configuration (Linux & Windows)
+### Konfiguracja nginx (Linux i Windows)
 
-#### 1. Create nginx Configuration
+#### 1. Utworzenie Konfiguracji nginx
 
-Create `/etc/nginx/sites-available/chemman` (Linux) or `C:\nginx\conf\chemman.conf` (Windows):
+Utwórz plik `/etc/nginx/sites-available/chemman` (Linux) lub `C:\nginx\conf\chemman.conf` (Windows):
 
 ```nginx
-# HTTP to HTTPS redirect
+# Przekierowanie HTTP na HTTPS
 server {
     listen 80;
-    server_name your-domain.com www.your-domain.com;
+    server_name twoja-domena.com www.twoja-domena.com;
 
     return 301 https://$server_name$request_uri;
 }
 
-# HTTPS server
+# Serwer HTTPS
 server {
     listen 443 ssl http2;
-    server_name your-domain.com www.your-domain.com;
+    server_name twoja-domena.com www.twoja-domena.com;
 
-    # SSL Configuration (update paths for your certificates)
-    ssl_certificate /etc/ssl/certs/your-domain.crt;
-    ssl_certificate_key /etc/ssl/private/your-domain.key;
+    # Konfiguracja SSL (zaktualizuj ścieżki do certyfikatów)
+    ssl_certificate /etc/ssl/certs/twoja-domena.crt;
+    ssl_certificate_key /etc/ssl/private/twoja-domena.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    # Security Headers
+    # Nagłówki Bezpieczeństwa
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # Logging
+    # Logowanie
     access_log /var/log/nginx/chemman_access.log;
     error_log /var/log/nginx/chemman_error.log;
 
-    # Max upload size (for SDS files)
+    # Maksymalny rozmiar uploadu (dla plików SDS)
     client_max_body_size 20M;
 
-    # Proxy to Gunicorn/Waitress
+    # Proxy do Gunicorn/Waitress
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -439,13 +439,13 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # Timeouts
+        # Limity czasowe
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
 
-    # Static files (if served separately)
+    # Pliki statyczne (jeśli serwowane oddzielnie)
     location /static/ {
         alias /opt/chemman/static/;
         expires 30d;
@@ -454,37 +454,37 @@ server {
 }
 ```
 
-#### 2. Enable Site (Linux)
+#### 2. Włączenie Strony (Linux)
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/chemman /etc/nginx/sites-enabled/
-sudo nginx -t  # Test configuration
+sudo nginx -t  # Testowanie konfiguracji
 sudo systemctl restart nginx
 ```
 
-#### 3. Start nginx (Windows)
+#### 3. Uruchomienie nginx (Windows)
 
 ```bash
 cd C:\nginx
 start nginx
 ```
 
-### Apache Configuration (Alternative)
+### Konfiguracja Apache (Alternatywa)
 
-Create `/etc/apache2/sites-available/chemman.conf`:
+Utwórz plik `/etc/apache2/sites-available/chemman.conf`:
 
 ```apache
 <VirtualHost *:80>
-    ServerName your-domain.com
-    Redirect permanent / https://your-domain.com/
+    ServerName twoja-domena.com
+    Redirect permanent / https://twoja-domena.com/
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName your-domain.com
+    ServerName twoja-domena.com
 
     SSLEngine on
-    SSLCertificateFile /etc/ssl/certs/your-domain.crt
-    SSLCertificateKeyFile /etc/ssl/private/your-domain.key
+    SSLCertificateFile /etc/ssl/certs/twoja-domena.crt
+    SSLCertificateKeyFile /etc/ssl/private/twoja-domena.key
 
     ProxyPreserveHost On
     ProxyPass / http://127.0.0.1:8000/
@@ -492,7 +492,7 @@ Create `/etc/apache2/sites-available/chemman.conf`:
 </VirtualHost>
 ```
 
-Enable modules and site:
+Włącz moduły i stronę:
 ```bash
 sudo a2enmod proxy proxy_http ssl
 sudo a2ensite chemman
@@ -501,39 +501,39 @@ sudo systemctl restart apache2
 
 ---
 
-## SSL/TLS Configuration
+## Konfiguracja SSL/TLS
 
-### Option 1: Let's Encrypt (Free, Linux only)
+### Opcja 1: Let's Encrypt (Darmowe, tylko Linux)
 
 ```bash
-# Install Certbot
+# Instalacja Certbot
 sudo apt install certbot python3-certbot-nginx
 
-# Obtain certificate
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+# Uzyskanie certyfikatu
+sudo certbot --nginx -d twoja-domena.com -d www.twoja-domena.com
 
-# Auto-renewal (already enabled by certbot)
+# Auto-odnowienie (już włączone przez certbot)
 sudo systemctl status certbot.timer
 ```
 
-### Option 2: Commercial Certificate
+### Opcja 2: Certyfikat Komercyjny
 
-1. Purchase SSL certificate from a CA (Comodo, DigiCert, etc.)
-2. Generate CSR: `openssl req -new -newkey rsa:2048 -nodes -keyout your-domain.key -out your-domain.csr`
-3. Submit CSR to CA, receive certificate
-4. Install certificate in nginx/Apache configuration (see above)
+1. Kup certyfikat SSL od CA (Comodo, DigiCert, itp.)
+2. Wygeneruj CSR: `openssl req -new -newkey rsa:2048 -nodes -keyout twoja-domena.key -out twoja-domena.csr`
+3. Prześlij CSR do CA, otrzymaj certyfikat
+4. Zainstaluj certyfikat w konfiguracji nginx/Apache (patrz wyżej)
 
 ---
 
-## Backup Strategy
+## Strategia Backupu
 
-### 1. Database Backups
+### 1. Backup Bazy Danych
 
-Create `/opt/chemman/backup_db.sh`:
+Utwórz plik `/opt/chemman/backup_db.sh`:
 
 ```bash
 #!/bin/bash
-# PostgreSQL backup script
+# Skrypt backupu PostgreSQL
 
 BACKUP_DIR="/backups/chemman"
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -542,30 +542,30 @@ DB_USER="chemman_user"
 
 mkdir -p $BACKUP_DIR
 
-# Create backup
-PGPASSWORD="STRONG_PASSWORD_HERE" pg_dump -U $DB_USER -h localhost $DB_NAME | gzip > $BACKUP_DIR/chemman_$DATE.sql.gz
+# Utworzenie backupu
+PGPASSWORD="SILNE_HASŁO_TUTAJ" pg_dump -U $DB_USER -h localhost $DB_NAME | gzip > $BACKUP_DIR/chemman_$DATE.sql.gz
 
-# Keep only last 30 days
+# Zachowaj tylko ostatnie 30 dni
 find $BACKUP_DIR -name "chemman_*.sql.gz" -mtime +30 -delete
 
-echo "Backup completed: chemman_$DATE.sql.gz"
+echo "Backup ukończony: chemman_$DATE.sql.gz"
 ```
 
-Make executable and schedule:
+Nadaj uprawnienia wykonywania i zaplanuj:
 ```bash
 chmod +x /opt/chemman/backup_db.sh
 
-# Add to cron (daily at 2 AM)
+# Dodaj do crona (codziennie o 2:00)
 sudo crontab -e
-# Add line:
+# Dodaj linię:
 0 2 * * * /opt/chemman/backup_db.sh >> /var/log/chemman/backup.log 2>&1
 ```
 
-### 2. Application Files Backup
+### 2. Backup Plików Aplikacji
 
 ```bash
 #!/bin/bash
-# Application files backup
+# Backup plików aplikacji
 
 BACKUP_DIR="/backups/chemman"
 DATE=$(date +%Y%m%d)
@@ -573,254 +573,254 @@ APP_DIR="/opt/chemman"
 
 tar -czf $BACKUP_DIR/chemman_files_$DATE.tar.gz $APP_DIR --exclude='venv' --exclude='__pycache__' --exclude='*.pyc'
 
-# Keep only last 7 days
+# Zachowaj tylko ostatnie 7 dni
 find $BACKUP_DIR -name "chemman_files_*.tar.gz" -mtime +7 -delete
 ```
 
-### 3. Restore from Backup
+### 3. Przywracanie z Backupu
 
 ```bash
-# Restore database
-gunzip -c /backups/chemman/chemman_20251022.sql.gz | PGPASSWORD="PASSWORD" psql -U chemman_user -h localhost chemman_prod
+# Przywróć bazę danych
+gunzip -c /backups/chemman/chemman_20251022.sql.gz | PGPASSWORD="HASŁO" psql -U chemman_user -h localhost chemman_prod
 
-# Restore files
+# Przywróć pliki
 tar -xzf /backups/chemman/chemman_files_20251022.tar.gz -C /
 ```
 
 ---
 
-## Monitoring & Maintenance
+## Monitoring i Utrzymanie
 
-### 1. Log Monitoring
+### 1. Monitoring Logów
 
-Application logs:
-- **Location:** `/var/log/chemman/` (Linux) or `C:\chemman\logs\` (Windows)
-- **Files:** `chem_man.log`, `access.log`, `error.log`
+Logi aplikacji:
+- **Lokalizacja:** `/var/log/chemman/` (Linux) lub `C:\chemman\logs\` (Windows)
+- **Pliki:** `chem_man.log`, `access.log`, `error.log`
 
-Monitor logs:
+Monitorowanie logów:
 ```bash
 tail -f /var/log/chemman/chem_man.log
 tail -f /var/log/chemman/error.log
 ```
 
-### 2. Health Check Script
+### 2. Skrypt Health Check
 
-Create `health_check.py`:
+Utwórz plik `health_check.py`:
 
 ```python
-"""Health check script for Chem-Man application"""
+"""Skrypt health check dla aplikacji Chem-Man"""
 import requests
 import sys
 from datetime import datetime
 
 def check_health():
     try:
-        # Check if app responds
+        # Sprawdź czy aplikacja odpowiada
         response = requests.get('http://localhost:8000/', timeout=5)
-        if response.status_code in [200, 302]:  # 302 = redirect to login
-            print(f"[{datetime.now()}] OK: Application is responding")
+        if response.status_code in [200, 302]:  # 302 = przekierowanie do loginu
+            print(f"[{datetime.now()}] OK: Aplikacja odpowiada")
             return 0
         else:
-            print(f"[{datetime.now()}] ERROR: Unexpected status code {response.status_code}")
+            print(f"[{datetime.now()}] BŁĄD: Nieoczekiwany kod statusu {response.status_code}")
             return 1
     except Exception as e:
-        print(f"[{datetime.now()}] ERROR: {e}")
+        print(f"[{datetime.now()}] BŁĄD: {e}")
         return 1
 
 if __name__ == '__main__':
     sys.exit(check_health())
 ```
 
-Schedule health checks:
+Zaplanuj health checki:
 ```bash
-# Add to cron (every 5 minutes)
+# Dodaj do crona (co 5 minut)
 */5 * * * * /opt/chemman/venv/bin/python /opt/chemman/health_check.py >> /var/log/chemman/health.log 2>&1
 ```
 
-### 3. Disk Space Monitoring
+### 3. Monitoring Przestrzeni Dyskowej
 
 ```bash
-# Check disk space weekly
-df -h | grep -E 'Filesystem|/$' | mail -s "Disk Space Report" admin@your-domain.com
+# Sprawdź przestrzeń dyskową co tydzień
+df -h | grep -E 'Filesystem|/$' | mail -s "Raport Przestrzeni Dyskowej" admin@twoja-domena.com
 ```
 
-### 4. Performance Monitoring
+### 4. Monitoring Wydajności
 
-Install and configure:
-- **PostgreSQL:** pg_stat_statements for query monitoring
-- **nginx:** Monitor response times via access logs
-- **Application:** Use Flask-Monitor or custom metrics
+Zainstaluj i skonfiguruj:
+- **PostgreSQL:** pg_stat_statements do monitorowania zapytań
+- **nginx:** Monitoruj czasy odpowiedzi poprzez logi dostępu
+- **Aplikacja:** Użyj Flask-Monitor lub własnych metryk
 
 ---
 
-## Troubleshooting
+## Rozwiązywanie Problemów
 
-### Application Won't Start
+### Aplikacja Nie Uruchamia Się
 
-1. **Check logs:**
+1. **Sprawdź logi:**
    ```bash
    tail -50 /var/log/chemman/error.log
    sudo journalctl -u chemman -n 50
    ```
 
-2. **Verify database connection:**
+2. **Zweryfikuj połączenie z bazą danych:**
    ```bash
-   python -c "from app import create_app; from config import ProductionConfig; app = create_app(ProductionConfig); print('DB connection OK')"
+   python -c "from app import create_app; from config import ProductionConfig; app = create_app(ProductionConfig); print('Połączenie z bazą OK')"
    ```
 
-3. **Check permissions:**
+3. **Sprawdź uprawnienia:**
    ```bash
    ls -la /opt/chemman
-   # Ensure chemman user owns files
+   # Upewnij się, że użytkownik chemman jest właścicielem plików
    ```
 
-### Database Connection Errors
+### Błędy Połączenia z Bazą Danych
 
-1. **Verify PostgreSQL is running:**
+1. **Sprawdź czy PostgreSQL działa:**
    ```bash
    sudo systemctl status postgresql
    ```
 
-2. **Check connection string in `.env`:**
+2. **Sprawdź connection string w `.env`:**
    ```bash
    grep DATABASE_URL .env
    ```
 
-3. **Test connection manually:**
+3. **Przetestuj połączenie ręcznie:**
    ```bash
-   PGPASSWORD="PASSWORD" psql -U chemman_user -h localhost chemman_prod -c "SELECT version();"
+   PGPASSWORD="HASŁO" psql -U chemman_user -h localhost chemman_prod -c "SELECT version();"
    ```
 
-### nginx/Apache Errors
+### Błędy nginx/Apache
 
-1. **Check configuration:**
+1. **Sprawdź konfigurację:**
    ```bash
    sudo nginx -t
-   # OR
+   # LUB
    sudo apache2ctl configtest
    ```
 
-2. **Check error logs:**
+2. **Sprawdź logi błędów:**
    ```bash
    tail -50 /var/log/nginx/error.log
    ```
 
-3. **Verify proxy is working:**
+3. **Zweryfikuj czy proxy działa:**
    ```bash
    curl -I http://localhost:8000
    ```
 
-### Import Failures
+### Błędy Importu
 
-1. **Check Excel file permissions:**
+1. **Sprawdź uprawnienia plików Excel:**
    ```bash
    ls -la substancje_baza.xlsx svhc.xlsx
    ```
 
-2. **Verify database tables exist:**
+2. **Zweryfikuj czy tabele istnieją:**
    ```bash
    python -c "from app import create_app; from models import db; from config import ProductionConfig; app = create_app(ProductionConfig); app.app_context().push(); print(db.engine.table_names())"
    ```
 
 ---
 
-## Security Checklist
+## Lista Kontrolna Bezpieczeństwa
 
-- [ ] PostgreSQL only accepts local connections
-- [ ] Strong passwords for database user and admin account
-- [ ] SECRET_KEY is random and kept secret
-- [ ] HTTPS is enforced (HTTP redirects to HTTPS)
-- [ ] SSL certificate is valid and up to date
-- [ ] Security headers are configured in nginx
-- [ ] File permissions are restrictive (600 for .env, 644 for code)
-- [ ] Application runs as non-root user (Linux)
-- [ ] Database backups are configured and tested
-- [ ] Logs are monitored regularly
-- [ ] Rate limiting is enabled
-- [ ] Firewall rules are configured (only 80/443 open)
-
----
-
-## Maintenance Schedule
-
-### Daily
-- Monitor logs for errors
-- Check disk space
-
-### Weekly
-- Review access logs
-- Check backup integrity
-- Update system packages
-
-### Monthly
-- Update Python dependencies (`pip list --outdated`)
-- Review user accounts
-- Test restore from backup
-
-### Quarterly
-- Security audit
-- Performance review
-- Update SSL certificates (if not auto-renewed)
+- [ ] PostgreSQL akceptuje tylko połączenia lokalne
+- [ ] Silne hasła dla użytkownika bazy danych i konta admin
+- [ ] SECRET_KEY jest losowy i bezpieczny
+- [ ] HTTPS jest wymuszony (HTTP przekierowuje na HTTPS)
+- [ ] Certyfikat SSL jest ważny i aktualny
+- [ ] Nagłówki bezpieczeństwa skonfigurowane w nginx
+- [ ] Uprawnienia plików są restrykcyjne (600 dla .env, 644 dla kodu)
+- [ ] Aplikacja działa jako użytkownik bez uprawnień roota (Linux)
+- [ ] Backupy bazy danych są skonfigurowane i przetestowane
+- [ ] Logi są regularnie monitorowane
+- [ ] Rate limiting jest włączony
+- [ ] Reguły firewalla są skonfigurowane (tylko porty 80/443 otwarte)
 
 ---
 
-## Support & Updates
+## Harmonogram Utrzymania
 
-### Updating the Application
+### Codziennie
+- Monitoruj logi pod kątem błędów
+- Sprawdź przestrzeń dyskową
+
+### Co tydzień
+- Przejrzyj logi dostępu
+- Sprawdź integralność backupów
+- Aktualizuj pakiety systemowe
+
+### Co miesiąc
+- Aktualizuj zależności Python (`pip list --outdated`)
+- Przejrzyj konta użytkowników
+- Przetestuj przywracanie z backupu
+
+### Co kwartał
+- Audit bezpieczeństwa
+- Przegląd wydajności
+- Aktualizacja certyfikatów SSL (jeśli nie auto-odnawiane)
+
+---
+
+## Wsparcie i Aktualizacje
+
+### Aktualizacja Aplikacji
 
 ```bash
-# Stop application
+# Zatrzymaj aplikację
 sudo systemctl stop chemman  # Linux
 nssm stop ChemMan  # Windows
 
-# Backup current version
+# Backup obecnej wersji
 cd /opt/chemman
 tar -czf ../chemman_backup_$(date +%Y%m%d).tar.gz .
 
-# Pull/copy new code
-git pull  # if using git
+# Pobierz/skopiuj nowy kod
+git pull  # jeśli używasz git
 
-# Update dependencies
+# Aktualizuj zależności
 source venv/bin/activate
 pip install -r requirements.txt --upgrade
 
-# Run migrations (if any)
+# Uruchom migracje (jeśli są)
 # python migrate.py
 
-# Restart application
+# Zrestartuj aplikację
 sudo systemctl start chemman  # Linux
 nssm start ChemMan  # Windows
 ```
 
-### Getting Help
+### Uzyskiwanie Pomocy
 
-- **Application logs:** `/var/log/chemman/chem_man.log`
-- **PostgreSQL logs:** `/var/log/postgresql/`
-- **nginx logs:** `/var/log/nginx/`
-
----
-
-## Production Checklist
-
-Before going live, verify:
-
-- [ ] Database is PostgreSQL (not SQLite)
-- [ ] 4400 CLP substances imported
-- [ ] 492 SVHC substances imported
-- [ ] Admin user created
-- [ ] HTTPS is working
-- [ ] Backups are configured
-- [ ] Logs are being written
-- [ ] Health checks are scheduled
-- [ ] All tests passing (`pytest tests/`)
-- [ ] Application accessible via domain name
-- [ ] Login works with admin credentials
-- [ ] Search functionality works
-- [ ] Export functionality works
-- [ ] SDS file upload works
+- **Logi aplikacji:** `/var/log/chemman/chem_man.log`
+- **Logi PostgreSQL:** `/var/log/postgresql/`
+- **Logi nginx:** `/var/log/nginx/`
 
 ---
 
-**End of Deployment Guide**
+## Lista Kontrolna Produkcyjna
 
-For questions or issues, review logs and consult this guide's troubleshooting section.
+Przed uruchomieniem produkcyjnym, zweryfikuj:
+
+- [ ] Baza danych to PostgreSQL (nie SQLite)
+- [ ] Zaimportowano 4400 substancji CLP
+- [ ] Zaimportowano 492 substancje SVHC
+- [ ] Utworzono użytkownika admin
+- [ ] HTTPS działa
+- [ ] Backupy są skonfigurowane
+- [ ] Logi są zapisywane
+- [ ] Health checki są zaplanowane
+- [ ] Wszystkie testy przechodzą (`pytest tests/`)
+- [ ] Aplikacja dostępna przez nazwę domeny
+- [ ] Logowanie działa z danymi admin
+- [ ] Funkcja wyszukiwania działa
+- [ ] Funkcja eksportu działa
+- [ ] Upload plików SDS działa
+
+---
+
+**Koniec Przewodnika Wdrożeniowego**
+
+W razie pytań lub problemów, sprawdź logi i skonsultuj się z sekcją rozwiązywania problemów w tym przewodniku.
