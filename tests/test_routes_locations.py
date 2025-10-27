@@ -658,9 +658,9 @@ class TestDeleteLocation:
         )
 
         assert response.status_code == 200
-        # Check for error message about protected location
+        # Check for error message about organizational unit assignment (new access control)
         data_lower = response.data.decode('utf-8').lower()
-        assert 'chronionej' in data_lower or 'protected' in data_lower
+        assert 'przypisane do ciebie' in data_lower or 'assigned to you' in data_lower
 
         # Verify location still exists
         with app.app_context():

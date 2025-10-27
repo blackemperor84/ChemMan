@@ -16,7 +16,7 @@
     {% if request.endpoint != 'auth.login' %}
     <nav>
         {% if current_user.is_authenticated and (current_user.is_admin or current_user.can_view) %}
-            <a href="{{ url_for('locations.index') }}">Lista Lokalizacji</a> |
+            <a href="{{ url_for('locations.index') }}">Komórki Organizacyjne</a> |
             <a href="{{ url_for('export.view_all_substances') }}">Wszystkie Substancje</a> |
         {% endif %}
         
@@ -58,7 +58,7 @@
     {% endblock %}
     <footer>
         <div>NITROERG &copy; 2025</div>
-        <div class="version">Chem-Man v2.0</div>
+        <div class="version">Chem-Man v2.1.0</div>
     </footer>
 
     

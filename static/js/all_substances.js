@@ -250,4 +250,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // ===== KONIEC LOGIKI ZMIANY PER_PAGE =====
 
+    // ===== LOGIKA KLIKANIA WIERSZY - PRZEKIEROWANIE DO KOMÓRKI ORGANIZACYJNEJ =====
+    const tableRows = document.querySelectorAll('#all-substances-table tbody tr');
+    if (tableRows.length > 0) {
+        tableRows.forEach(row => {
+            // Ustaw kursor jako wskaźnik (pointer) aby pokazać, że wiersz jest klikalny
+            row.style.cursor = 'pointer';
+
+            // Dodaj event listener dla kliknięcia
+            row.addEventListener('click', (event) => {
+                // Sprawdź czy użytkownik nie kliknął w link (np. link do SDS)
+                if (event.target.tagName === 'A' || event.target.closest('a')) {
+                    return; // Pozwól linkowi działać normalnie
+                }
+
+                const locationId = row.dataset.locationId;
+                if (locationId) {
+                    window.location.href = `/location/${locationId}`;
+                }
+            });
+        });
+        console.log(`all_substances.js: Dodano obsługę kliknięcia dla ${tableRows.length} wierszy.`);
+    }
+    // ===== KONIEC LOGIKI KLIKANIA WIERSZY =====
+
 }); // Koniec DOMContentLoaded

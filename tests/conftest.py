@@ -77,12 +77,13 @@ def db_session(app):
 
 
 @pytest.fixture(scope='function')
-def test_user(db_session):
+def test_user(db_session, test_location):
     """
-    Create a test user with standard permissions.
+    Create a test user with standard permissions assigned to test location.
 
     Args:
         db_session: Database session fixture
+        test_location: Test location fixture
 
     Returns:
         User: Test user object
@@ -91,6 +92,12 @@ def test_user(db_session):
     user.set_password('testpassword123')
     user.can_view = True
     user.can_add = True
+    user.can_edit = True
+    user.can_delete = True
+    user.can_move = True
+    user.can_copy = True
+    user.can_upload_sds = True
+    user.organizational_unit_id = test_location.id
     db_session.add(user)
     db_session.commit()
     return user

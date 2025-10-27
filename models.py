@@ -8,16 +8,19 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 
 class Location(db.Model):
-    """Model lokalizacji substancji chemicznych."""
+    """Model komórki organizacyjnej (działu/jednostki organizacyjnej)."""
     __tablename__ = 'locations'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     last_modified = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relacja: Jedna lokalizacja -> wiele substancji
-    # cascade="all, delete-orphan" zapewnia usunięcie substancji przy usuwaniu lokalizacji
+
+    # Relacja: Jedna komórka organizacyjna -> wiele substancji
+    # cascade="all, delete-orphan" zapewnia usunięcie substancji przy usuwaniu komórki
     substances = db.relationship('Substance', backref='location', lazy=True, cascade="all, delete-orphan")
+
+    # Relacja: Jedna komórka organizacyjna -> wielu użytkowników
+    users = db.relationship('User', backref='organizational_unit', lazy=True)
 
     def update_modification_time(self) -> 'Location':
         """
@@ -57,11 +60,12 @@ class Substance(db.Model):
 class User(db.Model, UserMixin):
     """Model użytkownika systemu z obsługą uwierzytelniania."""
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)  # Przechowuje hash hasła
     is_admin = db.Column(db.Boolean, default=False)  # Dodane pole dla uprawnień administratora
+    organizational_unit_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=True)  # Przypisanie do komórki organizacyjnej
 
     # Metoda ustawiająca (hashująca) hasło
     def set_password(self, password: str) -> None:
@@ -96,6 +100,52 @@ class User(db.Model, UserMixin):
     can_upload_sds = db.Column(db.Boolean, default=False)  # Może dodawać/usuwać pliki SDS
     can_add_location = db.Column(db.Boolean, default=False)  # Może dodawać lokalizacje
     can_delete_location = db.Column(db.Boolean, default=False)  # Może usuwać lokalizacje
+
+    def has_access_to_organizational_unit(self, location_id: int) -> bool:
+        """
+        Sprawdza, czy użytkownik ma dostęp do PRZEGLĄDANIA danej komórki organizacyjnej.
+        Administratorzy mają dostęp do wszystkich komórek.
+        Zwykli użytkownicy mogą przeglądać wszystkie komórki (tylko odczyt).
+
+        Args:
+            location_id: ID komórki organizacyjnej do sprawdzenia
+
+        Returns:
+            bool: True jeśli użytkownik może przeglądać, False w przeciwnym razie
+        """
+        # Admin ma dostęp do wszystkiego
+        if self.is_admin:
+            return True
+
+        # Użytkownicy z przypisaną komórką mogą przeglądać wszystkie komórki
+        # (ale modyfikować tylko swoją - sprawdza can_modify_organizational_unit)
+        if self.organizational_unit_id is not None:
+            return True
+
+        # Użytkownicy bez przypisanej komórki nie mają dostępu
+        return False
+
+    def can_modify_organizational_unit(self, location_id: int) -> bool:
+        """
+        Sprawdza, czy użytkownik może MODYFIKOWAĆ daną komórkę organizacyjną.
+        Administratorzy mogą modyfikować wszystkie komórki.
+        Zwykli użytkownicy mogą modyfikować tylko przypisaną im komórkę.
+
+        Args:
+            location_id: ID komórki organizacyjnej do sprawdzenia
+
+        Returns:
+            bool: True jeśli użytkownik może modyfikować, False w przeciwnym razie
+        """
+        # Admin może modyfikować wszystko
+        if self.is_admin:
+            return True
+
+        # Użytkownik może modyfikować tylko swoją przypisaną komórkę
+        if self.organizational_unit_id is None:
+            return False
+
+        return self.organizational_unit_id == location_id
 
     def __repr__(self) -> str:
         return f'<User {self.username}>'

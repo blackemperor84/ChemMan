@@ -353,7 +353,7 @@ class TestAddManualSubstance:
         assert response.status_code == 409
 
     def test_add_manual_location_not_found(self, client, test_user):
-        """Test that adding to non-existent location fails."""
+        """Test that adding to non-existent location fails with 403 (access control check happens first)."""
         client.post('/login', data={
             'username': 'testuser',
             'password': 'testpassword123'
@@ -364,7 +364,8 @@ class TestAddManualSubstance:
             json={'name': 'Test Chemical'}
         )
 
-        assert response.status_code == 404
+        # Access control check happens before location existence check, returns 403
+        assert response.status_code == 403
 
 
 class TestDeleteSubstance:

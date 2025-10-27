@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 
-{% block title %}Lokalizacja: {{ location.name }} - CHEM MAN{% endblock %}
+{% block title %}Komórka organizacyjna: {{ location.name }} - CHEM MAN{% endblock %}
 
 {% block extra_styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/location_detail.css') }}">
 {% endblock %}
 
-{% block header %}LOKALIZACJA: {{ location.name }}{% endblock %}
+{% block header %}KOMÓRKA ORGANIZACYJNA: {{ location.name }}{% endblock %}
 
 {% block content %}
 <div id="substances-list"
      data-is-admin="{{ current_user.is_admin|lower }}"
-     data-can-add="{{ (current_user.is_admin or current_user.can_add)|lower }}"
-     data-can-edit="{{ (current_user.is_admin or current_user.can_edit)|lower }}"
-     data-can-delete="{{ (current_user.is_admin or current_user.can_delete)|lower }}"
+     data-can-add="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_add))|lower }}"
+     data-can-edit="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_edit))|lower }}"
+     data-can-delete="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_delete))|lower }}"
      data-can-move="{{ (current_user.is_admin or current_user.can_move)|lower }}"
      data-can-copy="{{ (current_user.is_admin or current_user.can_copy)|lower }}"
-     data-can-upload-sds="{{ (current_user.is_admin or current_user.can_upload_sds)|lower }}">
+     data-can-upload-sds="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds))|lower }}">
      <!-- Dodana sekcja z datą ostatniej modyfikacji -->
      <div class="last-modified-info" style="margin-bottom: 15px; font-style: italic; color: #666;">
         Ostatnia aktualizacja: {{ convert_utc_to_local(location.last_modified) if location.last_modified else 'Brak danych' }}
     </div>
-    
-     <h2>Substancje w tej lokalizacji:</h2>
+
+     <h2>Substancje w tej komórce organizacyjnej:</h2>
 
     {% if substances_data %}
     <div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
@@ -144,7 +144,7 @@
                                 <a href="{{ url_for('files.download_sds', filename=sub_data.sds_filename) }}" target="_blank" title="Pobierz/Zobacz SDS" class="sds-link">
                                 Zobacz/ Pobierz
                                 </a>
-                                {% if current_user.is_admin or current_user.can_upload_sds %}
+                                {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
                                     <div class="sds-button-row">
                                         <button class="show-replace-sds-form" data-substance-id="{{ sub_data.id }}">Zmień</button>
                                         <form method="POST" action="{{ url_for('files.delete_sds', substance_id=sub_data.id) }}" class="delete-sds-form" onsubmit="return confirm('Czy na pewno chcesz trwale usunąć załączony plik SDS dla tej substancji?');">
@@ -157,7 +157,7 @@
                                     Ost. akt.: {{ sub_data.sds_upload_timestamp_local }}
                                 </small>
                             </div>
-                            {% if current_user.is_admin or current_user.can_upload_sds %}
+                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
                                 <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form" id="sds-form-{{ sub_data.id }}" style="display: none;">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="file" name="sds_file" accept=".pdf" required>
@@ -165,7 +165,7 @@
                                     <button type="button" class="cancel-upload-btn" data-substance-id="{{ sub_data.id }}">Anuluj</button>
                                 </form>
                             {% endif %}
-                        {% elif current_user.is_admin or current_user.can_upload_sds %}
+                        {% elif can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
                             <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="file" name="sds_file" accept=".pdf" required>
@@ -176,10 +176,10 @@
                         {% endif %}
                     </td>
                     <td class="actions-cell">
-                        {% if current_user.is_admin or current_user.can_edit %}
+                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_edit) %}
                             <button class="edit-comment-btn" data-substance-id="{{ sub_data.id }}">Edytuj Kom.</button>
                         {% endif %}
-                        {% if current_user.is_admin or current_user.can_delete %}
+                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_delete) %}
                             <button class="delete-substance-btn" data-substance-id="{{ sub_data.id }}">Usuń</button>
                         {% endif %}
                     </td>
@@ -196,7 +196,7 @@
                     Wybrano: <span id="selection-counter">0</span> substancji.
                     <label for="target-location">Przenieś/Kopiuj do:</label>
                     <select id="target-location" name="target_location" required>
-                        <option value="" disabled selected>-- Wybierz lokalizację --</option>
+                        <option value="" disabled selected>-- Wybierz komórkę organizacyjną --</option>
                         {% for target_loc in other_locations %}
                             <option value="{{ target_loc.id }}">{{ target_loc.name }}</option>
                         {% endfor %}
@@ -212,7 +212,7 @@
         {% endif %}
         {% endif %} {# <-- Koniec przeniesionego warunku #}
     {% else %}
-        <p>Brak substancji przypisanych do tej lokalizacji.</p>
+        <p>Brak substancji przypisanych do tej komórki organizacyjnej.</p>
     {% endif %}
 
 </div>
@@ -220,7 +220,7 @@
 <hr>
 
 <!-- Sekcja dodawania z bazy -->
-{% if current_user.is_admin or current_user.can_add %}
+{% if can_modify_this_unit and (current_user.is_admin or current_user.can_add) %}
 <div class="grid">
     <div style="border: 1px solid #eee; padding: 15px;">
         <h4>Dodaj z Bazy (Excel)</h4>
@@ -280,7 +280,7 @@
     </div>
 {% endif %}
 <hr>
-<p><a href="{{ url_for('locations.index') }}">Powrót do listy lokalizacji</a></p>
+<p><a href="{{ url_for('locations.index') }}">Powrót do listy komórek organizacyjnych</a></p>
 {% endblock %}
 
 {% block scripts %}

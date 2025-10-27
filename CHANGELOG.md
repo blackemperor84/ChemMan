@@ -6,6 +6,120 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.1.0] - 2025-10-27
+
+### 🏢 System Komórek Organizacyjnych - Major Feature Update!
+
+#### ✨ Dodano
+
+**Zarządzanie Komórkami Organizacyjnymi:**
+- Zmieniono terminologię: "Lokalizacja" → "Komórka Organizacyjna"
+- Rozróżnienie między komórkami organizacyjnymi (działy/jednostki) a lokalizacjami fizycznymi (Bieruń/Krupski Młyn)
+- System przypisywania użytkowników do konkretnych komórek organizacyjnych
+- Dwupoziomowy model kontroli dostępu:
+  - **Przeglądanie (VIEW)**: Wszyscy użytkownicy z przypisaną komórką mogą przeglądać wszystkie komórki
+  - **Modyfikacja (MODIFY)**: Użytkownicy mogą modyfikować tylko swoją przypisaną komórkę
+- Ograniczenie kopiowania/przenoszenia substancji tylko do przypisanej komórki organizacyjnej
+
+**Funkcje nawigacyjne:**
+- Klikalne wiersze w widoku "Wszystkie Substancje" - kliknięcie substancji przekierowuje do komórki organizacyjnej, w której jest przechowywana
+- Inteligentna obsługa kliknięć: linki (np. do SDS) działają normalnie, kliknięcie w dowolną część wiersza przekierowuje do komórki
+- Wizualna informacja o klikalności (kursor pointer na hoverze)
+
+**Baza danych:**
+- Nowa kolumna `organizational_unit_id` w tabeli `users`
+- Foreign key do tabeli `locations` (komórek organizacyjnych)
+- Relacja `users` w modelu `Location`
+
+**Model dostępu:**
+- `has_access_to_organizational_unit()` - sprawdza dostęp do przeglądania
+- `can_modify_organizational_unit()` - sprawdza dostęp do modyfikacji
+- Walidacja na poziomie backendu dla wszystkich operacji CRUD
+- Filtrowanie dropdown'ów kopiowania/przenoszenia na podstawie przypisanej komórki
+
+**Panel administratora:**
+- Możliwość przypisywania użytkowników do komórek organizacyjnych
+- Wyświetlanie przypisanej komórki dla każdego użytkownika
+- Dropdown wyboru komórki organizacyjnej w formularzach użytkownika
+
+#### 🔧 Zmieniono
+
+**Interfejs:**
+- `templates/base.html`: "Lista Lokalizacji" → "Komórki Organizacyjne"
+- `templates/locations.html`: Zaktualizowano terminologię i warunkowe wyświetlanie przycisków edycji
+- `templates/location_detail.html`: Warunkowe wyświetlanie kontrolek edycji na podstawie `can_modify_this_unit`
+- `templates/admin/manage_users.html`: Dodano selektor komórki organizacyjnej
+
+**Backend:**
+- `models.py`: Dodano metody `has_access_to_organizational_unit()` i `can_modify_organizational_unit()`
+- `routes/locations.py`:
+  - `index()` - wszyscy użytkownicy z przypisaniem widzą wszystkie komórki
+  - `view_location()` - dodano flagę `can_modify` i filtrowanie `other_locations`
+  - Walidacja uprawnień używa `can_modify_organizational_unit()`
+- `routes/substances.py`: Wszystkie trasy modyfikacji sprawdzają `can_modify_organizational_unit()`
+- `routes/admin.py`: Obsługa `organizational_unit_id` w formularzach użytkownika
+
+#### 🧪 Testy
+
+**Zaktualizowano:**
+- `tests/conftest.py`: Fixture `test_user` przypisuje użytkownika do `test_location`
+- `tests/test_routes_substances.py`: Zaktualizowano test `test_add_manual_location_not_found` (403 zamiast 404)
+- `tests/test_routes_locations.py`: Zaktualizowano test `test_delete_location_protected_admin_location`
+- ✅ Wszystkie 242 testy przechodzą pomyślnie
+
+#### 📚 Dokumentacja
+
+**Dodano:**
+- `ORGANIZATIONAL_UNITS_UPDATE.md`: Dokumentacja początkowej implementacji
+- `ACCESS_CONTROL_UPDATE.md`: Dokumentacja zaktualizowanego modelu dostępu (v1.2.0)
+- `COPY_RESTRICTION_FIX.md`: Dokumentacja ograniczeń kopiowania (v1.2.1)
+- Zaktualizowano `TESTING_GUIDE.md`: Nowe scenariusze testowe dla kontroli dostępu
+
+#### 🔒 Bezpieczeństwo
+
+**Ulepszone:**
+- Walidacja uprawnień na poziomie backendu dla wszystkich operacji
+- Filtrowanie UI oparte na uprawnieniach (nie tylko ukrywanie przycisków)
+- Ochrona przed bezpośrednim dostępem przez API
+- Komunikaty błędów 403 przy próbach nieupoważnionych operacji
+
+#### ⚠️ Breaking Changes
+
+**Dla istniejących użytkowników:**
+1. Terminologia w interfejsie zmieniona na "Komórka Organizacyjna"
+2. Użytkownicy bez przypisanej komórki organizacyjnej nie mają dostępu do żadnych danych
+3. Użytkownicy mogą modyfikować tylko swoją przypisaną komórkę
+
+#### 🔄 Instrukcje migracji
+
+Dla istniejących instalacji:
+
+1. Dodaj kolumnę do bazy danych:
+```sql
+ALTER TABLE users ADD COLUMN organizational_unit_id INTEGER;
+ALTER TABLE users ADD CONSTRAINT fk_users_organizational_unit_id
+    FOREIGN KEY (organizational_unit_id) REFERENCES locations(id);
+```
+
+Lub użyj skryptu:
+```bash
+python add_org_unit_column.py
+```
+
+2. Przypisz użytkowników do komórek organizacyjnych:
+   - Zaloguj się jako administrator
+   - Przejdź do "Zarządzaj Użytkownikami"
+   - Dla każdego użytkownika wybierz "Komórka organizacyjna"
+   - Zapisz zmiany
+
+3. Restart aplikacji
+
+**Zachowanie administratorów:**
+- Administratorzy zachowują pełny dostęp do wszystkich komórek organizacyjnych
+- Brak zmian w funkcjonalności dla kont administratorów
+
+---
+
 ## [2.0.0] - 2025-10-22
 
 ### 🎉 Wersja gotowa do produkcji - Major Update!
@@ -252,6 +366,8 @@ Projekt stosuje [Semantic Versioning](https://semver.org/):
 
 | Wersja | Data | Główne zmiany |
 |--------|------|---------------|
+| 2.1.0 | 2025-10-27 | System komórek organizacyjnych z kontrolą dostępu |
+| 2.0.0 | 2025-10-22 | Przejście na PostgreSQL, testy automatyczne, dokumentacja |
 | 1.0.0 | 2025-01-17 | Pierwsze wydanie |
 
 ---
@@ -264,4 +380,4 @@ Zgłaszanie błędów i propozycji funkcji:
 
 ---
 
-**Ostatnia aktualizacja:** 2025-01-17
+**Ostatnia aktualizacja:** 2025-10-27

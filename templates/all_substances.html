@@ -20,15 +20,15 @@
 <!-- Ulepszony formularz wyszukiwania z zaawansowanymi filtrami -->
 <div class="search-export-container">
     <div class="search-row">
-        <input type="text" id="filter-input" placeholder="Filtruj (Nazwa, CAS, EC, Klasyfikacja, Lokalizacja...)">
+        <input type="text" id="filter-input" placeholder="Filtruj (Nazwa, CAS, EC, Klasyfikacja, Komórka organizacyjna...)">
         <button id="filter-button" class="search-button">Filtruj</button>
     </div>
-    
+
     <div class="advanced-filter-buttons">
         <button id="toggle-advanced-btn" class="toggle-advanced-btn">Pokaż zaawansowane filtry</button>
         <button id="reset-filters-btn" class="reset-filters-btn" style="display: none;">Wyczyść filtry</button>
     </div>
-    
+
     <div id="advanced-filters" class="advanced-filters" style="display: none;">
         <div class="filter-group">
             <label for="physical-location-filter">Lokalizacja fizyczna:</label>
@@ -38,11 +38,11 @@
                 <option value="Krupski Młyn">Krupski Młyn</option>
             </select>
         </div>
-        
+
         <div class="filter-group">
-            <label for="user-location-filter">Użytkownik:</label>
+            <label for="user-location-filter">Komórka organizacyjna:</label>
             <select id="user-location-filter">
-                <option value="">Wszyscy</option>
+                <option value="">Wszystkie</option>
                 {% for loc in locations %}
                     <option value="{{ loc.name }}">{{ loc.name }}</option>
                 {% endfor %}
@@ -147,7 +147,7 @@
         </thead>
         <tbody>
             {% for sub_data in all_substances_data %}
-                <tr data-cmr="{{ sub_data.is_cmr|lower }}" data-svhc="{{ sub_data.is_svhc|lower }}" data-has-sds="{{ (sub_data.sds_filename is not none)|lower }}" data-physical-location="{{ sub_data.physical_location }}" data-user-location="{{ sub_data.location_name }}">
+                <tr data-cmr="{{ sub_data.is_cmr|lower }}" data-svhc="{{ sub_data.is_svhc|lower }}" data-has-sds="{{ (sub_data.sds_filename is not none)|lower }}" data-physical-location="{{ sub_data.physical_location }}" data-user-location="{{ sub_data.location_name }}" data-location-id="{{ sub_data.location_id }}">
                     <td>
                         <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
                         {% if sub_data.is_cmr %}

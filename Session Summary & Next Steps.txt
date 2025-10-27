@@ -1,0 +1,45 @@
+ Session Summary & Next Steps
+
+  What Was Done (Current Session)
+
+  ✅ Organizational Units Feature (v2.1.0) - COMPLETE
+
+  - Feature: System przypisywania użytkowników do komórek organizacyjnych z dwupoziomową kontrolą dostępu (VIEW vs
+  MODIFY)
+  - Database: Added organizational_unit_id column to users table
+  - Tests: Fixed and passing - 242/242 tests OK
+  - Documentation: Updated CHANGELOG, readme, USER_GUIDE, BACKEND_GUIDE, README_DEMO
+  - DEMO: Built fresh executable dated 2025-10-27 with v2.1.0 features
+
+  TODO - Next Session
+
+  1. Update Version Numbers
+
+  Current problem: App still shows v2.0.0, should be v2.1.0
+
+  Files to update:
+  - app.py - Update version string
+  - templates/base.html - Footer version number
+  - config.py - VERSION constant (if exists)
+  - Any other files displaying version
+
+  2. GitHub Push
+
+  New version release workflow:
+  git add .
+  git commit -m "Release v2.1.0 - Organizational Units Feature"
+  git tag -a v2.1.0 -m "Version 2.1.0 - Organizational Units with Access Control"
+  git push origin master
+  git push origin v2.1.0
+
+  Files to verify before push:
+  - All documentation updated ✅
+  - Tests passing ✅
+  - DEMO built ✅
+  - Version numbers corrected ⚠️ (do in next session)
+
+  3. Optional: Create GitHub Release
+
+  - Use tag v2.1.0
+  - Attach DEMO/dist/ChemMan_Demo_v2.1.0.zip (59 MB)
+  - Release notes from CHANGELOG.md v2.1.0 section

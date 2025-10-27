@@ -3,7 +3,7 @@ import secrets
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 
-from models import db, User, AuditLog
+from models import db, User, AuditLog, Location
 from utils import log_action, handle_exception
 
 # Utworzenie blueprintu dla administracji
@@ -32,11 +32,13 @@ def manage_users():
     try:
         # Pobierz wszystkich użytkowników posortowanych wg nazwy
         users = User.query.order_by(User.username).all()
-        return render_template('admin/manage_users.html', users=users)
+        # Pobierz wszystkie komórki organizacyjne do wyboru
+        organizational_units = Location.query.order_by(Location.name).all()
+        return render_template('admin/manage_users.html', users=users, organizational_units=organizational_units)
     except Exception as e:
         flash(f'Błąd podczas pobierania listy użytkowników: {e}', 'error')
         current_app.logger.error(f"BŁĄD pobierania użytkowników: {e}")
-        return render_template('admin/manage_users.html', users=[])
+        return render_template('admin/manage_users.html', users=[], organizational_units=[])
 
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
@@ -109,6 +111,7 @@ def add_user():
     # Pobierz dane z formularza
     new_username = request.form.get('new_username', '').strip()
     new_password = request.form.get('new_password', '').strip()
+    organizational_unit_id = request.form.get('organizational_unit_id', '').strip()
 
     # Uprawnienia
     can_view = 'can_view' in request.form
@@ -141,16 +144,19 @@ def add_user():
                 can_copy=can_copy,
                 can_upload_sds=can_upload_sds,
                 can_add_location=can_add_location,
-                can_delete_location=can_delete_location
+                can_delete_location=can_delete_location,
+                organizational_unit_id=int(organizational_unit_id) if organizational_unit_id else None
             )
             user.set_password(new_password)  # Hashowanie hasła
             db.session.add(user)
             db.session.commit()
+
+            org_unit_name = Location.query.get(int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
             log_action(
-                'ADD_USER', 
-                target_type='User', 
-                target_id=user.id, 
-                details=f"Utworzono użytkownika: {user.username} z uprawnieniami"
+                'ADD_USER',
+                target_type='User',
+                target_id=user.id,
+                details=f"Utworzono użytkownika: {user.username} z uprawnieniami, Komórka: {org_unit_name}"
             )
             flash(f'Użytkownik "{new_username}" został dodany.', 'success')
             current_app.logger.info(f"Admin '{current_user.username}' dodał użytkownika: {new_username}")
@@ -181,16 +187,21 @@ def edit_user_permissions(user_id):
         user_to_edit.can_upload_sds = 'can_upload_sds' in request.form
         user_to_edit.can_add_location = 'can_add_location' in request.form
         user_to_edit.can_delete_location = 'can_delete_location' in request.form
-        
+
+        # Aktualizacja przypisania do komórki organizacyjnej
+        organizational_unit_id = request.form.get('organizational_unit_id', '').strip()
+        user_to_edit.organizational_unit_id = int(organizational_unit_id) if organizational_unit_id else None
+
         db.session.commit()
-        
+
+        org_unit_name = Location.query.get(int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
         log_action(
-            'UPDATE_USER_PERMISSIONS', 
-            target_type='User', 
-            target_id=user_id, 
-            details=f"Zaktualizowano uprawnienia dla: {user_to_edit.username}"
+            'UPDATE_USER_PERMISSIONS',
+            target_type='User',
+            target_id=user_id,
+            details=f"Zaktualizowano uprawnienia dla: {user_to_edit.username}, Komórka: {org_unit_name}"
         )
-        
+
         flash(f'Uprawnienia dla użytkownika "{user_to_edit.username}" zostały zaktualizowane.', 'success')
         current_app.logger.info(f"Admin '{current_user.username}' zaktualizował uprawnienia dla: {user_to_edit.username}")
     except Exception as e:

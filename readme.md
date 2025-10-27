@@ -4,13 +4,14 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 
 ## Funkcje
 
-- 📦 Zarządzanie substancjami w różnych lokalizacjach
+- 📦 Zarządzanie substancjami w komórkach organizacyjnych (jednostki/działy)
+- 🏢 System przypisywania użytkowników do komórek organizacyjnych z kontrolą dostępu
 - 🔍 Wyszukiwanie w bazie CLP (4400+ substancji) i SVHC (490+ substancji)
 - 🌍 Dwujęzyczne nazwy (angielski/polski)
 - ⚠️ Automatyczne oznaczanie CMR i SVHC
 - 📄 Upload i zarządzanie kartami SDS (PDF)
 - 📊 Export do CSV
-- 👥 System uprawnień użytkowników
+- 👥 System uprawnień użytkowników z kontrolą na poziomie komórek
 - 📜 Dziennik zmian (audit log)
 
 ## Technologie

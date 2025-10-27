@@ -1,7 +1,7 @@
 # ChemMan - Wersja Demo (Standalone)
 
-**Wersja:** 2.0.0 Demo
-**Data:** 2025-10-23
+**Wersja:** 2.1.0 Demo
+**Data:** 2025-10-27
 **Cel:** Prezentacja/demonstracja funkcjonalności aplikacji
 
 ---
@@ -106,7 +106,8 @@ Rozmiar: ~150 MB
 Wersja demo zawiera **wszystkie funkcje** wersji produkcyjnej:
 
 ### ✅ Dostępne funkcje:
-- 📦 Zarządzanie lokalizacjami i substancjami
+- 📦 Zarządzanie komórkami organizacyjnymi i substancjami
+- 🏢 System przypisywania użytkowników do komórek z kontrolą dostępu (v2.1.0)
 - 🔍 Wyszukiwanie w bazach CLP (4400+) i SVHC (492)
 - ⚠️ Detekcja CMR i SVHC
 - 📄 Upload kart SDS (PDF)

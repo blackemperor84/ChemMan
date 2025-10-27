@@ -43,22 +43,27 @@ Przewodnik dla użytkowników systemu ChemMan - zarządzanie substancjami chemic
 
 Po zalogowaniu zobaczysz:
 ```
-┌─────────────────────────────────────────┐
-│  CHEM-MAN | LOKALIZACJE                 │
-├─────────────────────────────────────────┤
-│  [Menu nawigacji]                       │
-│  Lista Lokalizacji | Wszystkie Subst.   │
-│  | Zmień hasło | Wyloguj (jan.kowalski) │
-├─────────────────────────────────────────┤
-│  Istniejące lokalizacje:                │
-│                                          │
-│  📦 Magazyn A      [Edytuj] [Usuń]      │
-│  📦 Laboratorium   [Edytuj] [Usuń]      │
-│  📦 Magazyn B      [Edytuj] [Usuń]      │
-│                                          │
-│  [+ Dodaj nową lokalizację]             │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  CHEM-MAN | KOMÓRKI ORGANIZACYJNE            │
+├──────────────────────────────────────────────┤
+│  [Menu nawigacji]                            │
+│  Komórki Organizacyjne | Wszystkie Subst.    │
+│  | Zmień hasło | Wyloguj (jan.kowalski)      │
+├──────────────────────────────────────────────┤
+│  Istniejące komórki organizacyjne:           │
+│                                               │
+│  📦 Magazyn A      [Edytuj] [Usuń]           │
+│  📦 Laboratorium   [Edytuj] [Usuń]           │
+│  📦 Magazyn B      [Edytuj] [Usuń]           │
+│                                               │
+│  [+ Dodaj nową komórkę organizacyjną]        │
+└──────────────────────────────────────────────┘
 ```
+
+**Uwaga:** Widoczność przycisków [Edytuj] i [Usuń] zależy od tego, czy jesteś:
+- **Administratorem** - widzisz przyciski dla wszystkich komórek
+- **Przypisany do komórki** - widzisz przyciski tylko dla swojej komórki
+- **Bez przypisania** - nie widzisz żadnych komórek (skontaktuj się z administratorem)
 
 ---
 
@@ -187,36 +192,64 @@ Lokalizacja: Bieruń
 
 ---
 
-## Zarządzanie lokalizacjami
+## Zarządzanie komórkami organizacyjnymi
 
-### Dodawanie lokalizacji
+### Co to jest komórka organizacyjna?
 
-**Tylko dla użytkowników z uprawnieniami `can_add_location`**
+**Komórka organizacyjna** = jednostka/dział w firmie (np. Laboratorium, Magazyn A, Dział Produkcji)
 
-1. Na stronie głównej przewiń do **"Dodaj nową lokalizację"**
-2. Wprowadź nazwę lokalizacji (np. "Magazyn C", "Lab Analityczne")
-3. Kliknij **"Dodaj Lokalizację"**
+**Lokalizacja fizyczna** = miejsce fizyczne (Bieruń / Krupski Młyn) - ustawiane dla poszczególnych substancji
+
+### Model dostępu
+
+System ChemMan używa dwupoziomowego modelu dostępu:
+
+| Rola | Przeglądanie | Modyfikacja | Kopiowanie |
+|------|-------------|-------------|------------|
+| **Administrator** | Wszystkie komórki | Wszystkie komórki | Do dowolnej komórki |
+| **Użytkownik z przypisaniem** | Wszystkie komórki (tylko odczyt) | Tylko przypisana komórka | Tylko do przypisanej komórki |
+| **Użytkownik bez przypisania** | Brak dostępu | Brak dostępu | Brak dostępu |
+
+**Przykład:**
+- Jan Kowalski jest przypisany do "Laboratorium SLK."
+- Może **przeglądać** substancje w "RBR-K" (tylko odczyt)
+- Może **dodawać/edytować** substancje tylko w "Laboratorium SLK."
+- Może **kopiować** substancje z "RBR-K" do "Laboratorium SLK." (nie na odwrót!)
+
+### Dodawanie komórki organizacyjnej
+
+**Tylko dla użytkowników z uprawnieniami `can_add_location` lub administratorów**
+
+1. Na stronie głównej przewiń do **"Dodaj nową komórkę organizacyjną"**
+2. Wprowadź nazwę komórki (np. "Laboratorium Analityczne", "Magazyn Główny")
+3. Kliknij **"Dodaj Komórkę Organizacyjną"**
 
 **Dobre praktyki nazewnictwa:**
-- ✅ Opisowe: `Magazyn A - Substancje łatwopalne`
-- ✅ Krótkie: `Lab 1`, `Mag B`
+- ✅ Opisowe: `Laboratorium SLK`, `Magazyn Surowców`
+- ✅ Krótkie: `Lab 1`, `RBR-K`
 - ❌ Unikaj: `aaaaa`, `test123`
 
-### Edycja nazwy lokalizacji
+### Edycja nazwy komórki
 
-1. Na stronie głównej kliknij **"Edytuj"** przy lokalizacji
+**Tylko dla komórek, do których jesteś przypisany (lub administrator)**
+
+1. Na stronie głównej kliknij **"Edytuj"** przy komórce organizacyjnej
 2. Wprowadź nową nazwę
 3. Kliknij **"Zapisz"**
 
-### Usuwanie lokalizacji
+**Uwaga:** Jeśli nie widzisz przycisku "Edytuj", nie masz uprawnień do tej komórki.
 
-**UWAGA:** Usunięcie lokalizacji usuwa też WSZYSTKIE substancje w niej!
+### Usuwanie komórki organizacyjnej
 
-1. Kliknij **"Usuń"** przy lokalizacji
-2. Potwierdź usunięcie (nazwa lokalizacji + liczba substancji)
-3. Lokalizacja i jej zawartość zostaną usunięte
+**UWAGA:** Usunięcie komórki organizacyjnej usuwa też WSZYSTKIE substancje w niej!
 
-**Zalecenie:** Przed usunięciem lokalizacji, przenieś lub usuń substancje ręcznie.
+**Tylko dla komórek, do których jesteś przypisany (lub administrator)**
+
+1. Kliknij **"Usuń"** przy komórce organizacyjnej
+2. Potwierdź usunięcie (nazwa komórki + liczba substancji)
+3. Komórka i jej zawartość zostaną usunięte
+
+**Zalecenie:** Przed usunięciem komórki, przenieś lub usuń substancje ręcznie.
 
 ---
 
@@ -494,5 +527,6 @@ Jeśli masz pytania lub problemy:
 
 ---
 
-**Wersja dokumentu:** 1.0  
-**Data aktualizacji:** 2025-01-17
+**Wersja dokumentu:** 2.1
+**Data aktualizacji:** 2025-10-27
+**Zmiany:** Dodano sekcję o komórkach organizacyjnych i modelu dostępu

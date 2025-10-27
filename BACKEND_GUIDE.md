@@ -468,6 +468,84 @@ def view_location(location_id):
 | Upload SDS | ✓ | - | - | - | - | ✓ |
 | Zarządzaj użytkownikami | ✓ | - | - | - | - | - |
 
+### Kontrola dostępu na poziomie komórek organizacyjnych (v2.1.0+)
+
+**Model dostępu:** Dwupoziomowa kontrola - VIEW (przeglądanie) vs MODIFY (modyfikacja)
+
+**Plik:** `models.py`
+```python
+class User:
+    organizational_unit_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
+
+    def has_access_to_organizational_unit(self, location_id: int) -> bool:
+        """
+        Sprawdza dostęp do PRZEGLĄDANIA komórki organizacyjnej.
+        - Admin: dostęp do wszystkich komórek
+        - Użytkownik z przypisaniem: może przeglądać wszystkie komórki (read-only)
+        - Użytkownik bez przypisania: brak dostępu
+        """
+        if self.is_admin:
+            return True
+        if self.organizational_unit_id is not None:
+            return True
+        return False
+
+    def can_modify_organizational_unit(self, location_id: int) -> bool:
+        """
+        Sprawdza dostęp do MODYFIKACJI komórki organizacyjnej.
+        - Admin: może modyfikować wszystkie komórki
+        - Użytkownik: może modyfikować TYLKO swoją przypisaną komórkę
+        """
+        if self.is_admin:
+            return True
+        if self.organizational_unit_id is None:
+            return False
+        return self.organizational_unit_id == location_id
+```
+
+**Zastosowanie w trasach:**
+```python
+# routes/substances.py
+@substances_bp.route('/location/<int:location_id>/add_substance', methods=['POST'])
+def add_substance_to_location(location_id):
+    # Sprawdź czy użytkownik może modyfikować tę komórkę
+    if not current_user.can_modify_organizational_unit(location_id):
+        return jsonify({
+            'status': 'error',
+            'message': 'Możesz dodawać substancje tylko do swojej komórki organizacyjnej.'
+        }), 403
+    # ... reszta logiki
+```
+
+**Macierz dostępu:**
+
+| Rola | VIEW wszystkich komórek | MODIFY wszystkich komórek | COPY do innych komórek |
+|------|-------------------------|---------------------------|------------------------|
+| Administrator | ✓ Tak | ✓ Tak | ✓ Tak |
+| User (z przypisaniem) | ✓ Tak (read-only) | ✗ Tylko własna komórka | ✗ Tylko do własnej komórki |
+| User (bez przypisania) | ✗ Nie | ✗ Nie | ✗ Nie |
+
+**Przykład użycia:**
+```python
+# Użytkownik przypisany do Laboratorium (ID: 1)
+
+# Przeglądanie RBR-K (ID: 2)
+current_user.has_access_to_organizational_unit(2)  # True - może przeglądać
+
+# Dodawanie substancji do RBR-K
+current_user.can_modify_organizational_unit(2)  # False - nie może modyfikować
+
+# Dodawanie substancji do Laboratorium
+current_user.can_modify_organizational_unit(1)  # True - może modyfikować swoją komórkę
+```
+
+**Pliki zmodyfikowane:**
+- `models.py`: Dodano `organizational_unit_id` i metody dostępu
+- `routes/locations.py`: Walidacja dostępu w wszystkich trasach
+- `routes/substances.py`: Walidacja `can_modify_organizational_unit()` przed operacjami CRUD
+- `routes/admin.py`: Obsługa przypisywania użytkowników do komórek
+- `templates/location_detail.html`: Warunkowe wyświetlanie kontrolek na podstawie `can_modify_this_unit`
+
 ---
 
 ## Obsługa plików Excel

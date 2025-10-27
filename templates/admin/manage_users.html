@@ -33,6 +33,8 @@
                             <strong>{{ user.username }}</strong>
                             {% if user.is_admin %}
                                 <br><small>(Administrator)</small>
+                            {% else %}
+                                <br><small style="color: #666;">Komórka: {{ user.organizational_unit.name if user.organizational_unit else 'Brak przypisania' }}</small>
                             {% endif %}
                         </td>
                         <td>
@@ -94,6 +96,15 @@
                                             </label>
                                         </div>
                                         <div style="margin-top: 10px;">
+                                            <label for="organizational_unit_id_{{ user.id }}" style="display: block; margin-bottom: 5px;">Komórka organizacyjna:</label>
+                                            <select name="organizational_unit_id" id="organizational_unit_id_{{ user.id }}" style="padding: 5px; width: 100%; max-width: 300px;">
+                                                <option value="">Brak przypisania</option>
+                                                {% for org_unit in organizational_units %}
+                                                    <option value="{{ org_unit.id }}" {% if user.organizational_unit_id == org_unit.id %}selected{% endif %}>{{ org_unit.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div style="margin-top: 10px;">
                                             <button type="submit" class="btn btn-success">
                                                 <span>💾</span> Zapisz
                                             </button>
@@ -152,7 +163,17 @@
                 <label for="new_password">Hasło*</label>
                 <input type="password" id="new_password" name="new_password" class="form-control" required minlength="8">
             </div>
-            
+            <div class="form-group">
+                <label for="organizational_unit_id">Komórka organizacyjna</label>
+                <select name="organizational_unit_id" id="organizational_unit_id" class="form-control">
+                    <option value="">Brak przypisania</option>
+                    {% for org_unit in organizational_units %}
+                        <option value="{{ org_unit.id }}">{{ org_unit.name }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666;">Wybierz komórkę organizacyjną, do której ma mieć dostęp użytkownik</small>
+            </div>
+
             <div class="permissions-section">
                 <h4 class="permissions-title">Uprawnienia użytkownika:</h4>
                 <div class="permissions-grid">

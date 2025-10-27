@@ -16,7 +16,12 @@ substances_bp = Blueprint('substances', __name__)
 def add_substance_to_location(location_id):
     """Obsługuje dodawanie substancji znalezionej przez wyszukiwanie w Excelu."""
     current_app.logger.debug(f"Otrzymano POST na /location/{location_id}/add_substance")
-    
+
+    # Sprawdź czy użytkownik może modyfikować tę komórkę organizacyjną
+    if not current_user.can_modify_organizational_unit(location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował dodać substancję do komórki bez uprawnień ID: {location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz dodawać substancje tylko do swojej komórki organizacyjnej.'}), 403
+
     # Aktualizacja daty modyfikacji lokalizacji
     from datetime import datetime
     location = Location.query.get(location_id)
@@ -118,7 +123,12 @@ def add_substance_to_location(location_id):
 def add_manual_substance(location_id):
     """Obsługuje dodawanie substancji/mieszaniny wprowadzonej ręcznie."""
     current_app.logger.debug(f"Otrzymano POST na /location/{location_id}/add_manual")
-    
+
+    # Sprawdź czy użytkownik może modyfikować tę komórkę organizacyjną
+    if not current_user.can_modify_organizational_unit(location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował dodać substancję ręcznie do komórki bez uprawnień ID: {location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz dodawać substancje tylko do swojej komórki organizacyjnej.'}), 403
+
     # Sprawdź czy lokalizacja istnieje
     from models import Location
     location = Location.query.get_or_404(location_id)
@@ -219,6 +229,12 @@ def delete_substance(substance_id):
     try:
         from models import Location  # Import Location model
         substance = Substance.query.get_or_404(substance_id)
+
+        # Sprawdź czy użytkownik może modyfikować komórkę organizacyjną substancji
+        if not current_user.can_modify_organizational_unit(substance.location_id):
+            current_app.logger.warning(f"Użytkownik {current_user.username} próbował usunąć substancję bez uprawnień do komórki ID: {substance.location_id}")
+            return jsonify({'status': 'error', 'message': 'Możesz usuwać substancje tylko z swojej komórki organizacyjnej.'}), 403
+
         # Zapamiętaj dane PRZED usunięciem, aby użyć ich w logu i komunikacie
         sub_id = substance.id
         substance_name = substance.name
@@ -257,6 +273,11 @@ def update_substance_comment(substance_id):
     """Obsługuje aktualizację komentarza dla substancji i loguje akcję."""
     current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/comment przez {current_user.username}")
     substance = Substance.query.get_or_404(substance_id)
+
+    # Sprawdź czy użytkownik może modyfikować komórkę organizacyjną substancji
+    if not current_user.can_modify_organizational_unit(substance.location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował edytować substancję bez uprawnień do komórki ID: {substance.location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz edytować substancje tylko w swojej komórce organizacyjnej.'}), 403
 
     data = request.get_json()
     if data is None or 'comment' not in data:
@@ -316,10 +337,15 @@ def move_substances():
         return jsonify({'status': 'error', 'message': 'Nieprawidłowe ID celu.'}), 400
     
     target_location = Location.query.get(target_location_id)
-    
+
     if not target_location:
         return jsonify({'status': 'error', 'message': 'Lokalizacja docelowa nie istnieje.'}), 404
-    
+
+    # Sprawdź czy użytkownik może modyfikować komórkę docelową
+    if not current_user.can_modify_organizational_unit(target_location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował przenieść substancje do komórki bez uprawnień ID: {target_location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz przenosić substancje tylko do swojej komórki organizacyjnej.'}), 403
+
     try:
         substances_to_move = Substance.query.filter(Substance.id.in_(substance_ids)).all()
         
@@ -410,10 +436,15 @@ def copy_substances():
         return jsonify({'status': 'error', 'message': 'Nieprawidłowe ID celu.'}), 400
     
     target_location = Location.query.get(target_location_id) # Pobierz obiekt lokalizacji docelowej
-    
+
     if not target_location:
         return jsonify({'status': 'error', 'message': 'Lokalizacja docelowa nie istnieje.'}), 404
-    
+
+    # Sprawdź czy użytkownik może modyfikować komórkę docelową
+    if not current_user.can_modify_organizational_unit(target_location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował skopiować substancje do komórki bez uprawnień ID: {target_location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz kopiować substancje tylko do swojej komórki organizacyjnej.'}), 403
+
     try:
         substances_to_copy_from = Substance.query.filter(Substance.id.in_(substance_ids)).all()
         

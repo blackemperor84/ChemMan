@@ -515,6 +515,7 @@ def view_all_substances():
 
             all_substances_data_for_template.append({
                 'id': sub.id,
+                'location_id': sub.location_id,
                 'location_name': sub.location.name,
                 'name': sub.name,
                 'cas': sub.cas,

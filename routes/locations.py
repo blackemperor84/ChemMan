@@ -15,15 +15,21 @@ locations_bp = Blueprint('locations', __name__)
 @login_required
 @view_permission_required
 def index():
-    """Wyświetla listę lokalizacji (strona główna)."""
+    """Wyświetla listę komórek organizacyjnych. Wszyscy użytkownicy z przypisaniem widzą wszystkie komórki."""
     current_app.logger.debug("Obsługa trasy / (index)")
     try:
-        # Pobierz wszystkie lokalizacje posortowane alfabetycznie
-        locations = Location.query.order_by(Location.name).all()
+        # Użytkownicy z przypisaną komórką widzą wszystkie komórki (mogą przeglądać)
+        if current_user.is_admin or current_user.organizational_unit_id:
+            locations = Location.query.order_by(Location.name).all()
+        # Użytkownik bez przypisanej komórki nie widzi nic
+        else:
+            locations = []
+            flash('Nie masz przypisanej komórki organizacyjnej. Skontaktuj się z administratorem.', 'warning')
+
         return render_template('locations.html', locations=locations)
     except Exception as e:
-        flash(f'Błąd odczytu lokalizacji z bazy danych: {e}', 'error')
-        current_app.logger.error(f"Błąd odczytu lokalizacji z DB: {e}")
+        flash(f'Błąd odczytu komórek organizacyjnych z bazy danych: {e}', 'error')
+        current_app.logger.error(f"Błąd odczytu komórek organizacyjnych z DB: {e}")
         return render_template('locations.html', locations=[])
 
 
@@ -75,6 +81,12 @@ def add_location():
 @view_permission_required
 def view_location(location_id):
     try:
+        # Sprawdź, czy użytkownik ma dostęp do przeglądania tej komórki organizacyjnej
+        if not current_user.has_access_to_organizational_unit(location_id):
+            flash('Nie masz dostępu do tej komórki organizacyjnej.', 'error')
+            current_app.logger.warning(f"Użytkownik {current_user.username} próbował uzyskać dostęp do komórki ID: {location_id}")
+            return redirect(url_for('locations.index'))
+
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 5, type=int)
         if per_page > 100: per_page = 100
@@ -82,11 +94,23 @@ def view_location(location_id):
         db.session.expire_all()
         location = Location.query.get_or_404(location_id)
 
+        # Sprawdź, czy użytkownik może modyfikować tę komórkę
+        can_modify = current_user.can_modify_organizational_unit(location_id)
+
         paginated_substances = Substance.query.filter_by(location_id=location_id).order_by(
             Substance.name
         ).paginate(page=page, per_page=per_page, error_out=False)
 
-        other_locations = Location.query.filter(Location.id != location_id).order_by(Location.name).all()
+        # Użytkownicy mogą kopiować/przenosić tylko do swojej przypisanej komórki
+        if current_user.is_admin:
+            # Admin widzi wszystkie inne komórki jako cele
+            other_locations = Location.query.filter(Location.id != location_id).order_by(Location.name).all()
+        elif current_user.organizational_unit_id and current_user.organizational_unit_id != location_id:
+            # Użytkownik widzi tylko swoją przypisaną komórkę jako cel (jeśli nie jest to aktualna komórka)
+            other_locations = Location.query.filter_by(id=current_user.organizational_unit_id).all()
+        else:
+            # Jeśli użytkownik przegląda swoją własną komórkę, nie ma innych celów (lub nie ma przypisania)
+            other_locations = []
 
         substances_data_for_template = []
         for sub in paginated_substances.items:
@@ -119,7 +143,8 @@ def view_location(location_id):
                 location=location,
                 substances_data=substances_data_for_template,
                 other_locations=other_locations,
-                pagination=paginated_substances
+                pagination=paginated_substances,
+                can_modify_this_unit=can_modify
             )
     except Exception as e:
         return handle_exception(e, "pobierania szczegółów lokalizacji", url_for('locations.index'))
@@ -128,8 +153,14 @@ def view_location(location_id):
 @login_required
 @edit_permission_required
 def update_location_name(location_id):
-    """Obsługuje aktualizację nazwy lokalizacji (przez AJAX/fetch)."""
+    """Obsługuje aktualizację nazwy komórki organizacyjnej (przez AJAX/fetch)."""
     current_app.logger.debug(f"Otrzymano POST na /location/{location_id}/edit")
+
+    # Sprawdź czy użytkownik może modyfikować tę komórkę organizacyjną
+    if not current_user.can_modify_organizational_unit(location_id):
+        current_app.logger.error(f"BŁĄD: Użytkownik {current_user.username} nie może modyfikować komórki ID: {location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz edytować tylko substancje w swojej komórce organizacyjnej.'}), 403
+
     # Pobierz lokalizację LUB zwróć błąd 404 jeśli nie istnieje
     location = Location.query.get_or_404(location_id)
     location.last_modified = datetime.utcnow()
@@ -193,9 +224,17 @@ def update_location_name(location_id):
 @login_required
 @delete_location_permission_required
 def delete_location(location_id):
-    """Obsługuje usuwanie lokalizacji i jej zawartości."""
+    """Obsługuje usuwanie komórki organizacyjnej i jej zawartości."""
     current_app.logger.info(f"Otrzymano POST na /location/{location_id}/delete")
     try:
+        # Sprawdź czy użytkownik może modyfikować tę komórkę organizacyjną
+        if not current_user.can_modify_organizational_unit(location_id):
+            current_app.logger.warning(f"Użytkownik {current_user.username} próbował usunąć komórkę bez uprawnień ID: {location_id}")
+            if request.accept_mimetypes.accept_json or request.content_type == 'application/json':
+                return jsonify({'status': 'error', 'message': 'Możesz usuwać tylko komórki organizacyjne przypisane do Ciebie.'}), 403
+            flash('Możesz usuwać tylko komórki organizacyjne przypisane do Ciebie.', 'error')
+            return redirect(url_for('locations.index'))
+
         location_to_delete = Location.query.get_or_404(location_id)
         location_name = location_to_delete.name
         loc_id = location_to_delete.id # Zapisz ID przed usunięciem
