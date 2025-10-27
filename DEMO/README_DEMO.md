@@ -26,7 +26,7 @@ To jest **samodzielna wersja demonstracyjna** aplikacji ChemMan, która:
 
 Jeśli już masz spakowaną wersję demo:
 
-1. Rozpakuj folder `ChemMan_Demo_v2.0.0.zip`
+1. Rozpakuj folder `ChemMan_Demo_v2.1.0.zip`
 2. Wejdź do folderu `ChemMan_Demo`
 3. Kliknij dwukrotnie `START_CHEMMAN_DEMO.bat`
 4. Poczekaj aż otworzy się przeglądarka

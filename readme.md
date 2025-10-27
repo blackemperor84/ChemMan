@@ -78,7 +78,24 @@ python -m pytest tests/ --cov=. --cov-report=html
 # Oczekiwany wynik: 242 testy, 80% pokrycia
 ```
 
-## Co nowego w v2.0.0? 🎉
+## Co nowego w v2.1.0? 🎉
+
+### 🏢 System komórek organizacyjnych
+- ✅ Przypisywanie użytkowników do komórek organizacyjnych (działy/jednostki)
+- ✅ Dwupoziomowa kontrola dostępu (VIEW/MODIFY)
+- ✅ Użytkownicy mogą przeglądać wszystkie komórki, ale modyfikować tylko swoją
+- ✅ Ograniczenie kopiowania/przenoszenia substancji do przypisanej komórki
+
+### 🔍 Usprawnienia nawigacji
+- ✅ **Klikalne wiersze** w widoku "Wszystkie Substancje"
+- ✅ Kliknięcie substancji przekierowuje do komórki organizacyjnej
+- ✅ Inteligentna obsługa kliknięć (linki SDS działają normalnie)
+- ✅ Wizualna informacja o klikalności (kursor pointer)
+
+### 📦 Poprzednie wersje
+
+<details>
+<summary>Co było nowego w v2.0.0</summary>
 
 ### Przejście na PostgreSQL
 - ✅ Baza danych PostgreSQL (zamiast SQLite)
@@ -100,6 +117,7 @@ python -m pytest tests/ --cov=. --cov-report=html
 - ✅ Kompletny przewodnik wdrożenia produkcyjnego
 - ✅ Instrukcje dla Linux i Windows
 - ✅ Konfiguracja SSL, kopie zapasowe, monitoring
+</details>
 
 Zobacz [CHANGELOG.md](CHANGELOG.md) dla pełnej listy zmian.
 

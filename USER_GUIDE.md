@@ -353,6 +353,31 @@ System ChemMan używa dwupoziomowego modelu dostępu:
 1. Kliknij **"Wszystkie Substancje"** w menu
 2. Zobaczysz tabelę ze wszystkimi substancjami ze wszystkich lokalizacji
 
+### 🖱️ Nawigacja kliknięciem (v2.1.0+)
+
+**Szybkie przechodzenie do komórki organizacyjnej**
+
+Każdy wiersz w tabeli "Wszystkie Substancje" jest klikalny:
+
+1. **Najedź kursorem** na wiersz substancji → kursor zmieni się na wskaźnik 👆
+2. **Kliknij w dowolne miejsce wiersza** → zostaniesz przekierowany do komórki organizacyjnej, gdzie jest ta substancja
+3. **Linki działają normalnie** - kliknięcie "Pobierz" przy SDS pobierze kartę (nie przekieruje)
+
+**Przykład:**
+```
+Szukasz "kwas siarkowy" → znajdziesz go w widoku globalnym
+↓
+Klikasz wiersz
+↓
+Widzisz komórkę organizacyjną "Magazyn A" ze wszystkimi szczegółami
+```
+
+**Zalety:**
+- ✅ Szybki dostęp do szczegółów lokalizacji
+- ✅ Zobacz inne substancje w tej samej komórce
+- ✅ Dostęp do operacji kopiowania/przenoszenia
+- ✅ Pełny kontekst substancji w jej komórce
+
 ### Filtr tekstowy
 
 W polu **"Filtruj (Nazwa, CAS, EC, Klasyfikacja, Lokalizacja...)"** możesz wpisać:

@@ -816,5 +816,5 @@ Jeśli dokumentacja nie rozwiązuje Twojego problemu:
 
 ---
 
-**Aktualizacja:** 2025-01-17  
-**Wersja:** 1.0
+**Aktualizacja:** 2025-10-27
+**Wersja:** 2.1.0
