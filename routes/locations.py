@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from decorators import view_permission_required, add_permission_required, edit_permission_required, delete_permission_required, add_location_permission_required, delete_location_permission_required
 from werkzeug.exceptions import NotFound # Dodaj import NotFound
 
-from models import db, Location, Substance
+from models import db, Location, Substance, SDSFile
 from utils import log_action, convert_utc_to_local, handle_exception, is_svhc_substance
 
 from datetime import datetime
@@ -123,18 +123,38 @@ def view_location(location_id):
                 svhc_reason = is_svhc_substance(cas=sub.cas, ec_number=sub.ec_number, name=sub.name)
             # --- KONIEC DODANEJ LOGIKI ---
 
+            # Pobierz wszystkie pliki SDS dla tej substancji
+            sds_files_list = []
+            for sds_file in sub.sds_files:
+                sds_files_list.append({
+                    'id': sds_file.id,
+                    'filename': sds_file.filename,
+                    'original_filename': sds_file.original_filename,
+                    'manufacturer': sds_file.manufacturer,
+                    'upload_timestamp_local': convert_utc_to_local(sds_file.upload_timestamp)
+                })
+
             substances_data_for_template.append({
                 'id': sub.id,
                 'name': sub.name,'cas': sub.cas, 'ec_number': sub.ec_number,
                 'classification': sub.classification, 'h_phrases': sub.h_phrases,
                 'comment': sub.comment, 'sds_filename': sub.sds_filename,
                 'sds_upload_timestamp_local': local_timestamp_str,
+                'sds_files': sds_files_list,  # DODANE: Lista plików SDS
                 'scl_mfactor': sub.scl_mfactor or '',
                 'physical_location': sub.physical_location or 'Nieznana',
                 'is_cmr': sub.is_cmr,
                 'is_svhc': sub.is_svhc,
+                'contains_cmr': sub.contains_cmr,  # DODANE: Flaga CMR dla mieszanin
+                'contains_svhc': sub.contains_svhc,  # DODANE: Flaga SVHC dla mieszanin
                 'svhc_reason': svhc_reason or '' # DODANE: Przekazujemy powód do szablonu (lub pusty string)
             })
+
+        # Oblicz liczniki
+        total_substances = Substance.query.filter_by(location_id=location_id).count()
+        total_sds_files = db.session.query(db.func.count(SDSFile.id)).join(
+            Substance, SDSFile.substance_id == Substance.id
+        ).filter(Substance.location_id == location_id).scalar()
 
         current_app.logger.info(f"Znaleziono lokalizację: {location.name}, wyświetlanie strony {page} z {paginated_substances.pages} ({len(substances_data_for_template)} substancji)")
 
@@ -144,7 +164,9 @@ def view_location(location_id):
                 substances_data=substances_data_for_template,
                 other_locations=other_locations,
                 pagination=paginated_substances,
-                can_modify_this_unit=can_modify
+                can_modify_this_unit=can_modify,
+                total_substances=total_substances,
+                total_sds_files=total_sds_files
             )
     except Exception as e:
         return handle_exception(e, "pobierania szczegółów lokalizacji", url_for('locations.index'))

@@ -5,7 +5,7 @@ from flask import Blueprint, request, flash, redirect, url_for, send_from_direct
 from flask_login import login_required, current_user
 from decorators import upload_sds_permission_required, view_permission_required
 
-from models import db, Substance, Location
+from models import db, Substance, Location, SDSFile
 from utils import allowed_file, log_action, handle_exception
 from utils.file_manager import FileManager
 from werkzeug.utils import secure_filename
@@ -51,7 +51,7 @@ def validate_mime_type(file_stream):
 @login_required
 @upload_sds_permission_required
 def upload_sds(substance_id):
-    """Obsługuje upload pliku SDS dla substancji."""
+    """Obsługuje upload pliku SDS dla substancji (obsługuje wiele plików)."""
     current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/upload_sds")
     substance = Substance.query.get_or_404(substance_id)
 
@@ -61,6 +61,7 @@ def upload_sds(substance_id):
         return redirect(url_for('locations.view_location', location_id=substance.location_id))
 
     file = request.files['sds_file']
+    manufacturer = request.form.get('manufacturer', '').strip()  # Pobierz nazwę producenta
 
     # Sprawdź, czy wybrano plik (przeglądarka może wysłać pustą część)
     if file.filename == '':
@@ -76,7 +77,7 @@ def upload_sds(substance_id):
     file.seek(0, os.SEEK_END)  # Idź na koniec pliku
     file_size = file.tell()
     file.seek(0)  # Reset do początku
-    
+
     max_size = current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
     if file_size > max_size:
         flash(f'Plik jest za duży. Maksymalny rozmiar: {max_size / (1024*1024):.1f} MB', 'error')
@@ -91,9 +92,9 @@ def upload_sds(substance_id):
     # Jeśli wszystkie walidacje przeszły - zapisz plik
     if file:
         try:
-            # Użyj menedżera plików do zapisania pliku i usunięcia starego
-            old_filename = substance.sds_filename
-            unique_filename = FileManager.save_sds_file(file, old_filename)
+            # Użyj menedżera plików do zapisania pliku (nie usuwamy starych - obsługujemy wiele)
+            unique_filename = FileManager.save_sds_file(file, None)
+            original_filename = secure_filename(file.filename)
 
             # Zaktualizuj datę ostatniej modyfikacji lokalizacji
             location = Location.query.get(substance.location_id)
@@ -102,17 +103,33 @@ def upload_sds(substance_id):
             else:
                 current_app.logger.warning(f"Nie znaleziono lokalizacji ID: {substance.location_id} podczas uploadu SDS dla substancji ID: {substance.id}")
 
-            # Zaktualizuj nazwę pliku w bazie danych
-            substance.sds_filename = unique_filename
-            substance.sds_upload_timestamp = datetime.utcnow()
+            # Utwórz nowy wpis w tabeli sds_files
+            new_sds_file = SDSFile(
+                substance_id=substance.id,
+                filename=unique_filename,
+                original_filename=original_filename,
+                manufacturer=manufacturer if manufacturer else None,
+                upload_timestamp=datetime.utcnow()
+            )
+            db.session.add(new_sds_file)
+
+            # Zachowaj kompatybilność wsteczną - zaktualizuj też stare pola
+            if not substance.sds_filename:
+                substance.sds_filename = unique_filename
+                substance.sds_upload_timestamp = datetime.utcnow()
+
             db.session.commit()
 
-            flash(f'Plik SDS "{secure_filename(file.filename)}" został pomyślnie przesłany dla {substance.name}.', 'success')
+            flash_msg = f'Plik SDS "{original_filename}" został pomyślnie przesłany dla {substance.name}.'
+            if manufacturer:
+                flash_msg += f' (Producent: {manufacturer})'
+            flash(flash_msg, 'success')
+
             log_action(
                 'UPLOAD_SDS',
                 target_type='Substance',
                 target_id=substance.id,
-                details=f"Plik: {unique_filename}, Rozmiar: {file_size} bajtów"
+                details=f"Plik: {original_filename}, Producent: {manufacturer or 'Nie podano'}, Rozmiar: {file_size} bajtów"
             )
 
         except Exception as e:
@@ -153,18 +170,22 @@ def download_sds(filename):
         abort(500)
 
 
-@files_bp.route('/substance/<int:substance_id>/delete_sds', methods=['POST'])
+@files_bp.route('/substance/<int:substance_id>/delete_sds/<int:sds_file_id>', methods=['POST'])
 @login_required
 @upload_sds_permission_required
-def delete_sds(substance_id):
-    """Usuwa załączony plik SDS i czyści wpis w bazie danych."""
-    current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/delete_sds")
+def delete_sds(substance_id, sds_file_id):
+    """Usuwa konkretny plik SDS."""
+    current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/delete_sds/{sds_file_id}")
     substance = Substance.query.get_or_404(substance_id)
-    filename_to_delete = substance.sds_filename
+    sds_file = SDSFile.query.get_or_404(sds_file_id)
 
-    if not filename_to_delete:
-        flash('Brak pliku SDS do usunięcia dla tej substancji.', 'warning')
+    # Sprawdź, czy plik SDS należy do tej substancji
+    if sds_file.substance_id != substance_id:
+        flash('Nieprawidłowe żądanie.', 'error')
         return redirect(url_for('locations.view_location', location_id=substance.location_id))
+
+    filename_to_delete = sds_file.filename
+    original_filename = sds_file.original_filename
 
     try:
         # Krok 1: Użyj FileManager do usunięcia pliku
@@ -177,23 +198,29 @@ def delete_sds(substance_id):
         else:
             current_app.logger.warning(f"Nie znaleziono lokalizacji ID: {substance.location_id} podczas usuwania SDS dla substancji ID: {substance.id}")
 
-        # Krok 3: Wyczyść nazwę pliku i timestamp w bazie danych
-        substance.sds_upload_timestamp = None
-        substance.sds_filename = None
+        # Krok 3: Usuń wpis z bazy danych
+        db.session.delete(sds_file)
+
+        # Krok 4: Jeśli to był jedyny plik, wyczyść stare pola w substance
+        remaining_files = SDSFile.query.filter_by(substance_id=substance_id).count()
+        if remaining_files == 0:
+            substance.sds_filename = None
+            substance.sds_upload_timestamp = None
+
         db.session.commit()
 
-        # Krok 4: Zapisz log akcji
+        # Krok 5: Zapisz log akcji
         try:
             log_action(
                 'DELETE_SDS',
                 target_type='Substance',
                 target_id=substance.id,
-                details=f"Usunięto plik: {filename_to_delete}"
+                details=f"Usunięto plik: {original_filename or filename_to_delete}"
             )
         except Exception as log_e:
             current_app.logger.warning(f"OSTRZEŻENIE: Nie udało się zapisać logu dla DELETE_SDS: {log_e}")
 
-        flash(f'Plik SDS "{filename_to_delete}" został usunięty dla {substance.name}.', 'success')
+        flash(f'Plik SDS "{original_filename or filename_to_delete}" został usunięty dla {substance.name}.', 'success')
 
     except Exception as e:
         return handle_exception(e, "usuwania pliku SDS",

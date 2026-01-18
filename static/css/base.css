@@ -386,6 +386,33 @@ textarea:focus {
     margin-top: 20px;  /* Zwiększony margines */
 }
 
+/* Fieldset CMR/SVHC powinien zajmować całą szerokość formularza */
+#manual-add-form fieldset {
+    grid-column: 1 / 3;
+}
+
+/* Wyrównanie checkboxów CMR/SVHC w formularzu ręcznego dodawania */
+#manual-add-form fieldset label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    text-align: left !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#manual-add-form fieldset label input[type="checkbox"] {
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+}
+
+#manual-add-form fieldset label span {
+    flex: 1 !important;
+    text-align: left !important;
+    word-wrap: break-word !important;
+}
+
 /* Wyrównanie wysokości przycisku Zapisz i Anuluj */
 #manual-add-form .button-row button {
     min-width: 120px;

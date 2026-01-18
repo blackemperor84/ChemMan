@@ -203,6 +203,70 @@
 }
 */
 
+/* ======================================== */
+/* Style dla trybu edycji inline          */
+/* ======================================== */
+
+/* Ogólne style dla pól edycyjnych */
+.edit-mode .edit-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-family: inherit;
+}
+
+/* Wyrównanie flag CMR/SVHC w trybie edycji */
+.edit-mode label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    margin: 3px 0;
+    cursor: pointer;
+    line-height: 16px;
+}
+
+.edit-mode label input[type="checkbox"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    vertical-align: baseline;
+}
+
+.edit-mode label span {
+    display: inline-block;
+    line-height: 14px;
+    vertical-align: baseline;
+}
+
+/* Ograniczenia szerokości dla konkretnych kolumn w trybie edycji */
+/* Kolumna Nazwa - maksymalna szerokość */
+td:nth-child(2) .edit-mode .edit-input {
+    max-width: 240px;
+}
+
+/* Kolumny CAS i EC - wąskie pola */
+td:nth-child(3) .edit-mode .edit-input,
+td:nth-child(4) .edit-mode .edit-input {
+    max-width: 90px;
+}
+
+/* Kolumna Lokalizacja - średnie pole */
+td:nth-child(8) .edit-mode .edit-input {
+    max-width: 120px;
+}
+
+/* Styling dla wiersza w trybie edycji */
+tr.editing-mode {
+    background-color: #fffbf0;
+}
+
 /* Style dla paginacji po stronie serwera */
 .pagination-server {
     display: flex;

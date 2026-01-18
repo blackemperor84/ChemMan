@@ -6,6 +6,103 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.2.0] - 2026-01-18
+
+### 📁 Wiele Kart SDS i Zaawansowana Edycja - Major Feature Update!
+
+#### ✨ Dodano
+
+**Wiele Kart SDS na Substancję:**
+- Każda substancja może mieć wiele kart SDS od różnych producentów
+- Pole "Producent" do śledzenia źródła karty SDS
+- Wyświetlanie oryginalnej nazwy pliku w kolumnie SDS
+- Śledzenie znacznika czasu przesłania dla każdej karty SDS
+- Możliwość dodawania, przeglądania i usuwania wielu kart SDS
+- Wyświetlanie wszystkich kart SDS w widoku lokalizacji i widoku globalnym
+
+**Liczniki Substancji i Kart SDS:**
+- Widok szczegółów komórki organizacyjnej: liczba substancji i kart SDS na komórkę
+- Widok globalny: całkowita liczba substancji i kart SDS we wszystkich komórkach
+- Liczniki aktualizują się dynamicznie po dodaniu/usunięciu substancji lub kart SDS
+- Wyświetlanie w stylizowanych sekcjach z ikonami
+
+**Ręczne Flagi CMR/SVHC:**
+- Substancje czyste: checkboxy "Jest CMR" / "Jest SVHC"
+- Mieszaniny: checkboxy "Zawiera CMR" / "Zawiera SVHC"
+- Flagi można ustawić podczas ręcznego dodawania lub edycji inline
+- Ręczne flagi nadpisują autodetekcję, gdy są wyraźnie ustawione
+- Autodetekcja nadal działa dla substancji bez ręcznych flag
+- Wizualne odznaki dla wszystkich flag (czerwone dla CMR, żółte dla SVHC, złote dla flag mieszanin)
+
+**Pełna Edycja Inline:**
+- Wszystkie pola substancji edytowalne bezpośrednio w wierszu tabeli
+- Pola edytowalne: nazwa, CAS, EC, klasyfikacja, zwroty H, SCL/M-factor, lokalizacja fizyczna, komentarz
+- Flagi CMR/SVHC edytowalne inline
+- Przyciski Zapisz/Anuluj w każdym wierszu
+- Tryb widoku/edycji z przełączaniem za pomocą przycisków
+- Pola edycyjne dopasowane do szerokości kolumn
+
+**Ulepszenia UI:**
+- Poprawione wyrównanie checkboxów w trybie edycji i formularzu ręcznego dodawania
+- Fieldset flag CMR/SVHC zajmuje pełną szerokość formularza
+- Pola edycyjne z ograniczoną szerokością dopasowaną do kolumn
+- Responsywny układ formularza (2-kolumnowy grid)
+- Lepsze marginesy i odstępy w formularzach
+
+#### 🔧 Zmieniono
+
+**Schemat Bazy Danych:**
+- Dodano model `SDSFile` dla relacji jeden-do-wielu z substancjami
+- Tabela `sds_files`: kolumny: id, substance_id, filename, original_filename, manufacturer, upload_timestamp
+- Dodano pola `contains_cmr` i `contains_svhc` Boolean do modelu `Substance`
+- Zachowano pole `sds_filename` dla kompatybilności wstecznej
+
+**API i Backend:**
+- Zaktualizowano endpoint `/substance/<id>/edit` aby przyjmował wszystkie pola włącznie z flagami CMR/SVHC
+- Zaktualizowano endpoint `/location/<id>/add_manual` aby przyjmował flagi CMR/SVHC
+- Zaktualizowano endpoint `/substance/<id>/upload_sds` dla wielu plików z danymi producenta
+- Zaktualizowano endpoint `/sds/delete` aby przyjmował parametr `sds_file_id`
+- Dodano logikę liczników w `routes/locations.py` i `routes/export.py`
+- Ulepszona obsługa relacji SQLAlchemy dla wielu kart SDS
+
+**Frontend:**
+- Refaktoryzacja edycji z modalnej na edycję inline w wierszach
+- Zaktualizowano `templates/location_detail.html` z trybem widoku/edycji inline
+- Zaktualizowano `templates/all_substances.html` do wyświetlania wielu kart SDS
+- Dodano checkboxy CMR/SVHC do formularza ręcznego dodawania
+- Zaktualizowano `static/js/location_detail.js` z obsługą edycji inline
+- CSS: `static/css/base.css` - układ formularza i style checkboxów
+- CSS: `static/css/location_detail.css` - tryb edycji i ograniczenia szerokości pól
+
+#### 🐛 Naprawiono
+
+- Szerokość pól edycyjnych teraz dopasowana do szerokości kolumn tabeli
+- Wyrównanie checkboxów CMR/SVHC w trybie edycji i formularzu ręcznego dodawania
+- Szerokość fieldset w formularzu ręcznego dodawania zajmuje pełną szerokość formularza (grid-column: 1 / 3)
+- Wiele kart SDS teraz wyświetla się poprawnie w widoku globalnym
+- Poprawiono style flexbox dla etykiet i checkboxów
+- Poprawiono układy grid dla spójności formularzy
+
+#### 📦 Techniczne
+
+**Migracja Bazy Danych:**
+- Skrypt migracyjny: `migrate_to_multi_sds.py`
+- Migruje stare pole `sds_filename` do nowego modelu `SDSFile`
+- Bezpieczna migracja bez utraty danych
+- Automatyczne tworzenie rekordów `SDSFile` z istniejących kart SDS
+
+**Lokalizacje Plików:**
+- Modele: `models.py` (linie: SDSFile model, Substance.contains_cmr/contains_svhc)
+- Routy substancji: `routes/substances.py:update_substance()`, `add_manual_substance()`
+- Routy plików: `routes/files.py:upload_sds()`, `delete_sds()`
+- Routy lokalizacji: `routes/locations.py:view_location()` (liczniki i lista kart SDS)
+- Routy eksportu: `routes/export.py:view_all_substances()` (globalne liczniki)
+- Szablony: `templates/location_detail.html`, `templates/all_substances.html`
+- JavaScript: `static/js/location_detail.js` (obsługa edycji inline)
+- CSS: `static/css/base.css` (linie 390-414), `static/css/location_detail.css`
+
+---
+
 ## [2.1.0] - 2025-10-27
 
 ### 🏢 System Komórek Organizacyjnych - Major Feature Update!

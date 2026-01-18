@@ -327,7 +327,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // --- Obsługa SDS UI (bez zmian, bo używa standardowych formularzy POST) ---
+            // --- Obsługa SDS UI ---
+            // Nowy przycisk "+ Dodaj SDS"
+            if (target.classList.contains('show-sds-upload-form')) {
+                console.log("Kliknięto .show-sds-upload-form");
+                const substanceId = target.dataset.substanceId;
+                const formToShow = document.getElementById(`sds-form-${substanceId}`);
+                if (formToShow) {
+                    target.style.display = 'none';
+                    formToShow.style.display = 'block';
+                    console.log(`Pokazano formularz dodawania SDS ID: ${substanceId}`);
+                } else { console.error(`Nie znaleziono formularza SDS ID: ${substanceId}`); }
+                return;
+            }
+
+            // Stary przycisk "Zmień" - zachowany dla kompatybilności
             if (target.classList.contains('show-replace-sds-form')) {
                 console.log("Kliknięto .show-replace-sds-form");
                 const substanceId = target.dataset.substanceId;
@@ -345,11 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Kliknięto .cancel-upload-btn");
                 const substanceId = target.dataset.substanceId;
                 const formToHide = document.getElementById(`sds-form-${substanceId}`);
+                const uploadButton = document.querySelector(`.show-sds-upload-form[data-substance-id="${substanceId}"]`);
                 const cellContent = target.closest('.sds-cell').querySelector('.sds-cell-content');
                 const fileInput = formToHide ? formToHide.querySelector('input[type="file"]') : null;
-                if (formToHide && cellContent) {
+
+                if (formToHide) {
                     formToHide.style.display = 'none';
-                    cellContent.style.display = 'block';
+                    if (uploadButton) uploadButton.style.display = 'inline-block';
+                    if (cellContent) cellContent.style.display = 'block';
                     if (fileInput) fileInput.value = '';
                     console.log(`Anulowano upload SDS ID: ${substanceId}`);
                 } else { console.error(`Nie znaleziono elementów SDS (anuluj) ID: ${substanceId}`); }
@@ -359,6 +376,108 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn("Nie znaleziono tbody - listenery dla tabeli substancji nieaktywne.");
     }
+
+    // === SEKCJA EDYCJI SUBSTANCJI (INLINE) ===
+
+    // Obsługa kliknięcia przycisku "Edytuj"
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-substance-btn')) {
+            const substanceId = e.target.dataset.substanceId;
+            const row = document.querySelector(`tr[data-substance-row-id="${substanceId}"]`);
+            if (!row) return;
+
+            // Pokaż tryb edycji dla wszystkich komórek
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.querySelector('.view-mode').style.display = 'none';
+                cell.querySelector('.edit-mode').style.display = 'block';
+            });
+
+            // Przełącz przyciski akcji
+            row.querySelector('.view-mode-actions').style.display = 'none';
+            row.querySelector('.edit-mode-actions').style.display = 'block';
+
+            // Dodaj klasę do wiersza dla stylowania
+            row.classList.add('editing-mode');
+        }
+    });
+
+    // Obsługa kliknięcia przycisku "Anuluj"
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('cancel-edit-btn')) {
+            const substanceId = e.target.dataset.substanceId;
+            const row = document.querySelector(`tr[data-substance-row-id="${substanceId}"]`);
+            if (!row) return;
+
+            // Cofnij tryb edycji
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.querySelector('.view-mode').style.display = 'block';
+                cell.querySelector('.edit-mode').style.display = 'none';
+            });
+
+            // Przełącz przyciski akcji
+            row.querySelector('.view-mode-actions').style.display = 'block';
+            row.querySelector('.edit-mode-actions').style.display = 'none';
+
+            // Usuń klasę
+            row.classList.remove('editing-mode');
+        }
+    });
+
+    // Obsługa kliknięcia przycisku "Zapisz"
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('save-edit-btn')) {
+            const substanceId = e.target.dataset.substanceId;
+            const row = document.querySelector(`tr[data-substance-row-id="${substanceId}"]`);
+            if (!row) return;
+
+            // Zbierz dane z pól edycji
+            const formData = {
+                name: row.querySelector('[data-field="name"] .edit-input').value.trim(),
+                cas: row.querySelector('[data-field="cas"] .edit-input').value.trim(),
+                ec_number: row.querySelector('[data-field="ec_number"] .edit-input').value.trim(),
+                classification: row.querySelector('[data-field="classification"] .edit-input').value.trim(),
+                h_phrases: row.querySelector('[data-field="h_phrases"] .edit-input').value.trim(),
+                scl_mfactor: row.querySelector('[data-field="scl_mfactor"] .edit-input').value.trim(),
+                physical_location: row.querySelector('[data-field="physical_location"] .edit-input').value.trim(),
+                comment: row.querySelector('[data-field="comment"] .edit-input').value.trim(),
+                is_cmr: row.querySelector('.flag-is-cmr').checked,
+                is_svhc: row.querySelector('.flag-is-svhc').checked,
+                contains_cmr: row.querySelector('.flag-contains-cmr').checked,
+                contains_svhc: row.querySelector('.flag-contains-svhc').checked
+            };
+
+            try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    showToast('Błąd bezpieczeństwa: Brak tokenu CSRF.', 'error');
+                    return;
+                }
+
+                const response = await fetch(`/substance/${substanceId}/edit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const responseData = await response.json();
+                if (!response.ok) throw new Error(responseData.message || `Błąd: ${response.status}`);
+
+                if (responseData.status === 'success') {
+                    showToast('Substancja zaktualizowana pomyślnie!', 'success');
+                    // Odśwież stronę aby zobaczyć zmiany
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(responseData.message || 'Nieznany błąd zapisu.', 'error');
+                }
+            } catch (error) {
+                console.error("Błąd edycji substancji:", error);
+                showToast(`Wystąpił błąd: ${error.message}`, 'error');
+            }
+        }
+    });
 
     // === SEKCJA OBSŁUGI RĘCZNEGO DODAWANIA ===
     const showManualFormBtn = document.getElementById('show-manual-form-btn');
@@ -425,7 +544,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 classification: document.getElementById('manual-classification').value.trim(),
                 h_phrases: document.getElementById('manual-hphrases').value.trim(),
                 comment: document.getElementById('manual-comment').value.trim(),
-                physical_location: physicalLocationField.value
+                physical_location: physicalLocationField.value,
+                is_cmr: document.getElementById('manual-is-cmr').checked,
+                is_svhc: document.getElementById('manual-is-svhc').checked,
+                contains_cmr: document.getElementById('manual-contains-cmr').checked,
+                contains_svhc: document.getElementById('manual-contains-svhc').checked
             };
 
             console.log(`Próba ręcznego dodania (Loc ID: ${locationId}):`, substanceData);

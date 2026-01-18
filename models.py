@@ -38,7 +38,7 @@ class Location(db.Model):
 class Substance(db.Model):
     """Model substancji chemicznej."""
     __tablename__ = 'substances'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)  # TEXT dla bardzo długich nazw (do 2048 chars)
     cas = db.Column(db.Text, nullable=True)  # TEXT dla list numerów CAS (do 484 chars)
@@ -47,15 +47,34 @@ class Substance(db.Model):
     h_phrases = db.Column(db.Text, nullable=True)
     scl_mfactor = db.Column(db.Text, nullable=True)
     comment = db.Column(db.Text, nullable=True)
-    is_cmr = db.Column(db.Boolean, default=False)  # Flaga CMR
-    is_svhc = db.Column(db.Boolean, default=False)  # Flaga SVHC
-    sds_filename = db.Column(db.String(255), nullable=True)
-    sds_upload_timestamp = db.Column(db.DateTime, nullable=True)
+    is_cmr = db.Column(db.Boolean, default=False)  # Flaga CMR dla czystej substancji
+    is_svhc = db.Column(db.Boolean, default=False)  # Flaga SVHC dla czystej substancji
+    contains_cmr = db.Column(db.Boolean, default=False)  # Flaga CMR dla mieszanin (zawiera CMR)
+    contains_svhc = db.Column(db.Boolean, default=False)  # Flaga SVHC dla mieszanin (zawiera SVHC)
+    sds_filename = db.Column(db.String(255), nullable=True)  # Zachowane dla kompatybilności wstecznej
+    sds_upload_timestamp = db.Column(db.DateTime, nullable=True)  # Zachowane dla kompatybilności wstecznej
     location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
     physical_location = db.Column(db.String(50), nullable=True)
 
+    # Relacja: Jedna substancja -> wiele plików SDS
+    sds_files = db.relationship('SDSFile', backref='substance', lazy=True, cascade="all, delete-orphan")
+
     def __repr__(self) -> str:
         return f'<Substance {self.name} (CAS: {self.cas}) in Loc {self.location_id}>'
+
+class SDSFile(db.Model):
+    """Model pliku SDS (Safety Data Sheet)."""
+    __tablename__ = 'sds_files'
+
+    id = db.Column(db.Integer, primary_key=True)
+    substance_id = db.Column(db.Integer, db.ForeignKey('substances.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)  # Nazwa pliku na dysku (z UUID)
+    original_filename = db.Column(db.String(255), nullable=True)  # Oryginalna nazwa pliku
+    manufacturer = db.Column(db.String(255), nullable=True)  # Producent/dostawca
+    upload_timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self) -> str:
+        return f'<SDSFile {self.original_filename} for Substance ID {self.substance_id}>'
 
 class User(db.Model, UserMixin):
     """Model użytkownika systemu z obsługą uwierzytelniania."""

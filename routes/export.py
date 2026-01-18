@@ -8,7 +8,7 @@ from sqlalchemy import or_
 import urllib.parse
 import re # Import modułu re do wyrażeń regularnych
 
-from models import db, Location, Substance, ExcelSourceSubstance, SVHCSubstance
+from models import db, Location, Substance, ExcelSourceSubstance, SVHCSubstance, SDSFile
 
 # Zakładając, że handle_exception i is_svhc_substance są w utils
 # Pamiętaj, aby upewnić się, że utils.__init__.py zawiera te funkcje
@@ -513,6 +513,17 @@ def view_all_substances():
                 # Użyj funkcji z utils
                 svhc_reason = is_svhc_substance(cas=sub.cas, ec_number=sub.ec_number, name=sub.name)
 
+            # Pobierz wszystkie pliki SDS dla tej substancji
+            sds_files_list = []
+            for sds_file in sub.sds_files:
+                sds_files_list.append({
+                    'id': sds_file.id,
+                    'filename': sds_file.filename,
+                    'original_filename': sds_file.original_filename,
+                    'manufacturer': sds_file.manufacturer,
+                    'upload_timestamp_local': convert_utc_to_local(sds_file.upload_timestamp)
+                })
+
             all_substances_data_for_template.append({
                 'id': sub.id,
                 'location_id': sub.location_id,
@@ -525,10 +536,13 @@ def view_all_substances():
                 'comment': sub.comment,
                 'sds_filename': sub.sds_filename,
                 'sds_upload_timestamp_local': local_timestamp_str,
+                'sds_files': sds_files_list,  # DODANE: Lista plików SDS
                 'scl_mfactor': sub.scl_mfactor or '',
                 'physical_location': sub.physical_location or 'Nieznana',
                 'is_cmr': sub.is_cmr,
                 'is_svhc': sub.is_svhc,
+                'contains_cmr': sub.contains_cmr,  # DODANE
+                'contains_svhc': sub.contains_svhc,  # DODANE
                 'svhc_reason': svhc_reason or ''
             })
 
@@ -536,6 +550,10 @@ def view_all_substances():
 
         # Upewnij się, że lista lokalizacji jest zawsze dostępna dla filtra
         locations = Location.query.order_by(Location.name).all()
+
+        # Oblicz globalne liczniki
+        total_substances = Substance.query.count()
+        total_sds_files = SDSFile.query.count()
 
         # Przekazujemy listę słowników, lokalizacje i informacje o paginacji do szablonu
         return render_template('all_substances.html',
@@ -547,7 +565,9 @@ def view_all_substances():
                                user_location=user_location,
                                is_cmr=is_cmr,
                                is_svhc=is_svhc_param, # Przekazujemy parametr SVHC
-                               has_sds=has_sds)
+                               has_sds=has_sds,
+                               total_substances=total_substances,
+                               total_sds_files=total_sds_files)
 
 
     except Exception as e:

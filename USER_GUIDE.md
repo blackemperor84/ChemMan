@@ -10,8 +10,11 @@ Przewodnik dla użytkowników systemu ChemMan - zarządzanie substancjami chemic
 2. [Przeglądanie substancji](#przeglądanie-substancji)
 3. [Dodawanie substancji](#dodawanie-substancji)
 4. [Edycja i usuwanie](#edycja-i-usuwanie)
-5. [Zarządzanie lokalizacjami](#zarządzanie-lokalizacjami)
+   - [Edycja inline (nowe w v2.2.0)](#edycja-inline-nowe-w-v220)
+   - [Ręczne flagi CMR/SVHC (nowe w v2.2.0)](#ręczne-flagi-cmrsvhc-nowe-w-v220)
+5. [Zarządzanie komórkami organizacyjnymi](#zarządzanie-komórkami-organizacyjnymi)
 6. [Karty charakterystyki (SDS)](#karty-charakterystyki-sds)
+   - [Wiele kart SDS (nowe w v2.2.0)](#wiele-kart-sds-nowe-w-v220)
 7. [Eksport danych](#eksport-danych)
 8. [Wyszukiwanie i filtrowanie](#wyszukiwanie-i-filtrowanie)
 9. [Często zadawane pytania](#często-zadawane-pytania)
@@ -150,8 +153,17 @@ Masz **dwa sposoby** dodawania substancji:
 | Zwroty H | Nie | Np. "H226, H314" |
 | Komentarz | Nie | Dodatkowe informacje |
 | Lokalizacja fizyczna | Nie | Bieruń / Krupski Młyn |
+| **Flagi CMR/SVHC** | Nie | **Nowe w v2.2.0!** Zobacz poniżej |
 
-3. Kliknij **"Zapisz"**
+3. **[NOWOŚĆ v2.2.0]** Ustaw ręczne flagi CMR/SVHC (opcjonalnie):
+   - ☑️ **Jest CMR (substancja)** - dla substancji czystych CMR
+   - ☑️ **Jest SVHC (substancja)** - dla substancji czystych SVHC
+   - ☑️ **Zawiera CMR (mieszanina)** - dla mieszanin zawierających CMR
+   - ☑️ **Zawiera SVHC (mieszanina)** - dla mieszanin zawierających SVHC
+
+   **Uwaga:** System automatycznie wykrywa CMR/SVHC z zwrotów H, ale możesz ręcznie oznaczyć mieszaniny!
+
+4. Kliknij **"Zapisz"**
 
 **Przykład - mieszanina własna:**
 ```
@@ -189,6 +201,99 @@ Lokalizacja: Bieruń
 3. Substancja zostanie usunięta z lokalizacji
 
 **Wskazówka:** Zamiast usuwać, rozważ dodanie komentarza "ZUŻYTE" lub "DO UTYLIZACJI"
+
+### Edycja inline (nowe w v2.2.0)
+
+**✨ Nowość! Edytuj wszystkie pola bezpośrednio w tabeli!**
+
+Zamiast edytować tylko komentarz, teraz możesz edytować **wszystkie pola** substancji bezpośrednio w wierszu tabeli.
+
+**Jak edytować substancję:**
+
+1. W tabeli substancji kliknij **"Edytuj"** przy wybranej substancji
+2. Wiersz przełączy się w tryb edycji - zobaczysz pola tekstowe zamiast zwykłego tekstu
+3. Edytuj dowolne pola:
+   - **Nazwa chemiczna** - zmień nazwę substancji
+   - **Nr CAS** - dodaj lub popraw numer CAS
+   - **Nr WE** - dodaj lub popraw numer WE/EC
+   - **Klasyfikacja** - zmień klasyfikację (np. "Flam. Liq. 3")
+   - **Zwroty H** - dodaj lub zmień zwroty H (np. "H226, H314")
+   - **SCL/M-factor** - dodaj SCL lub M-factor
+   - **Lokalizacja fizyczna** - zmień na Bieruń lub Krupski Młyn
+   - **Komentarz** - dodaj notatki
+4. **[NOWOŚĆ]** Ustaw flagi CMR/SVHC używając checkboxów:
+   - ☑️ **Jest CMR** - oznacz substancję jako CMR
+   - ☑️ **Jest SVHC** - oznacz substancję jako SVHC
+   - ☑️ **Zaw. CMR** - oznacz mieszaninę jako zawierającą CMR
+   - ☑️ **Zaw. SVHC** - oznacz mieszaninę jako zawierającą SVHC
+5. Kliknij **"Zapisz"** aby zapisać zmiany, lub **"Anuluj"** aby odrzucić
+
+**Przykład użycia:**
+```
+Przed edycją:
+  Nazwa: acetic acid
+  CAS: 64-19-7
+  Komentarz: (pusty)
+
+Po kliknięciu "Edytuj":
+  [Pole tekstowe: acetic acid]
+  [Pole tekstowe: 64-19-7]
+  [Pole tekstowe: ___________]  ← Możesz dodać komentarz
+  [Zapisz] [Anuluj]
+
+Po zapisaniu:
+  Nazwa: acetic acid
+  CAS: 64-19-7
+  Komentarz: 5L, półka 3
+```
+
+**Zalety edycji inline:**
+- ✅ Szybsze - wszystko w jednym miejscu
+- ✅ Widoczne - widzisz cały wiersz podczas edycji
+- ✅ Elastyczne - edytuj jedno lub wszystkie pola naraz
+
+### Ręczne flagi CMR/SVHC (nowe w v2.2.0)
+
+**🚨 System rozróżnia substancje czyste i mieszaniny!**
+
+ChemMan automatycznie wykrywa substancje CMR i SVHC na podstawie zwrotów H i bazy REACH. Jednak czasami musisz ręcznie oznaczyć mieszaniny jako zawierające CMR/SVHC.
+
+**Rodzaje flag:**
+
+| Flaga | Kiedy używać | Przykład |
+|-------|--------------|----------|
+| **Jest CMR** | Substancja czysta jest CMR | Benzen (H350) |
+| **Jest SVHC** | Substancja czysta jest SVHC | Bis(2-ethylhexyl) phthalate |
+| **Zawiera CMR** | Mieszanina zawiera składnik CMR | Farba z toluenem |
+| **Zawiera SVHC** | Mieszanina zawiera składnik SVHC | Mieszanina z ftalanami |
+
+**Wizualne odznaki:**
+- 🔴 **CMR** - czerwona odznaka (substancja CMR)
+- 🟡 **SVHC** - żółta odznaka (substancja SVHC)
+- 🟠 **Zaw. CMR** - pomarańczowa odznaka (mieszanina z CMR)
+- 🟠 **Zaw. SVHC** - pomarańczowa odznaka (mieszanina z SVHC)
+
+**Jak ustawić flagi:**
+
+**Podczas dodawania ręcznego:**
+1. Wypełnij formularz dodawania ręcznego
+2. W sekcji "Flagi CMR/SVHC" zaznacz odpowiednie checkboxy
+3. Kliknij "Zapisz"
+
+**Podczas edycji inline:**
+1. Kliknij "Edytuj" przy substancji
+2. Zaznacz/odznacz checkboxy CMR/SVHC
+3. Kliknij "Zapisz"
+
+**Przykład - mieszanina z CMR:**
+```
+Nazwa: Lakier epoksydowy XYZ
+Klasyfikacja: Skin Sens. 1, STOT SE 3
+Zwroty H: H317, H335, H340 (ten ostatni to CMR!)
+☑️ Zawiera CMR (mieszanina)  ← Zaznacz to!
+
+Wynik: Substancja będzie miała odznakę "Zaw. CMR" 🟠
+```
 
 ---
 
@@ -260,39 +365,101 @@ System ChemMan używa dwupoziomowego modelu dostępu:
 **Tylko dla użytkowników z uprawnieniami `can_upload_sds`**
 
 1. W widoku lokalizacji znajdź substancję w tabeli
-2. W kolumnie **"Karta SDS"**:
-   - Jeśli brak karty, zobaczysz przycisk **"Załaduj SDS"**
-   - Jeśli karta istnieje, zobaczysz link **"Zobacz/Pobierz"**
-3. Kliknij **"Choose File"** / **"Wybierz plik"**
-4. Wybierz plik PDF z kartą charakterystyki
-5. Kliknij **"Załaduj SDS"**
+2. W kolumnie **"Karta SDS"** kliknij przycisk **"Dodaj kartę SDS"**
+3. Pojawi się formularz przesyłania:
+   - **Wybierz plik PDF** - kliknij "Choose File" i wybierz kartę SDS
+   - **Producent (opcjonalnie)** - wpisz nazwę producenta/dostawcy
+4. Kliknij **"Załaduj SDS"**
 
 **Wymagania:**
 - ✅ Format: **PDF**
 - ✅ Rozmiar: maksymalnie **16 MB**
 - ❌ Inne formaty (Word, Excel) NIE są obsługiwane
 
+**Przykład:**
+```
+Plik: acetic_acid_sigma_aldrich.pdf
+Producent: Sigma-Aldrich
+```
+
+### Wiele kart SDS (nowe w v2.2.0)
+
+**✨ Nowość! Każda substancja może mieć wiele kart SDS od różnych producentów!**
+
+To szczególnie przydatne gdy:
+- Kupujesz tę samą substancję od różnych dostawców
+- Masz różne wersje karty (aktualizacje od producenta)
+- Substancja jest dostępna w różnych klasach czystości
+
+**Jak dodać kolejną kartę SDS:**
+
+1. Znajdź substancję, która już ma kartę SDS
+2. Kliknij **"Dodaj kartę SDS"** (przycisk nadal jest widoczny!)
+3. Wybierz nowy plik PDF
+4. Wpisz producenta (np. "Merck", "Sigma-Aldrich", "POCh")
+5. Kliknij **"Załaduj SDS"**
+
+**Wyświetlanie wielu kart:**
+```
+Kolumna "Karta SDS" w tabeli:
+┌─────────────────────────────────┐
+│ acetic_acid_sigma.pdf           │
+│ Sigma-Aldrich                   │
+│ [Zobacz] [Usuń]                 │
+├─────────────────────────────────┤
+│ acetic_acid_merck.pdf           │
+│ Merck                           │
+│ [Zobacz] [Usuń]                 │
+├─────────────────────────────────┤
+│ [+ Dodaj kartę SDS]             │
+└─────────────────────────────────┘
+```
+
+**Przykład użycia:**
+```
+Substancja: Ethanol 96%
+
+Karta 1:
+  Plik: ethanol_poch_2024.pdf
+  Producent: POCh
+  Data: 2024-01-15
+
+Karta 2:
+  Plik: ethanol_chempur_2024.pdf
+  Producent: Chempur
+  Data: 2024-03-20
+
+Użytkownik widzi obie karty i może wybrać odpowiednią dla swojego źródła.
+```
+
 ### Przeglądanie karty SDS
 
-1. Kliknij **"Zobacz/Pobierz"** w kolumnie "Karta SDS"
+1. Kliknij **"Zobacz"** lub nazwę pliku przy wybranej karcie SDS
 2. Plik PDF otworzy się w nowej karcie przeglądarki
 3. Możesz go wydrukować lub zapisać na dysk
 
-### Wymiana karty SDS
-
-**Gdy masz nowszą wersję karty charakterystyki**
-
-1. Kliknij **"Zmień"** przy istniejącej karcie
-2. Pojawi się przycisk wyboru pliku
-3. Wybierz nowy plik PDF
-4. Kliknij **"OK"**
-5. Stara karta zostanie zastąpiona nową
-
 ### Usuwanie karty SDS
 
-1. Kliknij **"Usuń"** przy karcie SDS
+**Usuwasz tylko jedną wybraną kartę, pozostałe zostają!**
+
+1. Kliknij **"Usuń"** przy karcie SDS, którą chcesz usunąć
 2. Potwierdź usunięcie
 3. Karta zostanie trwale usunięta
+4. Inne karty SDS tej substancji pozostaną nietknięte
+
+**Przykład:**
+```
+Przed usunięciem:
+  - ethanol_poch_2024.pdf (POCh)
+  - ethanol_merck_2023.pdf (Merck)
+  - ethanol_sigma_2022.pdf (Sigma)
+
+Usuwam "ethanol_sigma_2022.pdf"
+
+Po usunięciu:
+  - ethanol_poch_2024.pdf (POCh)
+  - ethanol_merck_2023.pdf (Merck)
+```
 
 ---
 

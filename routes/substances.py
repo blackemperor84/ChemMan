@@ -146,7 +146,13 @@ def add_manual_substance(location_id):
     comment = data.get('comment', '').strip()
     physical_location = data.get('physical_location', '').strip()
 
-    if not name: 
+    # Pobierz flagi CMR/SVHC z formularza (mogą nadpisać auto-detekcję)
+    manual_is_cmr = data.get('is_cmr', None)  # None oznacza brak flagi, False oznacza odznaczony checkbox
+    manual_is_svhc = data.get('is_svhc', None)
+    manual_contains_cmr = data.get('contains_cmr', False)
+    manual_contains_svhc = data.get('contains_svhc', False)
+
+    if not name:
         return jsonify({'status': 'error', 'message': 'Nazwa jest wymagana.'}), 400
 
     # Sprawdź duplikat w tej lokalizacji - MODYFIKACJA ZAPYTANIA
@@ -173,29 +179,35 @@ def add_manual_substance(location_id):
         return jsonify({'status': 'error', 'message': message}), 409
 
     try:
-        # Sprawdź, czy substancja jest CMR na podstawie zwrotów H
+        # Sprawdź, czy substancja jest CMR na podstawie zwrotów H (auto-detekcja)
         from utils import is_cmr_substance, is_svhc_substance
-        is_cmr = is_cmr_substance(h_phrases)
-        
-        # Sprawdź, czy substancja jest na liście SVHC
+        auto_is_cmr = is_cmr_substance(h_phrases)
+
+        # Sprawdź, czy substancja jest na liście SVHC (auto-detekcja)
         svhc_reason = is_svhc_substance(
             cas=cas if cas else None,
             ec_number=ec_number if ec_number else None,
             name=name
         )
-        is_svhc = svhc_reason is not None  
-        
+        auto_is_svhc = svhc_reason is not None
+
+        # Użyj flag ręcznych jeśli podane, w przeciwnym razie użyj auto-detekcji
+        final_is_cmr = manual_is_cmr if manual_is_cmr is not None else auto_is_cmr
+        final_is_svhc = manual_is_svhc if manual_is_svhc is not None else auto_is_svhc
+
         new_substance = Substance(
-            location_id=location_id, 
-            name=name, 
+            location_id=location_id,
+            name=name,
             cas=cas if cas else None,
             ec_number=ec_number if ec_number else None,  # Dodany numer WE
-            classification=classification, 
-            h_phrases=h_phrases, 
+            classification=classification,
+            h_phrases=h_phrases,
             comment=comment,
             physical_location=physical_location,
-            is_cmr=is_cmr,  # Dodany status CMR
-            is_svhc=is_svhc  # Dodany status SVHC
+            is_cmr=final_is_cmr,  # Status CMR (auto lub ręczny)
+            is_svhc=final_is_svhc,  # Status SVHC (auto lub ręczny)
+            contains_cmr=manual_contains_cmr,  # Flaga mieszanin zawierająca CMR
+            contains_svhc=manual_contains_svhc  # Flaga mieszanin zawierająca SVHC
         )
         db.session.add(new_substance)
         db.session.flush()  # Uzyskaj ID
@@ -208,10 +220,10 @@ def add_manual_substance(location_id):
         db.session.flush()
         
         log_action(
-            'ADD_SUBSTANCE', 
-            target_type='Substance', 
+            'ADD_SUBSTANCE',
+            target_type='Substance',
             target_id=new_substance.id,
-            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if is_cmr else 'Nie'}, SVHC: {'Tak' if is_svhc else 'Nie'}, LokID: {location_id}, Źródło: Ręczne"
+            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if final_is_cmr else 'Nie'}, SVHC: {'Tak' if final_is_svhc else 'Nie'}, Zaw.CMR: {'Tak' if manual_contains_cmr else 'Nie'}, Zaw.SVHC: {'Tak' if manual_contains_svhc else 'Nie'}, LokID: {location_id}, Źródło: Ręczne"
         )
         
         db.session.commit()
@@ -310,6 +322,74 @@ def update_substance_comment(substance_id):
 
     except Exception as e:
         return handle_exception(e, "aktualizacji komentarza substancji", None)
+
+
+@substances_bp.route('/substance/<int:substance_id>/edit', methods=['POST'])
+@login_required
+@edit_permission_required
+def update_substance(substance_id):
+    """Obsługuje aktualizację wszystkich pól substancji."""
+    current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/edit przez {current_user.username}")
+    substance = Substance.query.get_or_404(substance_id)
+
+    # Sprawdź czy użytkownik może modyfikować komórkę organizacyjną substancji
+    if not current_user.can_modify_organizational_unit(substance.location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował edytować substancję bez uprawnień do komórki ID: {substance.location_id}")
+        return jsonify({'status': 'error', 'message': 'Możesz edytować substancje tylko w swojej komórce organizacyjnej.'}), 403
+
+    data = request.get_json()
+    if data is None:
+        return jsonify({'status': 'error', 'message': 'Nieprawidłowe dane żądania.'}), 400
+
+    try:
+        # Aktualizuj wszystkie edytowalne pola
+        if 'name' in data:
+            substance.name = data['name'].strip()
+        if 'cas' in data:
+            substance.cas = data['cas'].strip() if data['cas'] else None
+        if 'ec_number' in data:
+            substance.ec_number = data['ec_number'].strip() if data['ec_number'] else None
+        if 'classification' in data:
+            substance.classification = data['classification'].strip() if data['classification'] else None
+        if 'h_phrases' in data:
+            substance.h_phrases = data['h_phrases'].strip() if data['h_phrases'] else None
+        if 'scl_mfactor' in data:
+            substance.scl_mfactor = data['scl_mfactor'].strip() if data['scl_mfactor'] else None
+        if 'comment' in data:
+            substance.comment = data['comment'].strip() if data['comment'] else None
+        if 'physical_location' in data:
+            substance.physical_location = data['physical_location'].strip() if data['physical_location'] else None
+
+        # Aktualizuj flagi CMR/SVHC
+        if 'is_cmr' in data:
+            substance.is_cmr = bool(data['is_cmr'])
+        if 'is_svhc' in data:
+            substance.is_svhc = bool(data['is_svhc'])
+        if 'contains_cmr' in data:
+            substance.contains_cmr = bool(data['contains_cmr'])
+        if 'contains_svhc' in data:
+            substance.contains_svhc = bool(data['contains_svhc'])
+
+        # Zaktualizuj datę ostatniej modyfikacji lokalizacji
+        location = Location.query.get(substance.location_id)
+        if location:
+            location.last_modified = datetime.utcnow()
+
+        db.session.commit()
+        current_app.logger.info(f"Pomyślnie zaktualizowano substancję ID: {substance_id}")
+
+        # Logowanie akcji
+        log_action(
+            action='UPDATE_SUBSTANCE',
+            target_type='Substance',
+            target_id=substance_id,
+            details=f"Zaktualizowano '{substance.name}'"
+        )
+
+        return jsonify({'status': 'success', 'message': 'Substancja zaktualizowana.'})
+
+    except Exception as e:
+        return handle_exception(e, "aktualizacji substancji", None)
 
 
 @substances_bp.route('/substances/move', methods=['POST'])

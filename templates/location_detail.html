@@ -24,6 +24,13 @@
 
      <h2>Substancje w tej komórce organizacyjnej:</h2>
 
+     <!-- Liczniki -->
+     <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; border: 1px solid #d0e8ff;">
+        <strong>Statystyki:</strong>
+        <span style="margin-left: 15px;">📦 Substancji: <strong>{{ total_substances }}</strong></span>
+        <span style="margin-left: 15px;">📄 Kart SDS: <strong>{{ total_sds_files }}</strong></span>
+     </div>
+
     {% if substances_data %}
     <div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
         <a href="{{ url_for('export.export_location_csv', location_id=location.id) }}" class="action-btn export-btn">
@@ -111,77 +118,148 @@
             <tbody>
 
                 {% for sub_data in substances_data %}
-                <tr data-substance-row-id="{{ sub_data.id }}">
+                <tr data-substance-row-id="{{ sub_data.id }}" class="substance-row"
+                    data-name="{{ sub_data.name }}"
+                    data-cas="{{ sub_data.cas or '' }}"
+                    data-ec="{{ sub_data.ec_number or '' }}"
+                    data-classification="{{ sub_data.classification or '' }}"
+                    data-hphrases="{{ sub_data.h_phrases or '' }}"
+                    data-scl="{{ sub_data.scl_mfactor or '' }}"
+                    data-physical-location="{{ sub_data.physical_location or '' }}"
+                    data-comment="{{ sub_data.comment or '' }}"
+                    data-is-cmr="{{ sub_data.is_cmr|lower }}"
+                    data-is-svhc="{{ sub_data.is_svhc|lower }}"
+                    data-contains-cmr="{{ sub_data.contains_cmr|lower }}"
+                    data-contains-svhc="{{ sub_data.contains_svhc|lower }}">
                     <td><input type="checkbox" class="substance-checkbox" name="selected_substance" value="{{ sub_data.id }}"></td>
-                    <td>
-                        <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
-                        {% if sub_data.is_cmr %}
-                            <span class="cmr-badge">CMR</span>
-                        {% endif %}
-                        {% if sub_data.is_svhc %}
-                        <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
 
-                        {% endif %}
-                    </td>
-                    <td>{{ sub_data.cas or '---' }}</td>
-                    <td>{{ sub_data.ec_number or '---' }}</td>
-                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</td>
-                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</td>
-                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</td>
-                    <td>{{ sub_data.physical_location or 'Nieznana' }}</td>
-                    <td>
-                        <span class="comment-display" id="comment-display-{{ sub_data.id }}">{{ sub_data.comment or '' }}</span>
-                        <div class="comment-edit" id="comment-edit-{{ sub_data.id }}" style="display: none;">
-                            <textarea id="comment-input-{{ sub_data.id }}" rows="2">{{ sub_data.comment or '' }}</textarea><br>
-                            <button class="save-comment-btn" data-substance-id="{{ sub_data.id }}">Zapisz</button>
-                            <button type="button" class="cancel-comment-btn" data-substance-id="{{ sub_data.id }}">Anuluj</button>
+                    <!-- Nazwa chemiczna -->
+                    <td class="editable-cell" data-field="name">
+                        <div class="view-mode">
+                            <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
+                            <div class="badges">
+                                {% if sub_data.is_cmr %}
+                                    <span class="cmr-badge" title="Substancja CMR">CMR</span>
+                                {% endif %}
+                                {% if sub_data.is_svhc %}
+                                    <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
+                                {% endif %}
+                                {% if sub_data.contains_cmr %}
+                                    <span class="cmr-badge" title="Mieszanina zawiera CMR" style="background-color: #d4a017;">Zaw. CMR</span>
+                                {% endif %}
+                                {% if sub_data.contains_svhc %}
+                                    <span class="svhc-badge" title="Mieszanina zawiera SVHC" style="background-color: #d4a017;">Zaw. SVHC</span>
+                                {% endif %}
+                            </div>
                         </div>
+                        <div class="edit-mode" style="display: none;">
+                            <textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.name }}</textarea>
+                            <div style="margin-top: 8px;">
+                                <label><input type="checkbox" class="flag-is-cmr" {% if sub_data.is_cmr %}checked{% endif %}><span>Jest CMR</span></label>
+                                <label><input type="checkbox" class="flag-is-svhc" {% if sub_data.is_svhc %}checked{% endif %}><span>Jest SVHC</span></label>
+                                <label><input type="checkbox" class="flag-contains-cmr" {% if sub_data.contains_cmr %}checked{% endif %}><span>Zaw. CMR</span></label>
+                                <label><input type="checkbox" class="flag-contains-svhc" {% if sub_data.contains_svhc %}checked{% endif %}><span>Zaw. SVHC</span></label>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Nr CAS -->
+                    <td class="editable-cell" data-field="cas">
+                        <div class="view-mode">{{ sub_data.cas or '---' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.cas or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Nr WE -->
+                    <td class="editable-cell" data-field="ec_number">
+                        <div class="view-mode">{{ sub_data.ec_number or '---' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.ec_number or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Klasyfikacja -->
+                    <td class="editable-cell" data-field="classification">
+                        <div class="view-mode">{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.classification or '' }}</textarea></div>
+                    </td>
+
+                    <!-- Zwroty H -->
+                    <td class="editable-cell" data-field="h_phrases">
+                        <div class="view-mode">{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.h_phrases or '' }}</textarea></div>
+                    </td>
+
+                    <!-- SCL/ M-factor -->
+                    <td class="editable-cell" data-field="scl_mfactor">
+                        <div class="view-mode">{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.scl_mfactor or '' }}</textarea></div>
+                    </td>
+
+                    <!-- Lokalizacja -->
+                    <td class="editable-cell" data-field="physical_location">
+                        <div class="view-mode">{{ sub_data.physical_location or 'Nieznana' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.physical_location or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Komentarz -->
+                    <td class="editable-cell" data-field="comment">
+                        <div class="view-mode">{{ sub_data.comment or '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.comment or '' }}</textarea></div>
                     </td>
                     <!-- Sekcja zarządzania SDS -->
                     <td class="sds-cell">
-                        {% if sub_data.sds_filename %}
-                            <div class="sds-cell-content">
-                                <a href="{{ url_for('files.download_sds', filename=sub_data.sds_filename) }}" target="_blank" title="Pobierz/Zobacz SDS" class="sds-link">
-                                Zobacz/ Pobierz
-                                </a>
-                                {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
-                                    <div class="sds-button-row">
-                                        <button class="show-replace-sds-form" data-substance-id="{{ sub_data.id }}">Zmień</button>
-                                        <form method="POST" action="{{ url_for('files.delete_sds', substance_id=sub_data.id) }}" class="delete-sds-form" onsubmit="return confirm('Czy na pewno chcesz trwale usunąć załączony plik SDS dla tej substancji?');">
+                        {% if sub_data.sds_files %}
+                            <div class="sds-files-list">
+                                {% for sds_file in sub_data.sds_files %}
+                                <div class="sds-file-item" style="margin-bottom: 8px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="flex: 1;">
+                                            <a href="{{ url_for('files.download_sds', filename=sds_file.filename) }}" target="_blank" title="Pobierz/Zobacz SDS" class="sds-link">
+                                                {{ sds_file.original_filename or 'SDS' }}
+                                            </a>
+                                            {% if sds_file.manufacturer %}
+                                            <br><small style="color: #666;">Producent: {{ sds_file.manufacturer }}</small>
+                                            {% endif %}
+                                            <br><small class="sds-timestamp">{{ sds_file.upload_timestamp_local }}</small>
+                                        </div>
+                                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
+                                        <form method="POST" action="{{ url_for('files.delete_sds', substance_id=sub_data.id, sds_file_id=sds_file.id) }}" class="delete-sds-form" style="display: inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć ten plik SDS?');">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="delete-sds-btn">Usuń</button>
+                                            <button type="submit" class="delete-sds-btn" style="font-size: 0.8em; padding: 2px 6px;">✕</button>
                                         </form>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
-                                <small class="sds-timestamp">
-                                    Ost. akt.: {{ sub_data.sds_upload_timestamp_local }}
-                                </small>
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
-                                <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form" id="sds-form-{{ sub_data.id }}" style="display: none;">
+                        {% endif %}
+
+                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
+                            <div id="sds-upload-area-{{ sub_data.id }}" style="margin-top: 10px;">
+                                <button class="show-sds-upload-form" data-substance-id="{{ sub_data.id }}" style="font-size: 0.9em;">+ Dodaj SDS</button>
+                                <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form" id="sds-form-{{ sub_data.id }}" style="display: none; margin-top: 5px;">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <input type="file" name="sds_file" accept=".pdf" required>
-                                    <button type="submit">OK</button>
-                                    <button type="button" class="cancel-upload-btn" data-substance-id="{{ sub_data.id }}">Anuluj</button>
+                                    <input type="text" name="manufacturer" placeholder="Producent (opcjonalnie)" style="width: 100%; margin-bottom: 5px; padding: 3px;">
+                                    <input type="file" name="sds_file" accept=".pdf" required style="margin-bottom: 5px;">
+                                    <button type="submit" style="font-size: 0.9em;">Załaduj</button>
+                                    <button type="button" class="cancel-upload-btn" data-substance-id="{{ sub_data.id }}" style="font-size: 0.9em;">Anuluj</button>
                                 </form>
-                            {% endif %}
-                        {% elif can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
-                            <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="file" name="sds_file" accept=".pdf" required>
-                                <button type="submit">Załaduj SDS</button>
-                            </form>
-                        {% else %}
+                            </div>
+                        {% elif not sub_data.sds_files %}
                             <span>Brak</span>
                         {% endif %}
                     </td>
                     <td class="actions-cell">
-                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_edit) %}
-                            <button class="edit-comment-btn" data-substance-id="{{ sub_data.id }}">Edytuj Kom.</button>
-                        {% endif %}
-                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_delete) %}
-                            <button class="delete-substance-btn" data-substance-id="{{ sub_data.id }}">Usuń</button>
-                        {% endif %}
+                        <div class="view-mode-actions">
+                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_edit) %}
+                                <button class="edit-substance-btn" data-substance-id="{{ sub_data.id }}">Edytuj</button>
+                            {% endif %}
+                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_delete) %}
+                                <button class="delete-substance-btn" data-substance-id="{{ sub_data.id }}">Usuń</button>
+                            {% endif %}
+                        </div>
+                        <div class="edit-mode-actions" style="display: none;">
+                            <button class="save-edit-btn" data-substance-id="{{ sub_data.id }}" style="background-color: #4CAF50; color: white;">Zapisz</button>
+                            <button class="cancel-edit-btn" data-substance-id="{{ sub_data.id }}" style="background-color: #f44336; color: white;">Anuluj</button>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -268,7 +346,29 @@
                         <option value="Bieruń">Bieruń</option>
                         <option value="Krupski Młyn">Krupski Młyn</option>
                     </select>
-                    
+
+                    <fieldset style="border: 1px solid #ddd; padding: 15px; margin: 10px 0 0 0; border-radius: 4px; box-sizing: border-box; width: 100%; min-width: 0;">
+                        <legend style="font-weight: bold; font-size: 14px; padding: 0 8px;">Flagi CMR/SVHC:</legend>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-is-cmr" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Jest CMR (substancja)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-is-svhc" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Jest SVHC (substancja)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-contains-cmr" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Zawiera CMR (mieszanina)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-contains-svhc" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Zawiera SVHC (mieszanina)</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
                     <div class="button-row">
                         <button type="submit" id="save-mixture-button">Zapisz</button>
                         <button type="button" id="cancel-manual-form-btn">Anuluj</button>

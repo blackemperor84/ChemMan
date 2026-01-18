@@ -17,6 +17,13 @@
     </a>
 </div>
 
+<!-- Globalne liczniki -->
+<div style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; border: 1px solid #d0e8ff;">
+    <strong>Statystyki globalne:</strong>
+    <span style="margin-left: 15px;">📦 Wszystkich substancji: <strong>{{ total_substances }}</strong></span>
+    <span style="margin-left: 15px;">📄 Wszystkich kart SDS: <strong>{{ total_sds_files }}</strong></span>
+</div>
+
 <!-- Ulepszony formularz wyszukiwania z zaawansowanymi filtrami -->
 <div class="search-export-container">
     <div class="search-row">
@@ -151,10 +158,16 @@
                     <td>
                         <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
                         {% if sub_data.is_cmr %}
-                            <span class="cmr-badge">CMR</span>
+                            <span class="cmr-badge" title="Substancja CMR">CMR</span>
                         {% endif %}
                         {% if sub_data.is_svhc %}
                             <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
+                        {% endif %}
+                        {% if sub_data.contains_cmr %}
+                            <span class="cmr-badge" title="Mieszanina zawiera CMR" style="background-color: #d4a017;">Zaw. CMR</span>
+                        {% endif %}
+                        {% if sub_data.contains_svhc %}
+                            <span class="svhc-badge" title="Mieszanina zawiera SVHC" style="background-color: #d4a017;">Zaw. SVHC</span>
                         {% endif %}
                     </td>
                     <td>{{ sub_data.cas or '' }}</td>
@@ -166,9 +179,13 @@
                     <td>{{ sub_data.physical_location }}</td> <!-- Będzie wyśrodkowane przez CSS -->
                     <td>{{ sub_data.comment or '' }}</td>
                     <td>
-                        {% if sub_data.sds_filename %}
-                            <a href="{{ url_for('files.download_sds', filename=sub_data.sds_filename) }}" target="_blank">Pobierz</a>
-                            <br><small>{{ sub_data.sds_upload_timestamp_local }}</small>
+                        {% if sub_data.sds_files %}
+                            {% for sds_file in sub_data.sds_files %}
+                                <a href="{{ url_for('files.download_sds', filename=sds_file.filename) }}" target="_blank" title="{% if sds_file.manufacturer %}Producent: {{ sds_file.manufacturer }}{% endif %}">
+                                    {{ sds_file.original_filename or 'SDS' }}
+                                </a>{% if sds_file.manufacturer %}<br><small style="color: #666;">{{ sds_file.manufacturer }}</small>{% endif %}
+                                {% if not loop.last %}<br>{% endif %}
+                            {% endfor %}
                         {% else %}
                             Brak
                         {% endif %}
