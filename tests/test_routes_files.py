@@ -204,7 +204,7 @@ class TestUploadSDS:
         assert 'nie jest prawidłowym' in data or 'not a valid' in data or 'pdf' in data
 
     def test_upload_replaces_old_file(self, client, admin_user, test_substance, app):
-        """Test that uploading new file replaces old one."""
+        """Test that uploading multiple files creates multiple SDS file entries."""
         client.post('/login', data={
             'username': 'admin',
             'password': 'adminpassword123'
@@ -219,8 +219,11 @@ class TestUploadSDS:
         )
 
         with app.app_context():
+            from models import SDSFile
             substance = Substance.query.get(test_substance.id)
             old_filename = substance.sds_filename
+            files_count_1 = SDSFile.query.filter_by(substance_id=test_substance.id).count()
+            assert files_count_1 == 1
 
         # Upload second file
         pdf_file2 = create_pdf_file()
@@ -233,11 +236,15 @@ class TestUploadSDS:
 
         assert response.status_code == 200
 
-        # Verify new filename is different
+        # Verify second file was added (not replaced)
         with app.app_context():
+            from models import SDSFile
             substance = Substance.query.get(test_substance.id)
-            assert substance.sds_filename != old_filename
-            assert substance.sds_filename.endswith('second.pdf')
+            # In multi-SDS system, we now have 2 files
+            files_count_2 = SDSFile.query.filter_by(substance_id=test_substance.id).count()
+            assert files_count_2 == 2
+            # Old sds_filename field stays the same (backward compatibility)
+            assert substance.sds_filename == old_filename
 
     def test_upload_updates_location_timestamp(self, client, admin_user, test_substance, test_location, app):
         """Test that uploading updates location's last_modified timestamp."""
@@ -402,8 +409,9 @@ class TestDeleteSDS:
 
     def test_delete_requires_login(self, client, test_substance):
         """Test that deleting SDS requires authentication."""
+        # Use a dummy file ID (will redirect to login before checking if it exists)
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
+            f'/substance/{test_substance.id}/delete_sds/1',
             follow_redirects=False
         )
         assert response.status_code == 302  # Redirect to login
@@ -424,8 +432,9 @@ class TestDeleteSDS:
             'password': 'password123'
         })
 
+        # Use a dummy file ID (will redirect before checking if it exists)
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
+            f'/substance/{test_substance.id}/delete_sds/1',
             follow_redirects=False
         )
         assert response.status_code == 302  # Redirect away
@@ -437,17 +446,14 @@ class TestDeleteSDS:
             'password': 'adminpassword123'
         })
 
-        # Ensure no file is attached
-        test_substance.sds_filename = None
-
+        # Try to delete a non-existent file ID (should return 404)
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
-            follow_redirects=True
+            f'/substance/{test_substance.id}/delete_sds/99999',
+            follow_redirects=False
         )
 
-        assert response.status_code == 200
-        data = response.data.decode('utf-8').lower()
-        assert 'brak' in data or 'no file' in data or 'warning' in data
+        # Should get 404 because the SDS file doesn't exist
+        assert response.status_code == 404
 
     def test_delete_success(self, client, admin_user, test_substance, app):
         """Test successful SDS file deletion."""
@@ -464,15 +470,16 @@ class TestDeleteSDS:
             content_type='multipart/form-data'
         )
 
-        # Verify file was uploaded
+        # Get the SDS file ID from database
         with app.app_context():
-            substance = Substance.query.get(test_substance.id)
-            assert substance.sds_filename is not None
-            filename = substance.sds_filename
+            from models import SDSFile
+            sds_file = SDSFile.query.filter_by(substance_id=test_substance.id).first()
+            assert sds_file is not None
+            sds_file_id = sds_file.id
 
-        # Delete the file
+        # Delete the file using the new route with file ID
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
+            f'/substance/{test_substance.id}/delete_sds/{sds_file_id}',
             follow_redirects=True
         )
 
@@ -480,9 +487,14 @@ class TestDeleteSDS:
 
         # Verify file was deleted from database
         with app.app_context():
+            from models import SDSFile
             substance = Substance.query.get(test_substance.id)
+            # After deleting the only file, old fields should be cleared
             assert substance.sds_filename is None
             assert substance.sds_upload_timestamp is None
+            # SDSFile entry should be deleted
+            sds_file_check = SDSFile.query.get(sds_file_id)
+            assert sds_file_check is None
 
     def test_delete_updates_location_timestamp(self, client, admin_user, test_substance, test_location, app):
         """Test that deleting updates location's last_modified timestamp."""
@@ -499,13 +511,17 @@ class TestDeleteSDS:
             content_type='multipart/form-data'
         )
 
+        # Get the SDS file ID and original timestamp
         with app.app_context():
+            from models import SDSFile
             location = Location.query.get(test_location.id)
             original_modified = location.last_modified
+            sds_file = SDSFile.query.filter_by(substance_id=test_substance.id).first()
+            sds_file_id = sds_file.id
 
         # Delete the file
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
+            f'/substance/{test_substance.id}/delete_sds/{sds_file_id}',
             follow_redirects=True
         )
 
@@ -531,9 +547,15 @@ class TestDeleteSDS:
             content_type='multipart/form-data'
         )
 
+        # Get the SDS file ID
+        with app.app_context():
+            from models import SDSFile
+            sds_file = SDSFile.query.filter_by(substance_id=test_substance.id).first()
+            sds_file_id = sds_file.id
+
         # Delete the file
         response = client.post(
-            f'/substance/{test_substance.id}/delete_sds',
+            f'/substance/{test_substance.id}/delete_sds/{sds_file_id}',
             follow_redirects=True
         )
 
