@@ -6,6 +6,31 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.2.1] - 2026-01-18
+
+### 🐛 Poprawki Błędów - Patch Release
+
+#### 🐛 Naprawiono
+
+**Wyszukiwanie CMR/SVHC:**
+- Wyszukiwanie "CMR" w widoku globalnym teraz znajduje zarówno substancje oznaczone jako CMR (`is_cmr`) jak i mieszaniny zawierające CMR (`contains_cmr`)
+- Wyszukiwanie "SVHC" w widoku globalnym teraz znajduje zarówno substancje oznaczone jako SVHC (`is_svhc`) jak i mieszaniny zawierające SVHC (`contains_svhc`)
+- Zaawansowane filtry (dropdowny CMR/SVHC) również uwzględniają obie flagi
+- Eksport CSV respektuje te same zasady filtrowania
+
+**Dialog Usuwania:**
+- Poprawiono formatowanie okna potwierdzenia usunięcia substancji
+- Dialog teraz pokazuje tylko nazwę substancji (oczyszczoną, max 60 znaków) zamiast całej zawartości komórki z odznakami i flagami
+- Lepsza czytelność komunikatu potwierdzenia
+
+#### 📦 Techniczne
+
+**Lokalizacje zmian:**
+- `routes/export.py`: Zaktualizowano logikę filtrowania tekstowego i dropdown'ów (używa `or_()` dla `is_*/contains_*`)
+- `static/js/location_detail.js`: Pobieranie nazwy substancji z `.substance-name` div, czyszczenie whitespace, ograniczenie długości
+
+---
+
 ## [2.2.0] - 2026-01-18
 
 ### 📁 Wiele Kart SDS i Zaawansowana Edycja - Major Feature Update!
