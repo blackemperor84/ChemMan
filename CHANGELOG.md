@@ -23,11 +23,16 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 - Dialog teraz pokazuje tylko nazwę substancji (oczyszczoną, max 60 znaków) zamiast całej zawartości komórki z odznakami i flagami
 - Lepsza czytelność komunikatu potwierdzenia
 
+**Stopka:**
+- Rok w stopce (© 2025) teraz aktualizuje się automatycznie do aktualnego roku
+- Używa `{{ now().year }}` w szablonie Jinja2 zamiast zakodowanej wartości
+
 #### 📦 Techniczne
 
 **Lokalizacje zmian:**
 - `routes/export.py`: Zaktualizowano logikę filtrowania tekstowego i dropdown'ów (używa `or_()` dla `is_*/contains_*`)
 - `static/js/location_detail.js`: Pobieranie nazwy substancji z `.substance-name` div, czyszczenie whitespace, ograniczenie długości
+- `templates/base.html`: Stopka używa `{{ now().year }}` zamiast zakodowanego roku
 
 ---
 
