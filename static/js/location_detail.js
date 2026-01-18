@@ -215,13 +215,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 const button = target;
                 const substanceId = button.dataset.substanceId;
                 const substanceRow = button.closest('tr');
-                const substanceName = substanceRow ? substanceRow.cells[1].textContent.trim() : 'tej substancji';
+
+                // Pobierz tylko nazwę substancji (bez badge'ów)
+                let substanceName = 'tej substancji';
+                if (substanceRow) {
+                    const nameCell = substanceRow.cells[1];
+                    const substanceNameDiv = nameCell.querySelector('.substance-name');
+                    if (substanceNameDiv) {
+                        // Pobierz tekst i zastąp wielokrotne spacje/newlines pojedynczą spacją
+                        substanceName = substanceNameDiv.textContent.trim().replace(/\s+/g, ' ');
+                        // Ogranicz długość do 60 znaków
+                        if (substanceName.length > 60) {
+                            substanceName = substanceName.substring(0, 57) + '...';
+                        }
+                    }
+                }
+
                 if (!substanceId) {
                     console.error("Brak subId (delete)");
                     showToast('Błąd wewnętrzny.', 'error');
                     return;
                 }
-                if (!confirm(`Czy usunąć "${substanceName}"?`)) return;
+                if (!confirm(`Czy usunąć substancję:\n"${substanceName}"?`)) return;
                 console.log(`Deleting ID: ${substanceId}`);
                 try {
                     const apiUrl = `/substance/${substanceId}`;

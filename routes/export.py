@@ -211,12 +211,19 @@ def export_all_csv():
             # Poprawiony regex: szuka "svhc" otoczonego przez granice słów (początek, koniec, spacja itp.)
             # lub gdy jest na początku/końcu całego ciągu.
             if re.search(r'(^|\W)svhc($|\W)', filter_query_lower):
-                # Sprawdź, czy substancja jest SVHC
-                svhc_text_condition = Substance.is_svhc == True
+                # Sprawdź, czy substancja jest SVHC LUB zawiera SVHC (mieszanina)
+                svhc_text_condition = or_(
+                    Substance.is_svhc == True,
+                    Substance.contains_svhc == True
+                )
             # Dodaj warunek dla 'cmr' w filtrze tekstowym
             cmr_text_condition = None
             if re.search(r'(^|\W)cmr($|\W)', filter_query_lower):
-                cmr_text_condition = Substance.is_cmr == True
+                # Sprawdź, czy substancja jest CMR LUB zawiera CMR (mieszanina)
+                cmr_text_condition = or_(
+                    Substance.is_cmr == True,
+                    Substance.contains_cmr == True
+                )
 
             # Połącz warunki
             combined_conditions = []
@@ -250,21 +257,43 @@ def export_all_csv():
             filters_applied = True
             current_app.logger.info(f"Zastosowano filtr użytkownika: {user_location}")
 
-        # Filtr substancji CMR (bez zmian)
+        # Filtr substancji CMR (obejmuje substancje CMR i mieszaniny zawierające CMR)
         if is_cmr:
             is_cmr_bool = is_cmr.lower() == 'true'
-            query = query.filter(Substance.is_cmr == is_cmr_bool)
+            if is_cmr_bool:
+                # Jeśli szukamy CMR, pokaż substancje CMR LUB mieszaniny zawierające CMR
+                query = query.filter(or_(
+                    Substance.is_cmr == True,
+                    Substance.contains_cmr == True
+                ))
+            else:
+                # Jeśli szukamy "Nie", pokaż substancje, które nie są CMR i nie zawierają CMR
+                query = query.filter(
+                    Substance.is_cmr == False,
+                    Substance.contains_cmr == False
+                )
             filters_applied = True
-            current_app.logger.info(f"Zastosowano filtr CMR: {is_cmr}")
+            current_app.logger.info(f"Zastosowano filtr CMR: {is_cmr} (obejmuje is_cmr i contains_cmr)")
 
-        # Filtr substancji SVHC z parametru URL (bez zmian, używamy zmiennej is_svhc_param)
+        # Filtr substancji SVHC z parametru URL (obejmuje substancje SVHC i mieszaniny zawierające SVHC)
         if is_svhc_param:
             # Ten filtr działa tylko jeśli parametr is_svhc='true' lub 'false' jest jawnie podany
             # Niezależnie od filtra tekstowego
             is_svhc_bool = is_svhc_param.lower() == 'true'
-            query = query.filter(Substance.is_svhc == is_svhc_bool)
+            if is_svhc_bool:
+                # Jeśli szukamy SVHC, pokaż substancje SVHC LUB mieszaniny zawierające SVHC
+                query = query.filter(or_(
+                    Substance.is_svhc == True,
+                    Substance.contains_svhc == True
+                ))
+            else:
+                # Jeśli szukamy "Nie", pokaż substancje, które nie są SVHC i nie zawierają SVHC
+                query = query.filter(
+                    Substance.is_svhc == False,
+                    Substance.contains_svhc == False
+                )
             filters_applied = True
-            current_app.logger.info(f"Zastosowano filtr SVHC (parametr URL): {is_svhc_param}")
+            current_app.logger.info(f"Zastosowano filtr SVHC (parametr URL): {is_svhc_param} (obejmuje is_svhc i contains_svhc)")
 
 
         # Filtr posiadania karty SDS (bez zmian)
@@ -422,12 +451,19 @@ def view_all_substances():
             # otoczone przez granice słów (początek, koniec, spacja, znak interpunkcyjny itp.)
             # Dodatkowe warunki dla samego 'svhc' lub 'svhc.' itp.
             if re.search(r'(^|\W)svhc($|\W)', filter_query_lower) or filter_query_lower == 'svhc':
-                 # Sprawdź, czy substancja jest SVHC
-                 svhc_text_condition = Substance.is_svhc == True
+                 # Sprawdź, czy substancja jest SVHC LUB zawiera SVHC (mieszanina)
+                 svhc_text_condition = or_(
+                     Substance.is_svhc == True,
+                     Substance.contains_svhc == True
+                 )
             # Dodaj warunek dla 'cmr' w filtrze tekstowym
             cmr_text_condition = None
             if re.search(r'(^|\W)cmr($|\W)', filter_query_lower):
-                cmr_text_condition = Substance.is_cmr == True
+                # Sprawdź, czy substancja jest CMR LUB zawiera CMR (mieszanina)
+                cmr_text_condition = or_(
+                    Substance.is_cmr == True,
+                    Substance.contains_cmr == True
+                )
 
 
             # Połącz warunki
@@ -462,21 +498,43 @@ def view_all_substances():
             filters_applied = True
             current_app.logger.info(f"Zastosowano filtr użytkownika: {user_location}")
 
-        # Filtr substancji CMR
+        # Filtr substancji CMR (obejmuje substancje CMR i mieszaniny zawierające CMR)
         if is_cmr:
             is_cmr_bool = is_cmr.lower() == 'true'
-            query = query.filter(Substance.is_cmr == is_cmr_bool)
+            if is_cmr_bool:
+                # Jeśli szukamy CMR, pokaż substancje CMR LUB mieszaniny zawierające CMR
+                query = query.filter(or_(
+                    Substance.is_cmr == True,
+                    Substance.contains_cmr == True
+                ))
+            else:
+                # Jeśli szukamy "Nie", pokaż substancje, które nie są CMR i nie zawierają CMR
+                query = query.filter(
+                    Substance.is_cmr == False,
+                    Substance.contains_cmr == False
+                )
             filters_applied = True
-            current_app.logger.info(f"Zastosowano filtr CMR: {is_cmr}")
+            current_app.logger.info(f"Zastosowano filtr CMR: {is_cmr} (obejmuje is_cmr i contains_cmr)")
 
-        # Filtr substancji SVHC z parametru URL
+        # Filtr substancji SVHC z parametru URL (obejmuje substancje SVHC i mieszaniny zawierające SVHC)
         if is_svhc_param:
             # Ten filtr działa tylko jeśli parametr is_svhc='true' lub 'false' jest jawnie podany
             # Niezależnie od filtra tekstowego
             is_svhc_bool = is_svhc_param.lower() == 'true'
-            query = query.filter(Substance.is_svhc == is_svhc_bool)
+            if is_svhc_bool:
+                # Jeśli szukamy SVHC, pokaż substancje SVHC LUB mieszaniny zawierające SVHC
+                query = query.filter(or_(
+                    Substance.is_svhc == True,
+                    Substance.contains_svhc == True
+                ))
+            else:
+                # Jeśli szukamy "Nie", pokaż substancje, które nie są SVHC i nie zawierają SVHC
+                query = query.filter(
+                    Substance.is_svhc == False,
+                    Substance.contains_svhc == False
+                )
             filters_applied = True
-            current_app.logger.info(f"Zastosowano filtr SVHC (parametr URL): {is_svhc_param}")
+            current_app.logger.info(f"Zastosowano filtr SVHC (parametr URL): {is_svhc_param} (obejmuje is_svhc i contains_svhc)")
 
         # Filtr posiadania karty SDS
         if has_sds:
