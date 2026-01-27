@@ -1,0 +1,317 @@
+/* static/css/location_detail.css */
+
+/* ======================================== */
+/* Style Przycisków Akcji          */
+/* ======================================== */
+
+.action-btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    /* Dodano obramowanie dla spójności, jeśli przyciski dziedziczą różne */
+    border: 1px solid transparent;
+}
+
+.export-btn {
+    background-color: #e7f3ff;
+    border-color: #b8daff; /* Nadpisuje border: transparent */
+    color: #004085;
+}
+
+.export-btn:hover {
+    background-color: #cce5ff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Możesz dodać tu inne style przycisków jeśli są specyficzne dla tego widoku */
+
+
+/* ======================================== */
+/* Style Tabeli #substances-table     */
+/* ======================================== */
+
+/* Ogólne zachowanie komórek */
+#substances-table th,
+#substances-table td {
+    white-space: normal;   /* Pozwól na zawijanie tekstu */
+    vertical-align: middle;/* Wyrównaj zawartość do środka w pionie */
+    padding: 8px 10px;     /* Domyślny padding, może być nadpisany niżej */
+}
+
+/* Formatowanie poszczególnych kolumn */
+
+/* Kolumna 1: Checkbox */
+#substances-table th:nth-child(1),
+#substances-table td:nth-child(1) {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0 5px;
+    text-align: center;
+}
+#substances-table input[type="checkbox"] {
+    margin: 0 auto;
+    display: block;
+}
+
+/* Kolumna 2: Nazwa chemiczna */
+#substances-table th:nth-child(2) {
+    width: 250px;     /* Sugerowana szerokość */
+    max-width: 250px; /* Maksymalna szerokość */
+    text-align: left; /* Nagłówek do lewej */
+}
+#substances-table td:nth-child(2) {
+    max-width: 250px;
+    word-wrap: break-word;     /* Zawijanie długich słów */
+    overflow-wrap: break-word; /* To samo co word-wrap */
+    text-align: left;      /* Komórka do lewej */
+}
+
+/* Kolumna 3: Nr CAS */
+#substances-table th:nth-child(3),
+#substances-table td:nth-child(3) {
+    width: 100px;      /* Stała szerokość */
+    max-width: 100px;
+    text-align: center; /* Wyśrodkowanie */
+}
+
+/* Kolumna 4: Nr WE */
+#substances-table th:nth-child(4),
+#substances-table td:nth-child(4) {
+    width: 100px;      /* Stała szerokość */
+    max-width: 100px;
+    text-align: center; /* Wyśrodkowanie */
+}
+
+/* Kolumna 5 : Klasyfikacja (Komórki danych) */
+#substances-table td:nth-child(5) {
+    white-space: pre-line; /* Zachowaj podziały linii z danych */
+    line-height: 1.4;      /* Lepsza czytelność */
+    text-align: left;      /* Wyrównanie do lewej */
+    padding: 8px 12px;     /* Nieco większy padding dla czytelności */
+}
+
+
+/* Kolumny 6, 7: Zwroty H, SCL/M-factor (Komórki danych) */
+#substances-table td:nth-child(6),
+#substances-table td:nth-child(7) {
+    white-space: pre-line; /* Zachowaj podziały linii z danych */
+    line-height: 1.4;      /* Lepsza czytelność */
+    text-align: center;      /* Wyrównanie do lewej */
+    padding: 8px 12px;     /* Nieco większy padding dla czytelności */
+}
+
+
+/* Nagłówki dla Kolumn 5, 6, 7 */
+#substances-table th:nth-child(5), /* Klasyfikacja */
+#substances-table th:nth-child(6), /* Zwroty H */
+#substances-table th:nth-child(7) { /* SCL/M-factor */
+    text-align: center; /* Wyśrodkuj nagłówki */
+}
+
+/* Kolumna 8: Lokalizacja (fizyczna) */
+#substances-table th:nth-child(8),
+#substances-table td:nth-child(8) {
+    text-align: center; /* Wyśrodkowanie */
+}
+
+/* Kolumna 9: Komentarz */
+#substances-table th:nth-child(9),
+#substances-table td:nth-child(9) {
+    text-align: left; /* Wyrównanie do lewej */
+}
+
+/* Kolumna 10: Karta SDS */
+#substances-table th:nth-child(10),
+#substances-table td:nth-child(10) {
+    text-align: center; /* Wyśrodkowanie */
+}
+
+/* Kolumna 11: Akcje */
+#substances-table th:nth-child(11),
+#substances-table td:nth-child(11) {
+    text-align: center; /* Wyśrodkowanie */
+}
+
+/* ======================================== */
+/* Style dla Badge'y CMR i SVHC        */
+/* ======================================== */
+
+.cmr-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.svhc-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+/* ======================================== */
+/* Style Komórek Akcji i SDS           */
+/* ======================================== */
+
+/*.sds-cell {
+  /* Dodatkowe style dla komórki TD, jeśli potrzebne poza centrowaniem */
+  /* text-align: center; jest już obsłużone przez nth-child */
+/*}
+
+/*.actions-cell {
+ /* Dodatkowe style dla komórki TD, jeśli potrzebne poza centrowaniem */
+ /* text-align: center; jest już obsłużone przez nth-child */
+/*}
+
+/* Można tu dodać style dla elementów WEWNĄTRZ .sds-cell i .actions-cell */
+/* np. .sds-link, .sds-timestamp, .sds-button-row (zdefiniowane w base.html) */
+/* np. .actions-cell button (zdefiniowane w base.html) */
+
+
+/* ======================================== */
+/* Inne Style Specyficzne dla Widoku   */
+/* ======================================== */
+
+/* Dodaj tutaj style np. dla sekcji wyszukiwania, formularza dodawania ręcznego */
+/* Przykład: */
+/*
+.search-section { ... }
+#manual-add-form { ... }
+.last-modified-info {
+    margin-bottom: 15px;
+    font-style: italic;
+    color: #666;
+}
+*/
+
+/* ======================================== */
+/* Style dla trybu edycji inline          */
+/* ======================================== */
+
+/* Ogólne style dla pól edycyjnych */
+.edit-mode .edit-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-family: inherit;
+}
+
+/* Wyrównanie flag CMR/SVHC w trybie edycji */
+.edit-mode label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    margin: 3px 0;
+    cursor: pointer;
+    line-height: 16px;
+}
+
+.edit-mode label input[type="checkbox"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    vertical-align: baseline;
+}
+
+.edit-mode label span {
+    display: inline-block;
+    line-height: 14px;
+    vertical-align: baseline;
+}
+
+/* Ograniczenia szerokości dla konkretnych kolumn w trybie edycji */
+/* Kolumna Nazwa - maksymalna szerokość */
+td:nth-child(2) .edit-mode .edit-input {
+    max-width: 240px;
+}
+
+/* Kolumny CAS i EC - wąskie pola */
+td:nth-child(3) .edit-mode .edit-input,
+td:nth-child(4) .edit-mode .edit-input {
+    max-width: 90px;
+}
+
+/* Kolumna Lokalizacja - średnie pole */
+td:nth-child(8) .edit-mode .edit-input {
+    max-width: 120px;
+}
+
+/* Styling dla wiersza w trybie edycji */
+tr.editing-mode {
+    background-color: #fffbf0;
+}
+
+/* Style dla paginacji po stronie serwera */
+.pagination-server {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-button {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination-button:hover {
+    background-color: #f0f0f0;
+}
+
+.pagination-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.per-page-selector select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}

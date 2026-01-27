@@ -1,0 +1,724 @@
+# Instrukcja Użytkownika ChemMan
+
+Przewodnik dla użytkowników systemu ChemMan - zarządzanie substancjami chemicznymi.
+
+---
+
+## 📋 Spis treści
+
+1. [Pierwsze kroki](#pierwsze-kroki)
+2. [Przeglądanie substancji](#przeglądanie-substancji)
+3. [Dodawanie substancji](#dodawanie-substancji)
+4. [Edycja i usuwanie](#edycja-i-usuwanie)
+   - [Edycja inline (nowe w v2.2.0)](#edycja-inline-nowe-w-v220)
+   - [Ręczne flagi CMR/SVHC (nowe w v2.2.0)](#ręczne-flagi-cmrsvhc-nowe-w-v220)
+5. [Zarządzanie komórkami organizacyjnymi](#zarządzanie-komórkami-organizacyjnymi)
+6. [Karty charakterystyki (SDS)](#karty-charakterystyki-sds)
+   - [Wiele kart SDS (nowe w v2.2.0)](#wiele-kart-sds-nowe-w-v220)
+7. [Eksport danych](#eksport-danych)
+8. [Wyszukiwanie i filtrowanie](#wyszukiwanie-i-filtrowanie)
+9. [Często zadawane pytania](#często-zadawane-pytania)
+
+---
+
+## Pierwsze kroki
+
+### Logowanie do systemu
+
+1. Otwórz przeglądarkę (zalecane: Chrome, Firefox, Edge)
+2. Wpisz adres aplikacji: `http://[ADRES_SERWERA]:5000`
+3. Wprowadź swoją **nazwę użytkownika** i **hasło**
+4. Kliknij **"Zaloguj"**
+
+![Ekran logowania](docs/images/login.png)
+
+### Zmiana hasła po pierwszym logowaniu
+
+**WAŻNE:** Po pierwszym logowaniu powinieneś zmienić hasło!
+
+1. Kliknij **"Zmień hasło"** w górnym menu
+2. Wprowadź **obecne hasło**
+3. Wprowadź **nowe hasło** (min. 4 znaki, zalecane 8+)
+4. Potwierdź nowe hasło
+5. Kliknij **"Zmień Hasło"**
+
+### Interfejs główny
+
+Po zalogowaniu zobaczysz:
+```
+┌──────────────────────────────────────────────┐
+│  CHEM-MAN | KOMÓRKI ORGANIZACYJNE            │
+├──────────────────────────────────────────────┤
+│  [Menu nawigacji]                            │
+│  Komórki Organizacyjne | Wszystkie Subst.    │
+│  | Zmień hasło | Wyloguj (jan.kowalski)      │
+├──────────────────────────────────────────────┤
+│  Istniejące komórki organizacyjne:           │
+│                                               │
+│  📦 Magazyn A      [Edytuj] [Usuń]           │
+│  📦 Laboratorium   [Edytuj] [Usuń]           │
+│  📦 Magazyn B      [Edytuj] [Usuń]           │
+│                                               │
+│  [+ Dodaj nową komórkę organizacyjną]        │
+└──────────────────────────────────────────────┘
+```
+
+**Uwaga:** Widoczność przycisków [Edytuj] i [Usuń] zależy od tego, czy jesteś:
+- **Administratorem** - widzisz przyciski dla wszystkich komórek
+- **Przypisany do komórki** - widzisz przyciski tylko dla swojej komórki
+- **Bez przypisania** - nie widzisz żadnych komórek (skontaktuj się z administratorem)
+
+---
+
+## Przeglądanie substancji
+
+### Widok lokalizacji
+
+1. Na stronie głównej kliknij **nazwę lokalizacji** (np. "Magazyn A")
+2. Zobaczysz tabelę z substancjami w tej lokalizacji:
+
+| Nazwa chemiczna | Nr CAS | Nr WE | Klasyfikacja | Lokalizacja | Komentarz | Karta SDS | Akcje |
+|----------------|--------|-------|--------------|-------------|-----------|-----------|-------|
+| acetic acid<br>kwas octowy | 64-19-7 | 200-580-7 | Flam. Liq. 3 | Bieruń | 5L | Zobacz/Pobierz | Edytuj / Usuń |
+
+### Oznaczenia substancji
+
+- **🔴 CMR** - Substancja rakotwórcza, mutagenna lub działająca szkodliwie na rozrodczość
+- **🟡 SVHC** - Substancja wzbudzająca szczególnie duże obawy (lista REACH)
+
+**Przykład:**
+```
+bis(α,α-dimethylbenzyl) peroxide  [CMR] [SVHC]
+nadtlenek bis(α,α-dimetylobenzylu)
+```
+
+### Nawigacja po stronach
+
+Jeśli lokalizacja ma wiele substancji, zobaczysz paginację:
+```
+Wyświetlanie 25 z 150 substancji (Strona 1 z 6)
+
+[<< Pierwsza] [< Poprzednia] [Strona 1] [Następna >] [Ostatnia >>]
+
+Rekordów na stronę: [5] [10] [25] [50] [100]
+```
+
+---
+
+## Dodawanie substancji
+
+Masz **dwa sposoby** dodawania substancji:
+
+### Sposób 1: Dodawanie z bazy (zalecane)
+
+**Najlepszy dla substancji znanych, z bazy CLP lub SVHC**
+
+1. W widoku lokalizacji przewiń do sekcji **"Dodaj z Bazy (Excel)"**
+2. W polu wyszukiwania wpisz:
+   - **Nazwę** (polską lub angielską): `kwas`, `acetic`
+   - **Numer CAS**: `64-19-7`
+   - **Numer EC**: `200-580-7`
+3. Wybierz **lokalizację fizyczną** (Bieruń / Krupski Młyn) - opcjonalnie
+4. Kliknij **"Szukaj"**
+5. Pojawią się wyniki wyszukiwania:
+```
+✓ acetic acid ... % kwas octowy ... %
+  CAS: 64-19-7 | EC: 200-580-7
+  Klasyfikacja: Flam. Liq. 3, Skin Corr. 1A
+  [Dodaj]
+```
+
+6. Kliknij **"Dodaj"** przy wybranej substancji
+7. Substancja zostanie dodana do lokalizacji!
+
+**Wskazówki wyszukiwania:**
+- ✅ Wystarczą 2-3 znaki: `kwa` znajdzie wszystkie kwasy
+- ✅ Szukaj po polsku lub angielsku: `acetic` = `kwas octowy`
+- ✅ Możesz szukać po części numeru CAS: `64-19`
+- ✅ Wyszukiwarka przeszukuje **obie bazy** (CLP i SVHC)
+
+### Sposób 2: Dodawanie ręczne
+
+**Dla mieszanin własnych lub substancji spoza bazy**
+
+1. W widoku lokalizacji kliknij **"Dodaj mieszaninę/substancję ręcznie"**
+2. Wypełnij formularz:
+
+| Pole | Wymagane? | Opis |
+|------|-----------|------|
+| **Nazwa** | ✓ TAK | Nazwa substancji/mieszaniny |
+| Nr CAS | Nie | Numer CAS (jeśli znany) |
+| Nr WE | Nie | Numer WE/EC (jeśli znany) |
+| Klasyfikacja | Nie | Np. "Flam. Liq. 3, Skin Corr. 1A" |
+| Zwroty H | Nie | Np. "H226, H314" |
+| Komentarz | Nie | Dodatkowe informacje |
+| Lokalizacja fizyczna | Nie | Bieruń / Krupski Młyn |
+| **Flagi CMR/SVHC** | Nie | **Nowe w v2.2.0!** Zobacz poniżej |
+
+3. **[NOWOŚĆ v2.2.0]** Ustaw ręczne flagi CMR/SVHC (opcjonalnie):
+   - ☑️ **Jest CMR (substancja)** - dla substancji czystych CMR
+   - ☑️ **Jest SVHC (substancja)** - dla substancji czystych SVHC
+   - ☑️ **Zawiera CMR (mieszanina)** - dla mieszanin zawierających CMR
+   - ☑️ **Zawiera SVHC (mieszanina)** - dla mieszanin zawierających SVHC
+
+   **Uwaga:** System automatycznie wykrywa CMR/SVHC z zwrotów H, ale możesz ręcznie oznaczyć mieszaniny!
+
+4. Kliknij **"Zapisz"**
+
+**Przykład - mieszanina własna:**
+```
+Nazwa: Mieszanina czyszcząca ABC
+Klasyfikacja: Skin Irrit. 2, Eye Irrit. 2
+Zwroty H: H315, H319
+Komentarz: Mieszanina nr 5 z dnia 15.01.2025
+Lokalizacja: Bieruń
+```
+
+---
+
+## Edycja i usuwanie
+
+### Edycja komentarza
+
+**Najczęstsza operacja - dodawanie notatek do substancji**
+
+1. W tabeli substancji kliknij **"Edytuj Kom."** przy wybranej substancji
+2. Pojawi się pole tekstowe z komentarzem
+3. Wprowadź zmiany (np. ilość, lokalizacja dokładna, termin ważności)
+4. Kliknij **"Zapisz"** lub **"Anuluj"**
+
+**Przykłady komentarzy:**
+- `5L, półka 3, termin ważności: 2026-12`
+- `Ostatnie opakowanie, zamówić więcej`
+- `Nie używać, zanieczyszczone`
+
+### Usuwanie substancji
+
+**UWAGA:** Usunięcie jest trwałe!
+
+1. Kliknij **"Usuń"** przy substancji
+2. Potwierdź usunięcie w oknie dialogowym
+3. Substancja zostanie usunięta z lokalizacji
+
+**Wskazówka:** Zamiast usuwać, rozważ dodanie komentarza "ZUŻYTE" lub "DO UTYLIZACJI"
+
+### Edycja inline (nowe w v2.2.0)
+
+**✨ Nowość! Edytuj wszystkie pola bezpośrednio w tabeli!**
+
+Zamiast edytować tylko komentarz, teraz możesz edytować **wszystkie pola** substancji bezpośrednio w wierszu tabeli.
+
+**Jak edytować substancję:**
+
+1. W tabeli substancji kliknij **"Edytuj"** przy wybranej substancji
+2. Wiersz przełączy się w tryb edycji - zobaczysz pola tekstowe zamiast zwykłego tekstu
+3. Edytuj dowolne pola:
+   - **Nazwa chemiczna** - zmień nazwę substancji
+   - **Nr CAS** - dodaj lub popraw numer CAS
+   - **Nr WE** - dodaj lub popraw numer WE/EC
+   - **Klasyfikacja** - zmień klasyfikację (np. "Flam. Liq. 3")
+   - **Zwroty H** - dodaj lub zmień zwroty H (np. "H226, H314")
+   - **SCL/M-factor** - dodaj SCL lub M-factor
+   - **Lokalizacja fizyczna** - zmień na Bieruń lub Krupski Młyn
+   - **Komentarz** - dodaj notatki
+4. **[NOWOŚĆ]** Ustaw flagi CMR/SVHC używając checkboxów:
+   - ☑️ **Jest CMR** - oznacz substancję jako CMR
+   - ☑️ **Jest SVHC** - oznacz substancję jako SVHC
+   - ☑️ **Zaw. CMR** - oznacz mieszaninę jako zawierającą CMR
+   - ☑️ **Zaw. SVHC** - oznacz mieszaninę jako zawierającą SVHC
+5. Kliknij **"Zapisz"** aby zapisać zmiany, lub **"Anuluj"** aby odrzucić
+
+**Przykład użycia:**
+```
+Przed edycją:
+  Nazwa: acetic acid
+  CAS: 64-19-7
+  Komentarz: (pusty)
+
+Po kliknięciu "Edytuj":
+  [Pole tekstowe: acetic acid]
+  [Pole tekstowe: 64-19-7]
+  [Pole tekstowe: ___________]  ← Możesz dodać komentarz
+  [Zapisz] [Anuluj]
+
+Po zapisaniu:
+  Nazwa: acetic acid
+  CAS: 64-19-7
+  Komentarz: 5L, półka 3
+```
+
+**Zalety edycji inline:**
+- ✅ Szybsze - wszystko w jednym miejscu
+- ✅ Widoczne - widzisz cały wiersz podczas edycji
+- ✅ Elastyczne - edytuj jedno lub wszystkie pola naraz
+
+### Ręczne flagi CMR/SVHC (nowe w v2.2.0)
+
+**🚨 System rozróżnia substancje czyste i mieszaniny!**
+
+ChemMan automatycznie wykrywa substancje CMR i SVHC na podstawie zwrotów H i bazy REACH. Jednak czasami musisz ręcznie oznaczyć mieszaniny jako zawierające CMR/SVHC.
+
+**Rodzaje flag:**
+
+| Flaga | Kiedy używać | Przykład |
+|-------|--------------|----------|
+| **Jest CMR** | Substancja czysta jest CMR | Benzen (H350) |
+| **Jest SVHC** | Substancja czysta jest SVHC | Bis(2-ethylhexyl) phthalate |
+| **Zawiera CMR** | Mieszanina zawiera składnik CMR | Farba z toluenem |
+| **Zawiera SVHC** | Mieszanina zawiera składnik SVHC | Mieszanina z ftalanami |
+
+**Wizualne odznaki:**
+- 🔴 **CMR** - czerwona odznaka (substancja CMR)
+- 🟡 **SVHC** - żółta odznaka (substancja SVHC)
+- 🟠 **Zaw. CMR** - pomarańczowa odznaka (mieszanina z CMR)
+- 🟠 **Zaw. SVHC** - pomarańczowa odznaka (mieszanina z SVHC)
+
+**Jak ustawić flagi:**
+
+**Podczas dodawania ręcznego:**
+1. Wypełnij formularz dodawania ręcznego
+2. W sekcji "Flagi CMR/SVHC" zaznacz odpowiednie checkboxy
+3. Kliknij "Zapisz"
+
+**Podczas edycji inline:**
+1. Kliknij "Edytuj" przy substancji
+2. Zaznacz/odznacz checkboxy CMR/SVHC
+3. Kliknij "Zapisz"
+
+**Przykład - mieszanina z CMR:**
+```
+Nazwa: Lakier epoksydowy XYZ
+Klasyfikacja: Skin Sens. 1, STOT SE 3
+Zwroty H: H317, H335, H340 (ten ostatni to CMR!)
+☑️ Zawiera CMR (mieszanina)  ← Zaznacz to!
+
+Wynik: Substancja będzie miała odznakę "Zaw. CMR" 🟠
+```
+
+---
+
+## Zarządzanie komórkami organizacyjnymi
+
+### Co to jest komórka organizacyjna?
+
+**Komórka organizacyjna** = jednostka/dział w firmie (np. Laboratorium, Magazyn A, Dział Produkcji)
+
+**Lokalizacja fizyczna** = miejsce fizyczne (Bieruń / Krupski Młyn) - ustawiane dla poszczególnych substancji
+
+### Model dostępu
+
+System ChemMan używa dwupoziomowego modelu dostępu:
+
+| Rola | Przeglądanie | Modyfikacja | Kopiowanie |
+|------|-------------|-------------|------------|
+| **Administrator** | Wszystkie komórki | Wszystkie komórki | Do dowolnej komórki |
+| **Użytkownik z przypisaniem** | Wszystkie komórki (tylko odczyt) | Tylko przypisana komórka | Tylko do przypisanej komórki |
+| **Użytkownik bez przypisania** | Brak dostępu | Brak dostępu | Brak dostępu |
+
+**Przykład:**
+- Jan Kowalski jest przypisany do "Laboratorium SLK."
+- Może **przeglądać** substancje w "RBR-K" (tylko odczyt)
+- Może **dodawać/edytować** substancje tylko w "Laboratorium SLK."
+- Może **kopiować** substancje z "RBR-K" do "Laboratorium SLK." (nie na odwrót!)
+
+### Dodawanie komórki organizacyjnej
+
+**Tylko dla użytkowników z uprawnieniami `can_add_location` lub administratorów**
+
+1. Na stronie głównej przewiń do **"Dodaj nową komórkę organizacyjną"**
+2. Wprowadź nazwę komórki (np. "Laboratorium Analityczne", "Magazyn Główny")
+3. Kliknij **"Dodaj Komórkę Organizacyjną"**
+
+**Dobre praktyki nazewnictwa:**
+- ✅ Opisowe: `Laboratorium SLK`, `Magazyn Surowców`
+- ✅ Krótkie: `Lab 1`, `RBR-K`
+- ❌ Unikaj: `aaaaa`, `test123`
+
+### Edycja nazwy komórki
+
+**Tylko dla komórek, do których jesteś przypisany (lub administrator)**
+
+1. Na stronie głównej kliknij **"Edytuj"** przy komórce organizacyjnej
+2. Wprowadź nową nazwę
+3. Kliknij **"Zapisz"**
+
+**Uwaga:** Jeśli nie widzisz przycisku "Edytuj", nie masz uprawnień do tej komórki.
+
+### Usuwanie komórki organizacyjnej
+
+**UWAGA:** Usunięcie komórki organizacyjnej usuwa też WSZYSTKIE substancje w niej!
+
+**Tylko dla komórek, do których jesteś przypisany (lub administrator)**
+
+1. Kliknij **"Usuń"** przy komórce organizacyjnej
+2. Potwierdź usunięcie (nazwa komórki + liczba substancji)
+3. Komórka i jej zawartość zostaną usunięte
+
+**Zalecenie:** Przed usunięciem komórki, przenieś lub usuń substancje ręcznie.
+
+---
+
+## Karty charakterystyki (SDS)
+
+### Dodawanie karty SDS
+
+**Tylko dla użytkowników z uprawnieniami `can_upload_sds`**
+
+1. W widoku lokalizacji znajdź substancję w tabeli
+2. W kolumnie **"Karta SDS"** kliknij przycisk **"Dodaj kartę SDS"**
+3. Pojawi się formularz przesyłania:
+   - **Wybierz plik PDF** - kliknij "Choose File" i wybierz kartę SDS
+   - **Producent (opcjonalnie)** - wpisz nazwę producenta/dostawcy
+4. Kliknij **"Załaduj SDS"**
+
+**Wymagania:**
+- ✅ Format: **PDF**
+- ✅ Rozmiar: maksymalnie **16 MB**
+- ❌ Inne formaty (Word, Excel) NIE są obsługiwane
+
+**Przykład:**
+```
+Plik: acetic_acid_sigma_aldrich.pdf
+Producent: Sigma-Aldrich
+```
+
+### Wiele kart SDS (nowe w v2.2.0)
+
+**✨ Nowość! Każda substancja może mieć wiele kart SDS od różnych producentów!**
+
+To szczególnie przydatne gdy:
+- Kupujesz tę samą substancję od różnych dostawców
+- Masz różne wersje karty (aktualizacje od producenta)
+- Substancja jest dostępna w różnych klasach czystości
+
+**Jak dodać kolejną kartę SDS:**
+
+1. Znajdź substancję, która już ma kartę SDS
+2. Kliknij **"Dodaj kartę SDS"** (przycisk nadal jest widoczny!)
+3. Wybierz nowy plik PDF
+4. Wpisz producenta (np. "Merck", "Sigma-Aldrich", "POCh")
+5. Kliknij **"Załaduj SDS"**
+
+**Wyświetlanie wielu kart:**
+```
+Kolumna "Karta SDS" w tabeli:
+┌─────────────────────────────────┐
+│ acetic_acid_sigma.pdf           │
+│ Sigma-Aldrich                   │
+│ [Zobacz] [Usuń]                 │
+├─────────────────────────────────┤
+│ acetic_acid_merck.pdf           │
+│ Merck                           │
+│ [Zobacz] [Usuń]                 │
+├─────────────────────────────────┤
+│ [+ Dodaj kartę SDS]             │
+└─────────────────────────────────┘
+```
+
+**Przykład użycia:**
+```
+Substancja: Ethanol 96%
+
+Karta 1:
+  Plik: ethanol_poch_2024.pdf
+  Producent: POCh
+  Data: 2024-01-15
+
+Karta 2:
+  Plik: ethanol_chempur_2024.pdf
+  Producent: Chempur
+  Data: 2024-03-20
+
+Użytkownik widzi obie karty i może wybrać odpowiednią dla swojego źródła.
+```
+
+### Przeglądanie karty SDS
+
+1. Kliknij **"Zobacz"** lub nazwę pliku przy wybranej karcie SDS
+2. Plik PDF otworzy się w nowej karcie przeglądarki
+3. Możesz go wydrukować lub zapisać na dysk
+
+### Usuwanie karty SDS
+
+**Usuwasz tylko jedną wybraną kartę, pozostałe zostają!**
+
+1. Kliknij **"Usuń"** przy karcie SDS, którą chcesz usunąć
+2. Potwierdź usunięcie
+3. Karta zostanie trwale usunięta
+4. Inne karty SDS tej substancji pozostaną nietknięte
+
+**Przykład:**
+```
+Przed usunięciem:
+  - ethanol_poch_2024.pdf (POCh)
+  - ethanol_merck_2023.pdf (Merck)
+  - ethanol_sigma_2022.pdf (Sigma)
+
+Usuwam "ethanol_sigma_2022.pdf"
+
+Po usunięciu:
+  - ethanol_poch_2024.pdf (POCh)
+  - ethanol_merck_2023.pdf (Merck)
+```
+
+---
+
+## Eksport danych
+
+### Eksport substancji z lokalizacji
+
+**Eksportuje wszystkie substancje z jednej lokalizacji do CSV**
+
+1. W widoku lokalizacji kliknij **"⬇️ Eksportuj do CSV"** (prawy górny róg)
+2. Plik zostanie pobrany: `ChemMan_lok_Magazyn_A_subst.csv`
+3. Otwórz w Excel lub LibreOffice Calc
+
+**Zawartość eksportu:**
+- Nazwa chemiczna
+- Nr CAS
+- Klasyfikacja
+- Zwroty H
+- SCL/M-factor
+- Komentarz
+- Lokalizacja fizyczna
+
+### Eksport wszystkich substancji
+
+**Eksportuje substancje ze wszystkich lokalizacji**
+
+1. W menu kliknij **"Wszystkie Substancje"**
+2. Opcjonalnie zastosuj filtry (patrz: [Wyszukiwanie i filtrowanie](#wyszukiwanie-i-filtrowanie))
+3. Kliknij **"⬇️ Eksportuj do CSV"** (prawy górny róg)
+4. Plik zostanie pobrany:
+   - Z filtrami: `ChemMan_substancje_filtrowane.csv`
+   - Bez filtrów: `ChemMan_wszystkie_substancje.csv`
+
+**Dodatkowe kolumny w globalnym eksporcie:**
+- Nr WE
+- CMR (Tak/Nie)
+- SVHC (Tak/Nie)
+- Użytkownik (nazwa lokalizacji)
+
+### Otwieranie CSV w Excel
+
+**Jeśli polskie znaki się nie wyświetlają:**
+
+1. Otwórz Excel
+2. **Dane** → **Z pliku tekstowego/CSV**
+3. Wybierz pobrany plik
+4. Ustaw **Kodowanie: UTF-8** lub **65001: Unicode (UTF-8)**
+5. Kliknij **Załaduj**
+
+---
+
+## Wyszukiwanie i filtrowanie
+
+### Widok "Wszystkie Substancje"
+
+**Najpotężniejsze narzędzie do przeszukiwania całej bazy**
+
+1. Kliknij **"Wszystkie Substancje"** w menu
+2. Zobaczysz tabelę ze wszystkimi substancjami ze wszystkich lokalizacji
+
+### 🖱️ Nawigacja kliknięciem (v2.1.0+)
+
+**Szybkie przechodzenie do komórki organizacyjnej**
+
+Każdy wiersz w tabeli "Wszystkie Substancje" jest klikalny:
+
+1. **Najedź kursorem** na wiersz substancji → kursor zmieni się na wskaźnik 👆
+2. **Kliknij w dowolne miejsce wiersza** → zostaniesz przekierowany do komórki organizacyjnej, gdzie jest ta substancja
+3. **Linki działają normalnie** - kliknięcie "Pobierz" przy SDS pobierze kartę (nie przekieruje)
+
+**Przykład:**
+```
+Szukasz "kwas siarkowy" → znajdziesz go w widoku globalnym
+↓
+Klikasz wiersz
+↓
+Widzisz komórkę organizacyjną "Magazyn A" ze wszystkimi szczegółami
+```
+
+**Zalety:**
+- ✅ Szybki dostęp do szczegółów lokalizacji
+- ✅ Zobacz inne substancje w tej samej komórce
+- ✅ Dostęp do operacji kopiowania/przenoszenia
+- ✅ Pełny kontekst substancji w jej komórce
+
+### Filtr tekstowy
+
+W polu **"Filtruj (Nazwa, CAS, EC, Klasyfikacja, Lokalizacja...)"** możesz wpisać:
+
+| Szukasz | Wpisz | Wynik |
+|---------|-------|-------|
+| Substancje z "kwas" w nazwie | `kwas` | Wszystkie kwasy |
+| Konkretny CAS | `64-19-7` | Acetic acid |
+| Wszystkie CMR | `CMR` | Tylko substancje CMR |
+| Wszystkie SVHC | `SVHC` | Tylko substancje SVHC |
+| Zwrot H | `H350` | Substancje z tym zwrotem |
+
+**Przykłady:**
+```
+"kwas"        → znajdzie: kwas octowy, kwas solny, itp.
+"flam"        → znajdzie: wszystkie łatwopalne
+"CMR"         → tylko substancje CMR (czerwony badge)
+"SVHC"        → tylko substancje SVHC (żółty badge)
+"Magazyn A"   → wszystko w Magazynie A
+```
+
+### Zaawansowane filtry
+
+Kliknij **"Pokaż zaawansowane filtry"** aby zobaczyć więcej opcji:
+
+| Filtr | Opcje | Opis |
+|-------|-------|------|
+| **Lokalizacja fizyczna** | Wszystkie / Bieruń / Krupski Młyn | Filtruj po zakładzie |
+| **Użytkownik** | Wszystkie / [lista lokalizacji] | Filtruj po lokalizacji bazodanowej |
+| **Status CMR** | Wszystkie / Tak (CMR) / Nie | Pokaż tylko CMR lub nie-CMR |
+| **Status SVHC** | Wszystkie / Tak (SVHC) / Nie | Pokaż tylko SVHC lub nie-SVHC |
+| **Karta SDS** | Wszystkie / Posiada / Brak | Filtruj po posiadaniu karty |
+
+**Przykład kombinacji filtrów:**
+```
+Tekst: "flam"
+Lokalizacja fizyczna: Bieruń
+Status SVHC: Tak (SVHC)
+
+→ Wynik: Łatwopalne substancje SVHC w Bieruniu
+```
+
+### Czyszczenie filtrów
+
+Kliknij **"Wyczyść filtry"** aby usunąć wszystkie zastosowane filtry i zobaczyć pełną listę.
+
+---
+
+## Operacje masowe
+
+### Przenoszenie substancji
+
+**Przenieś kilka substancji na raz do innej lokalizacji**
+
+1. W widoku lokalizacji zaznacz checkboxy przy substancjach do przeniesienia
+2. Pojawi się sekcja **"Wybrano: X substancji"**
+3. Z listy **"Przenieś/Kopiuj do:"** wybierz docelową lokalizację
+4. Kliknij **"Przenieś"**
+5. Substancje znikną z obecnej lokalizacji i pojawią się w docelowej
+
+### Kopiowanie substancji
+
+**Skopiuj substancje do innej lokalizacji (oryginały pozostają)**
+
+1. Zaznacz checkboxy przy substancjach
+2. Wybierz lokalizację docelową z listy
+3. Kliknij **"Kopiuj"**
+4. Substancje zostaną skopiowane (duplikaty w obu lokalizacjach)
+
+**Użycie:** Przydatne gdy ta sama substancja jest w kilku miejscach.
+
+---
+
+## Często zadawane pytania
+
+### Ogólne
+
+**Q: Jak często powinienem zmieniać hasło?**  
+A: Zalecamy zmianę hasła co 3-6 miesięcy, lub natychmiast jeśli podejrzewasz wyciek.
+
+**Q: Czy mogę pracować na telefonie/tablecie?**  
+A: Tak, aplikacja działa w przeglądarce mobilnej, ale najwygodniej na komputerze.
+
+**Q: Jak długo przechowywane są dane?**  
+A: Wszystkie dane są przechowywane bezterminowo. System wykonuje automatyczne backupy.
+
+### Substancje
+
+**Q: Czym różni się "Dodaj z bazy" od "Dodaj ręcznie"?**  
+A: 
+- **Z bazy** - dane są automatycznie pobierane (klasyfikacja, H phrases, numery), CMR i SVHC oznaczane automatycznie
+- **Ręcznie** - wszystko wpisujesz sam, dla substancji/mieszanin własnych
+
+**Q: Dlaczego niektóre substancje mają dwie nazwy?**  
+A: To nazwy dwujęzyczne - angielska (góra) i polska (dół) z bazy CLP.
+
+**Q: Co oznacza badge CMR?**  
+A: Substancja jest **rakotwórcza** (Carcinogenic), **mutagenna** (Mutagenic) lub **toksyczna dla rozrodczości** (Reprotoxic).
+
+**Q: Co oznacza badge SVHC?**  
+A: Substancja **Wzbudzająca Szczególnie Duże Obawy** - lista kandydacka REACH do objęcia wymogiem zezwolenia.
+
+**Q: Czy mogę edytować nazwę lub CAS substancji?**  
+A: Nie bezpośrednio. Musisz usunąć i dodać ponownie, lub skontaktować się z administratorem.
+
+### Karty SDS
+
+**Q: Czy plik SDS musi być w jakimś konkretnym formacie?**  
+A: Tak, tylko **PDF**. Pliki Word, Excel, obrazy NIE są obsługiwane.
+
+**Q: Jak duży może być plik SDS?**  
+A: Maksymalnie **16 MB**. Jeśli plik jest większy, skompresuj go lub skontaktuj się z administratorem.
+
+**Q: Co jeśli nie mam karty SDS?**  
+A: To jest opcjonalne. Możesz pozostawić pole puste - substancja będzie miała status "Brak" w kolumnie SDS.
+
+**Q: Czy mogę dodać kilka kart SDS do jednej substancji?**  
+A: Nie, jedna substancja = jedna karta SDS. Jeśli masz kilka wersji, załaduj najnowszą.
+
+### Eksport
+
+**Q: Czy eksport zawiera również karty SDS?**  
+A: Nie, eksport CSV zawiera tylko dane tekstowe. Karty SDS musisz pobierać osobno.
+
+**Q: Czy mogę wyeksportować tylko wybrane substancje?**  
+A: Tak, użyj filtrów w widoku "Wszystkie Substancje" przed eksportem.
+
+**Q: W jakim programie otworzyć CSV?**  
+A: Microsoft Excel, LibreOffice Calc, Google Sheets - dowolny program arkuszy kalkulacyjnych.
+
+### Uprawnienia
+
+**Q: Dlaczego nie widzę przycisku "Dodaj substancję"?**  
+A: Nie masz uprawnienia `can_add`. Skontaktuj się z administratorem.
+
+**Q: Dlaczego nie mogę usunąć lokalizacji?**  
+A: Potrzebujesz uprawnienia `can_delete_location` lub statusu administratora.
+
+**Q: Jak sprawdzić jakie mam uprawnienia?**  
+A: Jeśli jesteś administratorem, możesz zobaczyć to w panelu "Zarządzaj Użytkownikami". W przeciwnym razie zapytaj swojego administratora.
+
+### Problemy techniczne
+
+**Q: Aplikacja nie działa, co robić?**  
+A: 
+1. Odśwież stronę (F5 lub Ctrl+R)
+2. Wyczyść cache przeglądarki
+3. Sprawdź połączenie z siecią
+4. Skontaktuj się z administratorem
+
+**Q: Widzę komunikat "Sesja wygasła"**  
+A: Zaloguj się ponownie. Sesja wygasa po pewnym czasie nieaktywności (domyślnie kilka godzin).
+
+**Q: Nie mogę załadować pliku SDS**  
+A: Sprawdź:
+- Czy plik jest w formacie PDF?
+- Czy plik nie jest większy niż 16 MB?
+- Czy masz uprawnienie `can_upload_sds`?
+
+**Q: Polskie znaki w CSV wyświetlają się jako krzaki**  
+A: Zobacz sekcję [Otwieranie CSV w Excel](#otwieranie-csv-w-excel) - ustaw kodowanie UTF-8.
+
+---
+
+## Wsparcie
+
+Jeśli masz pytania lub problemy:
+
+1. Sprawdź tę instrukcję
+2. Zapytaj swojego administratora systemu
+3. W przypadku błędów - zrób screenshot i prześlij administratorowi
+
+---
+
+**Wersja dokumentu:** 2.1
+**Data aktualizacji:** 2025-10-27
+**Zmiany:** Dodano sekcję o komórkach organizacyjnych i modelu dostępu

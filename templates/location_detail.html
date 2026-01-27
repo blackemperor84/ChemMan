@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Komórka organizacyjna: {{ location.name }} - CHEM MAN{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/location_detail.css') }}">
+{% endblock %}
+
+{% block header %}KOMÓRKA ORGANIZACYJNA: {{ location.name }}{% endblock %}
+
+{% block content %}
+<div id="substances-list"
+     data-is-admin="{{ current_user.is_admin|lower }}"
+     data-can-add="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_add))|lower }}"
+     data-can-edit="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_edit))|lower }}"
+     data-can-delete="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_delete))|lower }}"
+     data-can-move="{{ (current_user.is_admin or current_user.can_move)|lower }}"
+     data-can-copy="{{ (current_user.is_admin or current_user.can_copy)|lower }}"
+     data-can-upload-sds="{{ (can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds))|lower }}">
+     <!-- Dodana sekcja z datą ostatniej modyfikacji -->
+     <div class="last-modified-info" style="margin-bottom: 15px; font-style: italic; color: #666;">
+        Ostatnia aktualizacja: {{ convert_utc_to_local(location.last_modified) if location.last_modified else 'Brak danych' }}
+    </div>
+
+     <h2>Substancje w tej komórce organizacyjnej:</h2>
+
+     <!-- Liczniki -->
+     <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; border: 1px solid #d0e8ff;">
+        <strong>Statystyki:</strong>
+        <span style="margin-left: 15px;">📦 Substancji: <strong>{{ total_substances }}</strong></span>
+        <span style="margin-left: 15px;">📄 Kart SDS: <strong>{{ total_sds_files }}</strong></span>
+     </div>
+
+    {% if substances_data %}
+    <div style="margin-bottom: 15px; display: flex; justify-content: flex-end;">
+        <a href="{{ url_for('export.export_location_csv', location_id=location.id) }}" class="action-btn export-btn">
+            <span>⬇️</span> Eksportuj do CSV
+        </a>
+    </div>
+
+    {# --- PAGINACJA - PRZENIESIONA NAD TABELĘ --- #}
+    {% if pagination and pagination.pages > 1 %} {# Pokaż tylko jeśli jest więcej niż 1 strona #}
+    <div class="pagination-server">
+        <div class="pagination-info">
+            Wyświetlanie {{ pagination.items|length }} z {{ pagination.total }} substancji
+            (Strona {{ pagination.page }} z {{ pagination.pages }})
+        </div>
+        <div class="pagination-controls">
+            {# Przycisk Pierwsza #}
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=1, per_page=pagination.per_page) }}" class="pagination-button" title="Pierwsza strona">&lt;&lt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Pierwsza strona">&lt;&lt;</span>
+            {% endif %}
+
+            {# Przycisk Poprzednia #}
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.prev_num, per_page=pagination.per_page) }}" class="pagination-button" title="Poprzednia strona">&lt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Poprzednia strona">&lt;</span>
+            {% endif %}
+
+            {# Informacja o stronie (opcjonalnie można dodać więcej linków do stron) #}
+            <span class="page-info">Strona {{ pagination.page }}</span>
+
+            {# Przycisk Następna #}
+            {% if pagination.has_next %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.next_num, per_page=pagination.per_page) }}" class="pagination-button" title="Następna strona">&gt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Następna strona">&gt;</span>
+            {% endif %}
+
+             {# Przycisk Ostatnia #}
+            {% if pagination.has_next %}
+                <a href="{{ url_for('locations.view_location', location_id=location.id, page=pagination.pages, per_page=pagination.per_page) }}" class="pagination-button" title="Ostatnia strona">&gt;&gt;</a>
+            {% else %}
+                <span class="pagination-button disabled" title="Ostatnia strona">&gt;&gt;</span>
+            {% endif %}
+        </div>
+        <div class="per-page-selector">
+            <label for="per-page-select">Rekordów na stronę:</label>
+            <select id="per-page-select" onchange="changeLocationPerPage(this.value)">
+                {% for option in [5, 10, 25, 50, 100] %} {# Możesz dostosować te wartości #}
+                    <option value="{{ option }}" {% if pagination.per_page == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <script>
+        function changeLocationPerPage(perPage) {
+            // Pobierz bieżące parametry (głównie location_id) i zmień per_page
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', perPage);
+            url.searchParams.set('page', 1); // Zawsze resetuj do pierwszej strony po zmianie liczby rekordów
+            window.location.href = url.toString();
+        }
+    </script>
+    {% endif %}
+    {# --- KONIEC BLOKU PAGINACJI --- #}
+
+    <table id="substances-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;"><input type="checkbox" id="select-all-chk" title="Zaznacz/Odznacz wszystko"></th>
+                    <th>Nazwa chemiczna</th>
+                    <th>Nr CAS</th>
+                    <th>Nr WE</th>
+                    <th>Klasyfikacja</th>
+                    <th>Zwroty H</th>
+                    <th>SCL/ M-factor</th>
+                    <th>Lokalizacja</th>
+                    <th>Komentarz</th>
+                    <th>Karta SDS</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% for sub_data in substances_data %}
+                <tr data-substance-row-id="{{ sub_data.id }}" class="substance-row"
+                    data-name="{{ sub_data.name }}"
+                    data-cas="{{ sub_data.cas or '' }}"
+                    data-ec="{{ sub_data.ec_number or '' }}"
+                    data-classification="{{ sub_data.classification or '' }}"
+                    data-hphrases="{{ sub_data.h_phrases or '' }}"
+                    data-scl="{{ sub_data.scl_mfactor or '' }}"
+                    data-physical-location="{{ sub_data.physical_location or '' }}"
+                    data-comment="{{ sub_data.comment or '' }}"
+                    data-is-cmr="{{ sub_data.is_cmr|lower }}"
+                    data-is-svhc="{{ sub_data.is_svhc|lower }}"
+                    data-contains-cmr="{{ sub_data.contains_cmr|lower }}"
+                    data-contains-svhc="{{ sub_data.contains_svhc|lower }}">
+                    <td><input type="checkbox" class="substance-checkbox" name="selected_substance" value="{{ sub_data.id }}"></td>
+
+                    <!-- Nazwa chemiczna -->
+                    <td class="editable-cell" data-field="name">
+                        <div class="view-mode">
+                            <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
+                            <div class="badges">
+                                {% if sub_data.is_cmr %}
+                                    <span class="cmr-badge" title="Substancja CMR">CMR</span>
+                                {% endif %}
+                                {% if sub_data.is_svhc %}
+                                    <span class="svhc-badge" title="{{ sub_data.svhc_reason }}">SVHC</span>
+                                {% endif %}
+                                {% if sub_data.contains_cmr %}
+                                    <span class="cmr-badge" title="Mieszanina zawiera CMR" style="background-color: #d4a017;">Zaw. CMR</span>
+                                {% endif %}
+                                {% if sub_data.contains_svhc %}
+                                    <span class="svhc-badge" title="Mieszanina zawiera SVHC" style="background-color: #d4a017;">Zaw. SVHC</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="edit-mode" style="display: none;">
+                            <textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.name }}</textarea>
+                            <div style="margin-top: 8px;">
+                                <label><input type="checkbox" class="flag-is-cmr" {% if sub_data.is_cmr %}checked{% endif %}><span>Jest CMR</span></label>
+                                <label><input type="checkbox" class="flag-is-svhc" {% if sub_data.is_svhc %}checked{% endif %}><span>Jest SVHC</span></label>
+                                <label><input type="checkbox" class="flag-contains-cmr" {% if sub_data.contains_cmr %}checked{% endif %}><span>Zaw. CMR</span></label>
+                                <label><input type="checkbox" class="flag-contains-svhc" {% if sub_data.contains_svhc %}checked{% endif %}><span>Zaw. SVHC</span></label>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Nr CAS -->
+                    <td class="editable-cell" data-field="cas">
+                        <div class="view-mode">{{ sub_data.cas or '---' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.cas or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Nr WE -->
+                    <td class="editable-cell" data-field="ec_number">
+                        <div class="view-mode">{{ sub_data.ec_number or '---' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.ec_number or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Klasyfikacja -->
+                    <td class="editable-cell" data-field="classification">
+                        <div class="view-mode">{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.classification or '' }}</textarea></div>
+                    </td>
+
+                    <!-- Zwroty H -->
+                    <td class="editable-cell" data-field="h_phrases">
+                        <div class="view-mode">{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.h_phrases or '' }}</textarea></div>
+                    </td>
+
+                    <!-- SCL/ M-factor -->
+                    <td class="editable-cell" data-field="scl_mfactor">
+                        <div class="view-mode">{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.scl_mfactor or '' }}</textarea></div>
+                    </td>
+
+                    <!-- Lokalizacja -->
+                    <td class="editable-cell" data-field="physical_location">
+                        <div class="view-mode">{{ sub_data.physical_location or 'Nieznana' }}</div>
+                        <div class="edit-mode" style="display: none;"><input type="text" class="edit-input" value="{{ sub_data.physical_location or '' }}" style="width: 100%;"></div>
+                    </td>
+
+                    <!-- Komentarz -->
+                    <td class="editable-cell" data-field="comment">
+                        <div class="view-mode">{{ sub_data.comment or '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.comment or '' }}</textarea></div>
+                    </td>
+                    <!-- Sekcja zarządzania SDS -->
+                    <td class="sds-cell">
+                        {% if sub_data.sds_files %}
+                            <div class="sds-files-list">
+                                {% for sds_file in sub_data.sds_files %}
+                                <div class="sds-file-item" style="margin-bottom: 8px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="flex: 1;">
+                                            <a href="{{ url_for('files.download_sds', filename=sds_file.filename) }}" target="_blank" title="Pobierz/Zobacz SDS" class="sds-link">
+                                                {{ sds_file.original_filename or 'SDS' }}
+                                            </a>
+                                            {% if sds_file.manufacturer %}
+                                            <br><small style="color: #666;">Producent: {{ sds_file.manufacturer }}</small>
+                                            {% endif %}
+                                            <br><small class="sds-timestamp">{{ sds_file.upload_timestamp_local }}</small>
+                                        </div>
+                                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
+                                        <form method="POST" action="{{ url_for('files.delete_sds', substance_id=sub_data.id, sds_file_id=sds_file.id) }}" class="delete-sds-form" style="display: inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć ten plik SDS?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="delete-sds-btn" style="font-size: 0.8em; padding: 2px 6px;">✕</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% if can_modify_this_unit and (current_user.is_admin or current_user.can_upload_sds) %}
+                            <div id="sds-upload-area-{{ sub_data.id }}" style="margin-top: 10px;">
+                                <button class="show-sds-upload-form" data-substance-id="{{ sub_data.id }}" style="font-size: 0.9em;">+ Dodaj SDS</button>
+                                <form method="POST" action="{{ url_for('files.upload_sds', substance_id=sub_data.id) }}" enctype="multipart/form-data" class="sds-upload-form" id="sds-form-{{ sub_data.id }}" style="display: none; margin-top: 5px;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="text" name="manufacturer" placeholder="Producent (opcjonalnie)" style="width: 100%; margin-bottom: 5px; padding: 3px;">
+                                    <input type="file" name="sds_file" accept=".pdf" required style="margin-bottom: 5px;">
+                                    <button type="submit" style="font-size: 0.9em;">Załaduj</button>
+                                    <button type="button" class="cancel-upload-btn" data-substance-id="{{ sub_data.id }}" style="font-size: 0.9em;">Anuluj</button>
+                                </form>
+                            </div>
+                        {% elif not sub_data.sds_files %}
+                            <span>Brak</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <div class="view-mode-actions">
+                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_edit) %}
+                                <button class="edit-substance-btn" data-substance-id="{{ sub_data.id }}">Edytuj</button>
+                            {% endif %}
+                            {% if can_modify_this_unit and (current_user.is_admin or current_user.can_delete) %}
+                                <button class="delete-substance-btn" data-substance-id="{{ sub_data.id }}">Usuń</button>
+                            {% endif %}
+                        </div>
+                        <div class="edit-mode-actions" style="display: none;">
+                            <button class="save-edit-btn" data-substance-id="{{ sub_data.id }}" style="background-color: #4CAF50; color: white;">Zapisz</button>
+                            <button class="cancel-edit-btn" data-substance-id="{{ sub_data.id }}" style="background-color: #f44336; color: white;">Anuluj</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% if substances_data %} {# <-- Przenieś ten warunek tutaj, aby sekcja dodawania nie znikała #}
+        <!-- Sekcja narzędzi masowych -->
+        {% if current_user.is_admin or current_user.can_move or current_user.can_copy %}
+            <div id="bulk-action-area" style="display: none;">
+                <form>
+                    Wybrano: <span id="selection-counter">0</span> substancji.
+                    <label for="target-location">Przenieś/Kopiuj do:</label>
+                    <select id="target-location" name="target_location" required>
+                        <option value="" disabled selected>-- Wybierz komórkę organizacyjną --</option>
+                        {% for target_loc in other_locations %}
+                            <option value="{{ target_loc.id }}">{{ target_loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if current_user.is_admin or current_user.can_move %}
+                        <button type="button" id="move-substances-btn" disabled>Przenieś</button>
+                    {% endif %}
+                    {% if current_user.is_admin or current_user.can_copy %}
+                        <button type="button" id="copy-substances-btn" disabled>Kopiuj</button>
+                    {% endif %}
+                </form>
+            </div>
+        {% endif %}
+        {% endif %} {# <-- Koniec przeniesionego warunku #}
+    {% else %}
+        <p>Brak substancji przypisanych do tej komórki organizacyjnej.</p>
+    {% endif %}
+
+</div>
+
+<hr>
+
+<!-- Sekcja dodawania z bazy -->
+{% if can_modify_this_unit and (current_user.is_admin or current_user.can_add) %}
+<div class="grid">
+    <div style="border: 1px solid #eee; padding: 15px;">
+        <h4>Dodaj z Bazy (Excel)</h4>
+        <div class="search-section" data-location-id="{{ location.id }}">
+            <div class="search-row">
+                <input type="text" id="search-query" name="search_query" placeholder="Szukaj (Nazwa lub CAS)">
+                <select id="search-physical-location">
+                    <option value="">-- Wybierz lokalizację --</option>
+                    <option value="Bieruń">Bieruń</option>
+                    <option value="Krupski Młyn">Krupski Młyn</option>
+                </select>
+                <button id="search-button">Szukaj</button>
+            </div>
+            <div id="search-results" style="margin-top: 15px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+    <div style="border: 1px solid #eee; padding: 15px;">
+        <h4>Dodaj Ręcznie</h4>
+        <div id="manual-add-container">
+            <button id="show-manual-form-btn">Dodaj mieszaninę/substancję ręcznie</button>
+        </div>
+        <div id="manual-add-section" style="display: none; margin-top: 15px;">
+                <form id="manual-add-form">
+                    <label for="manual-name">Nazwa:*</label>
+                    <input type="text" id="manual-name" required>
+                    
+                    <label for="manual-cas">Nr CAS (opcjonalnie):</label>
+                    <input type="text" id="manual-cas">
+                    
+                    <label for="manual-ec">Nr WE (opcjonalnie):</label>
+                    <input type="text" id="manual-ec">
+                    
+                    <label for="manual-classification">Klasyfikacja:</label>
+                    <textarea id="manual-classification" rows="2"></textarea>
+                    
+                    <label for="manual-hphrases">Zwroty H:</label>
+                    <textarea id="manual-hphrases" rows="2"></textarea>
+                    
+                    <label for="manual-comment">Komentarz:</label>
+                    <textarea id="manual-comment" rows="2"></textarea>
+                    
+                    <label for="manual-physical-location">Lokalizacja fizyczna:</label>
+                    <select id="manual-physical-location">
+                        <option value="">-- Wybierz lokalizację --</option>
+                        <option value="Bieruń">Bieruń</option>
+                        <option value="Krupski Młyn">Krupski Młyn</option>
+                    </select>
+
+                    <fieldset style="border: 1px solid #ddd; padding: 15px; margin: 10px 0 0 0; border-radius: 4px; box-sizing: border-box; width: 100%; min-width: 0;">
+                        <legend style="font-weight: bold; font-size: 14px; padding: 0 8px;">Flagi CMR/SVHC:</legend>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-is-cmr" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Jest CMR (substancja)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-is-svhc" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Jest SVHC (substancja)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-contains-cmr" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Zawiera CMR (mieszanina)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="manual-contains-svhc" style="width: 16px; height: 16px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                                <span style="line-height: 16px;">Zawiera SVHC (mieszanina)</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="button-row">
+                        <button type="submit" id="save-mixture-button">Zapisz</button>
+                        <button type="button" id="cancel-manual-form-btn">Anuluj</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+<hr>
+<p><a href="{{ url_for('locations.index') }}">Powrót do listy komórek organizacyjnych</a></p>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} {# <--- DODAJ TĘ LINIĘ, aby załadować base.js #}
+    <script src="{{ url_for('static', filename='js/location_detail.js') }}" defer></script>
+{% endblock %}

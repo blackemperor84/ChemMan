@@ -1,0 +1,84 @@
+# ==========================================
+# ChemMan - Logrotate Configuration
+# ==========================================
+# This file should be copied to /etc/logrotate.d/chemman on Linux servers
+#
+# Installation:
+#   sudo cp deployment/logrotate-chemman /etc/logrotate.d/chemman
+#   sudo chmod 644 /etc/logrotate.d/chemman
+#
+# Test the configuration:
+#   sudo logrotate -d /etc/logrotate.d/chemman
+#
+# Force rotation (for testing):
+#   sudo logrotate -f /etc/logrotate.d/chemman
+
+# Application logs
+/var/www/chemman/logs/*.log {
+    # Rotate daily
+    daily
+
+    # Keep 30 days of logs
+    rotate 30
+
+    # Don't error if log file is missing
+    missingok
+
+    # Don't rotate if log is empty
+    notifempty
+
+    # Compress rotated logs (saves disk space)
+    compress
+
+    # Delay compression until next rotation (allows time for processes to finish writing)
+    delaycompress
+
+    # Create new log file with these permissions after rotation
+    create 0644 chemman chemman
+
+    # Date extension for rotated files (e.g., chem_man.log-20231015)
+    dateext
+
+    # Use this date format
+    dateformat -%Y%m%d
+
+    # Run this after rotation (reload application to use new log file)
+    postrotate
+        # Reload the systemd service to reopen log files
+        systemctl reload chemman.service > /dev/null 2>&1 || true
+    endscript
+}
+
+# Gunicorn access logs (if separate from application logs)
+/var/log/chemman/access.log {
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    create 0644 chemman chemman
+    dateext
+    dateformat -%Y%m%d
+
+    postrotate
+        systemctl reload chemman.service > /dev/null 2>&1 || true
+    endscript
+}
+
+# Gunicorn error logs
+/var/log/chemman/error.log {
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    create 0644 chemman chemman
+    dateext
+    dateformat -%Y%m%d
+
+    postrotate
+        systemctl reload chemman.service > /dev/null 2>&1 || true
+    endscript
+}

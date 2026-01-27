@@ -1,0 +1,203 @@
+small { 
+    color: grey; 
+    font-size: 0.8em;
+}
+
+/* Ulepszony nagłówek strony */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Ulepszony formularz wyszukiwania */
+.search-export-container {
+    margin-bottom: 1.5rem;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#filter-input {
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 200px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+#filter-input:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.search-button {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px;
+}
+
+.search-button:hover {
+    background-color: #2980b9;
+}
+
+/* Zaawansowane filtrowanie */
+.advanced-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.filter-group select,
+.filter-group input {
+    height: 35px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.cmr-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.svhc-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+/* Przyciski zaawansowanego filtrowania */
+.advanced-filter-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.toggle-advanced-btn {
+    background-color: transparent;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px;
+    text-decoration: underline;
+}
+
+.reset-filters-btn {
+    background-color: transparent;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px;
+}
+
+.reset-filters-btn:hover,
+.toggle-advanced-btn:hover {
+    text-decoration: underline;
+}
+
+/* Dodaj te style do sekcji extra_styles */
+/* Centering columns */
+#all-substances-table td:nth-child(5),/* Zwroty H */
+#all-substances-table td:nth-child(7), /* Użytkownik */
+#all-substances-table td:nth-child(8), /* Lokalizacja */
+#all-substances-table td:nth-child(10) { /* Karta SDS  */
+    text-align: center !important;
+}
+
+/* Oznaczenie CMR wyraźnym kolorem */
+.cmr-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+css/* Ograniczenie szerokości kolumny z nazwą chemiczną i zawijanie tekstu */
+#all-substances-table th:nth-child(1) {
+    width: 250px; /* Maksymalna szerokość kolumny nagłówka */
+    max-width: 250px;
+}
+
+#all-substances-table td:nth-child(1) {
+    max-width: 250px; /* Maksymalna szerokość komórki */
+    word-wrap: break-word; /* Zawijanie długich ciągów tekstu */
+    overflow-wrap: break-word;
+    white-space: normal; /* Zezwalanie na łamanie linii */
+    padding: 8px 10px;
+}
+
+/* Dodatkowe style dla pozostałych kolumn */
+#all-substances-table th, 
+#all-substances-table td {
+    white-space: normal; /* Pozwala na zawijanie tekstu */
+}
+
+/* Dla kolumny numerów CAS i EC ustalmy sztywną szerokość */
+#all-substances-table th:nth-child(2),
+#all-substances-table td:nth-child(2),
+#all-substances-table th:nth-child(3),
+#all-substances-table td:nth-child(3) {
+    width: 100px;
+    max-width: 100px;
+}
+
+
+

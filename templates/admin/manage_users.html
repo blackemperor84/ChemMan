@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}Zarządzanie Użytkownikami - Chem-Man{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_users.css') }}">
+{% endblock %}
+
+{% block header %}CHEM-MAN | ZARZĄDZANIE UŻYTKOWNIKAMI{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <div class="users-section">
+        <div class="section-header">
+            <h3 class="section-title">Istniejący Użytkownicy</h3>
+        </div>
+        
+        {% if users %}
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 15%;">Nazwa użytkownika</th>
+                        <th style="width: 40%;">Uprawnienia</th>
+                        <th style="width: 40%;">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td style="text-align: center;">{{ user.id }}</td>
+                        <td>
+                            <strong>{{ user.username }}</strong>
+                            {% if user.is_admin %}
+                                <br><small>(Administrator)</small>
+                            {% else %}
+                                <br><small style="color: #666;">Komórka: {{ user.organizational_unit.name if user.organizational_unit else 'Brak przypisania' }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_admin %}
+                                <strong>Administrator (pełne uprawnienia)</strong>
+                            {% else %}
+                                {% set perms = [] %}
+                                {% if user.can_view %}{% set perms = perms + ['Przeglądanie'] %}{% endif %}
+                                {% if user.can_add %}{% set perms = perms + ['Dodawanie'] %}{% endif %}
+                                {% if user.can_edit %}{% set perms = perms + ['Edycja'] %}{% endif %}
+                                {% if user.can_delete %}{% set perms = perms + ['Usuwanie'] %}{% endif %}
+                                {% if user.can_move %}{% set perms = perms + ['Przenoszenie'] %}{% endif %}
+                                {% if user.can_copy %}{% set perms = perms + ['Kopiowanie'] %}{% endif %}
+                                {% if user.can_upload_sds %}{% set perms = perms + ['Zarządzanie SDS'] %}{% endif %}
+                                {% if user.can_add_location %}{% set perms = perms + ['Dodawanie lokalizacji'] %}{% endif %}
+                                {% if user.can_delete_location %}{% set perms = perms + ['Usuwanie lokalizacji'] %}{% endif %}
+                                
+                                {{ perms|join(', ') }}
+                                
+                                <div id="edit-permissions-form-{{ user.id }}" class="permissions-section" style="display: none; margin-top: 10px;">
+                                    <form method="POST" action="{{ url_for('admin.edit_user_permissions', user_id=user.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="permissions-grid">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_view" {% if user.can_view %}checked{% endif %}>
+                                                Przeglądanie
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_add" {% if user.can_add %}checked{% endif %}>
+                                                Dodawanie
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_edit" {% if user.can_edit %}checked{% endif %}>
+                                                Edycja
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_delete" {% if user.can_delete %}checked{% endif %}>
+                                                Usuwanie
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_move" {% if user.can_move %}checked{% endif %}>
+                                                Przenoszenie
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_copy" {% if user.can_copy %}checked{% endif %}>
+                                                Kopiowanie
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_upload_sds" {% if user.can_upload_sds %}checked{% endif %}>
+                                                Zarządzanie SDS
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_add_location" {% if user.can_add_location %}checked{% endif %}>
+                                                Dodawanie lokalizacji
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_delete_location" {% if user.can_delete_location %}checked{% endif %}>
+                                                Usuwanie lokalizacji
+                                            </label>
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <label for="organizational_unit_id_{{ user.id }}" style="display: block; margin-bottom: 5px;">Komórka organizacyjna:</label>
+                                            <select name="organizational_unit_id" id="organizational_unit_id_{{ user.id }}" style="padding: 5px; width: 100%; max-width: 300px;">
+                                                <option value="">Brak przypisania</option>
+                                                {% for org_unit in organizational_units %}
+                                                    <option value="{{ org_unit.id }}" {% if user.organizational_unit_id == org_unit.id %}selected{% endif %}>{{ org_unit.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <button type="submit" class="btn btn-success">
+                                                <span>💾</span> Zapisz
+                                            </button>
+                                            <button type="button" class="btn btn-secondary cancel-edit-permissions-btn" data-user-id="{{ user.id }}">
+                                                Anuluj
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.username != 'admin' %}
+                                <div class="user-actions">
+                                    <button class="btn btn-warning edit-permissions-btn" data-user-id="{{ user.id }}">
+                                        <span>✏️</span> Edytuj uprawnienia
+                                    </button>
+                                    <button class="btn btn-info reset-password-btn" data-username="{{ user.username }}" data-user-id="{{ user.id }}">
+                                        <span>🔑</span> Resetuj Hasło
+                                    </button>
+                                    <button class="btn btn-danger delete-user-btn" data-username="{{ user.username }}" data-user-id="{{ user.id }}">
+                                        <span>🗑️</span> Usuń
+                                    </button>
+                                </div>
+                                <form id="reset-password-form-{{ user.id }}" method="POST" action="{{ url_for('admin.admin_reset_password', user_id=user.id) }}" style="display: none;"></form>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <form id="delete-user-form-{{ user.id }}" method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display: none;"></form>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% else %}
+                                <div style="text-align: center; color: #666;">
+                                    (Konto administratora - brak akcji)
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Brak zdefiniowanych użytkowników.</p>
+        {% endif %}
+    </div>
+
+    <div class="add-user-section">
+        <div class="section-header">
+            <h3 class="section-title">Dodaj Nowego Użytkownika</h3>
+        </div>
+        
+        <form method="POST" action="{{ url_for('admin.add_user') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="new_username">Nazwa użytkownika*</label>
+                <input type="text" id="new_username" name="new_username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="new_password">Hasło*</label>
+                <input type="password" id="new_password" name="new_password" class="form-control" required minlength="8">
+            </div>
+            <div class="form-group">
+                <label for="organizational_unit_id">Komórka organizacyjna</label>
+                <select name="organizational_unit_id" id="organizational_unit_id" class="form-control">
+                    <option value="">Brak przypisania</option>
+                    {% for org_unit in organizational_units %}
+                        <option value="{{ org_unit.id }}">{{ org_unit.name }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color: #666;">Wybierz komórkę organizacyjną, do której ma mieć dostęp użytkownik</small>
+            </div>
+
+            <div class="permissions-section">
+                <h4 class="permissions-title">Uprawnienia użytkownika:</h4>
+                <div class="permissions-grid">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_view" checked>
+                        Przeglądanie
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_add">
+                        Dodawanie
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_edit">
+                        Edycja
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_delete">
+                        Usuwanie
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_move">
+                        Przenoszenie
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_copy">
+                        Kopiowanie
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_upload_sds">
+                        Zarządzanie SDS
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_add_location">
+                        Dodawanie lokalizacji
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_delete_location">
+                        Usuwanie lokalizacji
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                <span style="color: white; font-weight: bold; margin-right: 5px;">&plus;</span> Dodaj użytkownika
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modalne okno potwierdzenia resetowania hasła -->
+<div id="reset-password-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Potwierdź resetowanie hasła</h3>
+        </div>
+        <div class="modal-body">
+            <p>Czy na pewno chcesz zresetować hasło dla użytkownika <strong id="reset-username"></strong>?</p>
+            <p>Zostanie wygenerowane nowe hasło tymczasowe, które będzie musiał zmienić przy następnym logowaniu.</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-reset" class="btn btn-secondary">Anuluj</button>
+            <button id="confirm-reset" class="btn btn-primary">Resetuj hasło</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modalne okno potwierdzenia usunięcia użytkownika -->
+<div id="delete-user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Potwierdź usunięcie</h3>
+        </div>
+        <div class="modal-body">
+            <p>Czy na pewno chcesz trwale usunąć użytkownika <strong id="delete-username"></strong>?</p>
+            <p><strong>Uwaga:</strong> Ta operacja jest nieodwracalna!</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-delete" class="btn btn-secondary">Anuluj</button>
+            <button id="confirm-delete" class="btn btn-danger">Usuń użytkownika</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Style dla okna modalnego */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 400px;
+    max-width: 80%;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/manage_users.js') }}" defer></script>
+{% endblock %}

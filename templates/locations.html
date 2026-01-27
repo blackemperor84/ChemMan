@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Komórki organizacyjne - Chem-Man{% endblock %}
+
+{% block header %}CHEM-MAN | KOMÓRKI ORGANIZACYJNE{% endblock %}
+
+{% block content %}
+<h2>Istniejące komórki organizacyjne:</h2>
+<div style="margin-bottom: 1.5rem;">
+    <ul id="locations-list" style="list-style: none; padding: 0;">
+        {% for location in locations %}
+        <li id="location-item-{{ location.id }}">
+            <div class="location-display" id="location-display-{{ location.id }}">
+                <div class="location-name">
+                    <a href="{{ url_for('locations.view_location', location_id=location.id) }}" class="location-link">
+                        <span id="location-name-{{ location.id }}">{{ location.name }}</span>
+                    </a>
+                </div>
+                <div class="location-actions">
+                    {% if current_user.can_modify_organizational_unit(location.id) and (current_user.is_admin or current_user.can_edit) %}
+                        <button class="edit-location-btn" data-location-id="{{ location.id }}">Edytuj</button>
+                    {% endif %}
+                    {% if current_user.can_modify_organizational_unit(location.id) and (current_user.is_admin or current_user.can_delete_location) %}
+                        <button class="delete-location-btn" data-location-id="{{ location.id }}" data-location-name="{{ location.name }}">Usuń</button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="location-edit" id="location-edit-{{ location.id }}" style="display: none;">
+                <div class="location-name">
+                    <input type="text" id="location-input-{{ location.id }}" value="{{ location.name }}">
+                </div>
+                <div class="location-actions">
+                    <button class="save-location-btn" data-location-id="{{ location.id }}">Zapisz</button>
+                    <button type="button" class="cancel-location-btn" data-location-id="{{ location.id }}">Anuluj</button>
+                </div>
+            </div>
+        </li>
+        {% else %}
+            <li>Brak zdefiniowanych komórek organizacyjnych.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if current_user.is_admin or current_user.can_add_location %}
+    <hr>
+    <h2>Dodaj nową komórkę organizacyjną:</h2>
+    <form id="add-location-form" method="POST" action="{{ url_for('locations.add_location') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="location_name">Nazwa komórki organizacyjnej:</label>
+            <input type="text" id="location_name" name="location_name" required autocomplete="off">
+        </div>
+        <button type="submit">Dodaj Komórkę Organizacyjną</button>
+    </form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} {# <--- DODAJ TĘ LINIĘ #}
+    <script src="{{ url_for('static', filename='js/locations.js') }}" defer></script>
+{% endblock %}
