@@ -172,9 +172,9 @@
                     </td>
                     <td>{{ sub_data.cas or '' }}</td>
                     <td>{{ sub_data.ec_number or '' }}</td>
-                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</td>
-                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</td>
-                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</td>
+                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification and sub_data.classification not in ['nan', 'NaN', 'None'] else '' }}</td>
+                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases and sub_data.h_phrases not in ['nan', 'NaN', 'None'] else '' }}</td>
+                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor and sub_data.scl_mfactor not in ['nan', 'NaN', 'None'] else '' }}</td>
                     <td>{{ sub_data.location_name }}</td> <!-- Będzie wyśrodkowane przez CSS -->
                     <td>{{ sub_data.physical_location }}</td> <!-- Będzie wyśrodkowane przez CSS -->
                     <td>{{ sub_data.comment or '' }}</td>

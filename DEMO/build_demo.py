@@ -53,7 +53,8 @@ def create_demo_database():
             can_copy=True,
             can_upload_sds=True,
             can_add_location=True,
-            can_delete_location=True
+            can_delete_location=True,
+            can_update_databases=True
         )
         admin.set_password('Demo1234')
         db.session.add(admin)

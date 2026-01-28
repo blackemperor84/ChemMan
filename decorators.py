@@ -59,3 +59,7 @@ def add_location_permission_required(f):
 def delete_location_permission_required(f):
     """Skrót dla uprawnienia do usuwania lokalizacji."""
     return permission_required('can_delete_location')(f)
+
+def update_databases_permission_required(f):
+    """Skrót dla uprawnienia do aktualizacji baz danych (CLP, SVHC)."""
+    return permission_required('can_update_databases')(f)

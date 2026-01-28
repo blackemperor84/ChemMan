@@ -6,6 +6,67 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.3.0] - 2026-01-28
+
+### 🗄️ Aktualizacja Baz Danych przez Interfejs - New Feature!
+
+#### ✨ Dodano
+
+**Zarządzanie Bazami Danych przez Web:**
+- Nowa strona administracyjna `/admin/databases` do zarządzania bazami substancji
+- Upload i import bazy CLP (substancje_baza.xlsx) bezpośrednio przez przeglądarkę
+- Upload i import listy SVHC (svhc.xlsx) bezpośrednio przez przeglądarkę
+- Wyświetlanie statystyk baz danych (liczba rekordów CLP i SVHC)
+- Informacje o ostatnim imporcie (data, użytkownik)
+- Modal potwierdzenia przed importem z ostrzeżeniem o nadpisaniu danych
+
+**Nowe uprawnienie użytkownika:**
+- Dodano uprawnienie `can_update_databases` do modelu User
+- Administratorzy mają domyślnie dostęp do funkcji aktualizacji baz
+- Możliwość nadania uprawnienia wybranym użytkownikom przez panel admina
+- Checkbox w formularzu dodawania/edycji użytkownika
+
+**Walidacja plików Excel:**
+- Sprawdzanie rozszerzenia pliku (.xlsx, .xls)
+- Walidacja MIME type (magic bytes) dla plików Excel
+- Walidacja struktury kolumn przed importem
+- Limit rozmiaru pliku (16 MB)
+- Obsługa wartości NaN - automatyczna konwersja na puste wartości
+
+**Nawigacja:**
+- Link "Bazy Danych" w menu administratora (base.html)
+
+#### 🔧 Zmieniono
+
+**Wyświetlanie danych:**
+- Poprawiono wyświetlanie wartości "NaN" w tabelach - teraz wyświetlane jako puste pola
+- Poprawiono wyrównanie pionowe i poziome w kolumnach Klasyfikacja, Zwroty H, SCL/M-factor
+- Poprawiono wyrównanie przycisków akcji w tabeli substancji
+
+#### 📦 Techniczne
+
+**Nowe pliki:**
+- `utils/database_import.py` - serwis importu z funkcjami walidacji i importu
+- `templates/admin/manage_databases.html` - szablon strony zarządzania bazami
+- `static/css/manage_databases.css` - style dla strony zarządzania bazami
+- `migrations/versions/add_can_update_databases_permission.py` - migracja bazy danych
+
+**Zmodyfikowane pliki:**
+- `models.py` - dodano pole `can_update_databases` do modelu User
+- `decorators.py` - dodano dekorator `update_databases_permission_required`
+- `routes/admin.py` - dodano trasy `/databases`, `/databases/upload/clp`, `/databases/upload/svhc`
+- `templates/base.html` - dodano link do zarządzania bazami w menu admina
+- `templates/admin/manage_users.html` - dodano checkbox dla nowego uprawnienia
+- `templates/location_detail.html` - poprawiono filtrowanie wartości NaN
+- `templates/all_substances.html` - poprawiono filtrowanie wartości NaN
+- `static/css/location_detail.css` - poprawiono style wyrównania kolumn
+
+**Audit logging:**
+- Nowe typy akcji: `IMPORT_CLP_DATABASE`, `IMPORT_SVHC_DATABASE`
+- Logowanie: nazwa pliku, liczba zaimportowanych rekordów, użytkownik
+
+---
+
 ## [2.2.1] - 2026-01-18
 
 ### 🐛 Poprawki Błędów - Patch Release
@@ -493,6 +554,9 @@ Projekt stosuje [Semantic Versioning](https://semver.org/):
 
 | Wersja | Data | Główne zmiany |
 |--------|------|---------------|
+| 2.3.0 | 2026-01-28 | Aktualizacja baz danych CLP/SVHC przez interfejs web |
+| 2.2.1 | 2026-01-18 | Poprawki wyszukiwania CMR/SVHC, dialog usuwania |
+| 2.2.0 | 2026-01-18 | Wiele kart SDS, edycja inline, flagi CMR/SVHC |
 | 2.1.0 | 2025-10-27 | System komórek organizacyjnych z kontrolą dostępu |
 | 2.0.0 | 2025-10-22 | Przejście na PostgreSQL, testy automatyczne, dokumentacja |
 | 1.0.0 | 2025-01-17 | Pierwsze wydanie |
@@ -507,4 +571,4 @@ Zgłaszanie błędów i propozycji funkcji:
 
 ---
 
-**Ostatnia aktualizacja:** 2025-10-27
+**Ostatnia aktualizacja:** 2026-01-28

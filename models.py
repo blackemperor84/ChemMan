@@ -119,6 +119,7 @@ class User(db.Model, UserMixin):
     can_upload_sds = db.Column(db.Boolean, default=False)  # Może dodawać/usuwać pliki SDS
     can_add_location = db.Column(db.Boolean, default=False)  # Może dodawać lokalizacje
     can_delete_location = db.Column(db.Boolean, default=False)  # Może usuwać lokalizacje
+    can_update_databases = db.Column(db.Boolean, default=False)  # Może aktualizować bazy substancji (CLP, SVHC)
 
     def has_access_to_organizational_unit(self, location_id: int) -> bool:
         """

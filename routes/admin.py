@@ -1,3 +1,4 @@
+import os
 import string
 import secrets
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
@@ -5,6 +6,13 @@ from flask_login import login_required, current_user
 
 from models import db, User, AuditLog, Location
 from utils import log_action, handle_exception
+from utils.database_import import (
+    validate_excel_mime_type,
+    allowed_excel_file,
+    import_clp_data,
+    import_svhc_data,
+    get_database_stats
+)
 
 # Utworzenie blueprintu dla administracji
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -123,6 +131,7 @@ def add_user():
     can_upload_sds = 'can_upload_sds' in request.form
     can_add_location = 'can_add_location' in request.form
     can_delete_location = 'can_delete_location' in request.form
+    can_update_databases = 'can_update_databases' in request.form
 
     # Walidacja
     if not new_username or not new_password:
@@ -145,6 +154,7 @@ def add_user():
                 can_upload_sds=can_upload_sds,
                 can_add_location=can_add_location,
                 can_delete_location=can_delete_location,
+                can_update_databases=can_update_databases,
                 organizational_unit_id=int(organizational_unit_id) if organizational_unit_id else None
             )
             user.set_password(new_password)  # Hashowanie hasła
@@ -187,6 +197,7 @@ def edit_user_permissions(user_id):
         user_to_edit.can_upload_sds = 'can_upload_sds' in request.form
         user_to_edit.can_add_location = 'can_add_location' in request.form
         user_to_edit.can_delete_location = 'can_delete_location' in request.form
+        user_to_edit.can_update_databases = 'can_update_databases' in request.form
 
         # Aktualizacja przypisania do komórki organizacyjnej
         organizational_unit_id = request.form.get('organizational_unit_id', '').strip()
@@ -348,3 +359,153 @@ def export_changelog_csv():
         
     except Exception as e:
         return handle_exception(e, "eksportu dziennika zmian", url_for('admin.view_changelog'))
+
+
+#===== ZARZĄDZANIE BAZAMI DANYCH SUBSTANCJI =====
+
+@admin_bp.route('/databases')
+@admin_required
+def manage_databases():
+    """Wyświetla stronę zarządzania bazami danych substancji (CLP, SVHC)."""
+    try:
+        # Pobierz statystyki baz danych
+        stats = get_database_stats()
+
+        # Pobierz informacje o ostatnich importach z audit log
+        clp_last_import = AuditLog.query.filter_by(action='IMPORT_CLP_DATABASE').order_by(AuditLog.timestamp.desc()).first()
+        svhc_last_import = AuditLog.query.filter_by(action='IMPORT_SVHC_DATABASE').order_by(AuditLog.timestamp.desc()).first()
+
+        return render_template(
+            'admin/manage_databases.html',
+            stats=stats,
+            clp_last_import=clp_last_import,
+            svhc_last_import=svhc_last_import
+        )
+    except Exception as e:
+        flash(f'Błąd podczas pobierania informacji o bazach danych: {e}', 'error')
+        current_app.logger.error(f"BŁĄD pobierania statystyk baz danych: {e}")
+        return render_template('admin/manage_databases.html', stats={'clp_count': 0, 'svhc_count': 0})
+
+
+@admin_bp.route('/databases/upload/clp', methods=['POST'])
+@admin_required
+def upload_clp_database():
+    """Obsługuje upload i import bazy danych CLP."""
+    # Sprawdź, czy plik został wysłany
+    if 'clp_file' not in request.files:
+        flash('Nie wybrano pliku do wysłania.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    file = request.files['clp_file']
+
+    # Sprawdź, czy wybrano plik
+    if file.filename == '':
+        flash('Nie wybrano pliku.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 1: Sprawdź rozszerzenie pliku
+    if not allowed_excel_file(file.filename):
+        flash('Niedozwolony typ pliku. Dozwolone są tylko pliki Excel (.xlsx, .xls)', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 2: Sprawdź rozmiar pliku
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+
+    max_size = current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
+    if file_size > max_size:
+        flash(f'Plik jest za duży. Maksymalny rozmiar: {max_size / (1024*1024):.1f} MB', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 3: Sprawdź MIME type
+    if not validate_excel_mime_type(file):
+        current_app.logger.warning(f"Odrzucono plik o nieprawidłowym MIME type: {file.filename}")
+        flash('Plik nie jest prawidłowym plikiem Excel.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # Wykonaj import
+    try:
+        success, message, records_count = import_clp_data(file)
+
+        if success:
+            # Zapisz log akcji
+            log_action(
+                'IMPORT_CLP_DATABASE',
+                target_type='ExcelSourceSubstance',
+                target_id=None,
+                details=f"Plik: {file.filename}, Zaimportowano rekordów: {records_count}"
+            )
+            flash(message, 'success')
+            current_app.logger.info(f"Administrator '{current_user.username}' zaimportował bazę CLP: {file.filename}, {records_count} rekordów")
+        else:
+            flash(message, 'error')
+            current_app.logger.error(f"Błąd importu CLP: {message}")
+
+    except Exception as e:
+        return handle_exception(e, "importu bazy CLP", url_for('admin.manage_databases'))
+
+    return redirect(url_for('admin.manage_databases'))
+
+
+@admin_bp.route('/databases/upload/svhc', methods=['POST'])
+@admin_required
+def upload_svhc_database():
+    """Obsługuje upload i import bazy danych SVHC."""
+    # Sprawdź, czy plik został wysłany
+    if 'svhc_file' not in request.files:
+        flash('Nie wybrano pliku do wysłania.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    file = request.files['svhc_file']
+
+    # Sprawdź, czy wybrano plik
+    if file.filename == '':
+        flash('Nie wybrano pliku.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 1: Sprawdź rozszerzenie pliku
+    if not allowed_excel_file(file.filename):
+        flash('Niedozwolony typ pliku. Dozwolone są tylko pliki Excel (.xlsx, .xls)', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 2: Sprawdź rozmiar pliku
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+
+    max_size = current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
+    if file_size > max_size:
+        flash(f'Plik jest za duży. Maksymalny rozmiar: {max_size / (1024*1024):.1f} MB', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # WALIDACJA 3: Sprawdź MIME type
+    if not validate_excel_mime_type(file):
+        current_app.logger.warning(f"Odrzucono plik o nieprawidłowym MIME type: {file.filename}")
+        flash('Plik nie jest prawidłowym plikiem Excel.', 'error')
+        return redirect(url_for('admin.manage_databases'))
+
+    # Wykonaj import
+    try:
+        success, message, records_count = import_svhc_data(file)
+
+        if success:
+            # Zapisz log akcji
+            log_action(
+                'IMPORT_SVHC_DATABASE',
+                target_type='SVHCSubstance',
+                target_id=None,
+                details=f"Plik: {file.filename}, Zaimportowano rekordów: {records_count}"
+            )
+            flash(message, 'success')
+            current_app.logger.info(f"Administrator '{current_user.username}' zaimportował bazę SVHC: {file.filename}, {records_count} rekordów")
+        else:
+            flash(message, 'error')
+            current_app.logger.error(f"Błąd importu SVHC: {message}")
+
+    except Exception as e:
+        return handle_exception(e, "importu bazy SVHC", url_for('admin.manage_databases'))
+
+    return redirect(url_for('admin.manage_databases'))
+
+#===== KONIEC ZARZĄDZANIA BAZAMI DANYCH =====
