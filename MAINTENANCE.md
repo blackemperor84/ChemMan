@@ -119,6 +119,17 @@ cp -r backups/sds_20250117_120000 instance/uploads/sds
 
 **Częstotliwość:** Co 6-12 miesięcy (gdy ECHA opublikuje nową wersję)
 
+### Metoda 1: Przez interfejs web (zalecane, od v2.3.0)
+
+1. Pobierz najnowszą bazę CLP z ECHA (plik .xlsx)
+2. Zaloguj się jako administrator
+3. Przejdź do **Bazy Danych** w menu nawigacji
+4. W sekcji "Aktualizacja Bazy CLP" kliknij "Wybierz plik" i wskaż pobrany plik
+5. Kliknij **"Importuj bazę CLP"** i potwierdź w oknie dialogowym
+6. Zweryfikuj licznik rekordów na stronie
+
+### Metoda 2: Przez linię komend (alternatywna)
+
 ### Przygotowanie
 
 1. Pobierz najnowszą bazę CLP z ECHA
@@ -130,7 +141,7 @@ python check_excel.py
 
 Jeśli kolumny się zmieniły, zaktualizuj `import_excel.py`.
 
-### Procedura aktualizacji
+### Procedura aktualizacji (CLI)
 ```bash
 # 1. BACKUP OBECNEJ BAZY!
 python backup.py
@@ -189,7 +200,17 @@ python update_cmr_flags.py
 
 **Częstotliwość:** Co 6 miesięcy (ECHA publikuje nowe listy w czerwcu i grudniu)
 
-### Procedura
+### Metoda 1: Przez interfejs web (zalecane, od v2.3.0)
+
+1. Pobierz najnowszą listę SVHC z ECHA (plik .xlsx)
+2. Zaloguj się jako administrator
+3. Przejdź do **Bazy Danych** w menu nawigacji
+4. W sekcji "Aktualizacja Listy SVHC" kliknij "Wybierz plik" i wskaż pobrany plik
+5. Kliknij **"Importuj listę SVHC"** i potwierdź w oknie dialogowym
+6. Zweryfikuj licznik rekordów na stronie
+
+### Metoda 2: Przez linię komend (alternatywna)
+
 ```bash
 # 1. Pobierz nową listę SVHC z ECHA
 # Zapisz jako svhc_NEW.xlsx

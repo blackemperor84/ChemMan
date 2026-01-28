@@ -8,10 +8,12 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 - 🏢 System przypisywania użytkowników do komórek organizacyjnych z kontrolą dostępu
 - 🔍 Wyszukiwanie w bazie CLP (4400+ substancji) i SVHC (490+ substancji)
 - 🌍 Dwujęzyczne nazwy (angielski/polski)
-- ⚠️ Automatyczne oznaczanie CMR i SVHC
-- 📄 Upload i zarządzanie kartami SDS (PDF)
+- ⚠️ Automatyczne i ręczne oznaczanie CMR i SVHC
+- 📄 Wiele kart SDS na substancję z informacją o producencie
+- ✏️ Edycja inline wszystkich pól substancji bezpośrednio w tabeli
+- 🗄️ Aktualizacja baz danych CLP/SVHC przez interfejs web (panel admina)
 - 📊 Export do CSV
-- 👥 System uprawnień użytkowników z kontrolą na poziomie komórek
+- 👥 System uprawnień użytkowników (10 poziomów) z kontrolą na poziomie komórek
 - 📜 Dziennik zmian (audit log)
 
 ## Technologie
@@ -78,21 +80,44 @@ python -m pytest tests/ --cov=. --cov-report=html
 # Oczekiwany wynik: 242 testy, 80% pokrycia
 ```
 
-## Co nowego w v2.1.0? 🎉
+## Co nowego w v2.3.0? 🎉
+
+### 🗄️ Aktualizacja baz danych przez interfejs web
+- ✅ Nowa strona `/admin/databases` do zarządzania bazami substancji
+- ✅ Upload i import bazy CLP (substancje_baza.xlsx) bezpośrednio przez przeglądarkę
+- ✅ Upload i import listy SVHC (svhc.xlsx) bezpośrednio przez przeglądarkę
+- ✅ Statystyki baz danych (liczba rekordów, data ostatniego importu)
+- ✅ Walidacja plików Excel (rozszerzenie, MIME, struktura kolumn)
+- ✅ Nowe uprawnienie `can_update_databases` dla wybranych użytkowników
+- ✅ Poprawiono wyświetlanie wartości NaN i wyrównanie kolumn w tabelach
+
+### 📦 Poprzednie wersje
+
+<details>
+<summary>Co było nowego w v2.2.0 / v2.2.1</summary>
+
+### 📁 Wiele kart SDS i zaawansowana edycja (v2.2.0)
+- ✅ Wiele kart SDS na substancję z informacją o producencie
+- ✅ Pełna edycja inline wszystkich pól substancji w wierszu tabeli
+- ✅ Ręczne flagi CMR/SVHC (checkboxy "Jest CMR", "Zawiera SVHC" itp.)
+- ✅ Liczniki substancji i kart SDS na komórkę organizacyjną
+
+### 🐛 Poprawki (v2.2.1)
+- ✅ Poprawiono wyszukiwanie CMR/SVHC w widoku globalnym
+- ✅ Poprawiono formatowanie dialogu usuwania substancji
+- ✅ Automatyczny rok w stopce
+</details>
+
+<details>
+<summary>Co było nowego w v2.1.0</summary>
 
 ### 🏢 System komórek organizacyjnych
 - ✅ Przypisywanie użytkowników do komórek organizacyjnych (działy/jednostki)
 - ✅ Dwupoziomowa kontrola dostępu (VIEW/MODIFY)
 - ✅ Użytkownicy mogą przeglądać wszystkie komórki, ale modyfikować tylko swoją
 - ✅ Ograniczenie kopiowania/przenoszenia substancji do przypisanej komórki
-
-### 🔍 Usprawnienia nawigacji
-- ✅ **Klikalne wiersze** w widoku "Wszystkie Substancje"
-- ✅ Kliknięcie substancji przekierowuje do komórki organizacyjnej
-- ✅ Inteligentna obsługa kliknięć (linki SDS działają normalnie)
-- ✅ Wizualna informacja o klikalności (kursor pointer)
-
-### 📦 Poprzednie wersje
+- ✅ Klikalne wiersze w widoku "Wszystkie Substancje"
+</details>
 
 <details>
 <summary>Co było nowego w v2.0.0</summary>
@@ -100,23 +125,8 @@ python -m pytest tests/ --cov=. --cov-report=html
 ### Przejście na PostgreSQL
 - ✅ Baza danych PostgreSQL (zamiast SQLite)
 - ✅ Obsługa wielu użytkowników jednocześnie
-- ✅ Brak błędów "database locked"
-- ✅ Gotowe do produkcji
-
-### Testy automatyczne
-- ✅ 242 testy automatyczne
-- ✅ 80% pokrycia kodu
-- ✅ Testowane bezpieczeństwo, uprawnienia, pliki
-
-### Ulepszenia bezpieczeństwa
-- ✅ Ulepszone limitowanie prędkości (rate limiting)
-- ✅ Lepsze sprawdzanie typów plików
-- ✅ Ulepszona walidacja danych
-
-### Dokumentacja
+- ✅ 242 testy automatyczne, 80% pokrycia kodu
 - ✅ Kompletny przewodnik wdrożenia produkcyjnego
-- ✅ Instrukcje dla Linux i Windows
-- ✅ Konfiguracja SSL, kopie zapasowe, monitoring
 </details>
 
 Zobacz [CHANGELOG.md](CHANGELOG.md) dla pełnej listy zmian.
@@ -146,19 +156,27 @@ Obejmuje:
 ```
 chem-man/
 ├── app.py                 # Główny plik aplikacji
-├── config.py             # Konfiguracja
-├── models.py             # Modele bazy danych
-├── commands.py           # Komendy Flask CLI
-├── routes/               # Blueprinty Flask
-│   ├── auth.py
-│   ├── locations.py
-│   ├── export.py
-│   └── ...
-├── static/               # CSS, JS
-├── templates/            # Szablony HTML
-├── instance/             # Baza danych i pliki SDS
-├── substancje_baza.xlsx  # Baza CLP
-└── svhc.xlsx            # Lista SVHC
+├── config.py              # Konfiguracja
+├── models.py              # Modele bazy danych
+├── decorators.py          # Dekoratory uprawnień
+├── routes/                # Blueprinty Flask
+│   ├── auth.py            # Logowanie/wylogowanie
+│   ├── admin.py           # Panel admina (użytkownicy, bazy danych)
+│   ├── locations.py       # Komórki organizacyjne
+│   ├── substances.py      # CRUD substancji
+│   ├── files.py           # Upload/download SDS
+│   └── export.py          # Eksport CSV, widok globalny
+├── utils/                 # Moduły pomocnicze
+│   ├── __init__.py        # Audit log, klasyfikacja CMR/SVHC
+│   ├── file_manager.py    # Zarządzanie plikami SDS
+│   └── database_import.py # Import baz CLP/SVHC
+├── static/                # CSS, JS
+├── templates/             # Szablony HTML
+├── tests/                 # Testy pytest (242 testy)
+├── migrations/            # Migracje bazy danych (Alembic)
+├── instance/              # Baza danych i pliki SDS
+├── substancje_baza.xlsx   # Baza CLP
+└── svhc.xlsx              # Lista SVHC
 ```
 
 ## Wsparcie
@@ -167,4 +185,4 @@ W razie problemów sprawdź [BACKEND_GUIDE.md](BACKEND_GUIDE.md) - sekcja "Rozwi
 
 ## Licencja
 
-© 2025 NITROERG
+© 2025-2026 NITROERG

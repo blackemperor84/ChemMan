@@ -661,8 +661,8 @@ A: Maksymalnie **16 MB**. Jeśli plik jest większy, skompresuj go lub skontaktu
 **Q: Co jeśli nie mam karty SDS?**  
 A: To jest opcjonalne. Możesz pozostawić pole puste - substancja będzie miała status "Brak" w kolumnie SDS.
 
-**Q: Czy mogę dodać kilka kart SDS do jednej substancji?**  
-A: Nie, jedna substancja = jedna karta SDS. Jeśli masz kilka wersji, załaduj najnowszą.
+**Q: Czy mogę dodać kilka kart SDS do jednej substancji?**
+A: Tak! Od wersji 2.2.0 każda substancja może mieć wiele kart SDS od różnych producentów. Przy uploadzie podaj nazwę producenta, aby łatwo je rozróżnić.
 
 ### Eksport
 
@@ -709,6 +709,46 @@ A: Zobacz sekcję [Otwieranie CSV w Excel](#otwieranie-csv-w-excel) - ustaw kodo
 
 ---
 
+## Zarządzanie Bazami Danych (Administrator) - od v2.3.0
+
+Od wersji 2.3.0 administrator może aktualizować bazy substancji CLP i SVHC bezpośrednio przez interfejs web, bez konieczności ręcznego dostępu do serwera.
+
+### Dostęp do strony zarządzania bazami
+
+1. Zaloguj się jako administrator
+2. W pasku nawigacji kliknij **"Bazy Danych"**
+3. Zobaczysz stronę ze statystykami i formularzami uploadu
+
+### Aktualizacja bazy CLP
+
+1. Pobierz aktualny plik CLP (substancje_baza.xlsx) ze strony ECHA
+2. Na stronie **Bazy Danych** w sekcji "Aktualizacja Bazy CLP" kliknij "Wybierz plik"
+3. Wskaż pobrany plik Excel (.xlsx lub .xls)
+4. Kliknij **"Importuj bazę CLP"**
+5. Potwierdź import w oknie dialogowym
+6. Po imporcie zobaczysz komunikat z liczbą zaimportowanych rekordów
+
+### Aktualizacja listy SVHC
+
+1. Pobierz aktualną listę SVHC (svhc.xlsx) ze strony ECHA
+2. Na stronie **Bazy Danych** w sekcji "Aktualizacja Listy SVHC" kliknij "Wybierz plik"
+3. Wskaż pobrany plik Excel (.xlsx lub .xls)
+4. Kliknij **"Importuj listę SVHC"**
+5. Potwierdź import w oknie dialogowym
+
+### Wymagania dotyczące plików
+
+- **Format:** .xlsx lub .xls
+- **Maksymalny rozmiar:** 16 MB
+- **Baza CLP** musi zawierać kolumny: International Chemical Identification, CAS No, EC No
+- **Lista SVHC** musi zawierać kolumny: Nazwa substancji (lub Substance name), Nr CAS, Nr WE
+
+### Uprawnienie do aktualizacji baz
+
+Administrator może nadać uprawnienie `can_update_databases` wybranym użytkownikom w panelu "Zarządzaj Użytkownikami". Domyślnie dostęp mają tylko administratorzy.
+
+---
+
 ## Wsparcie
 
 Jeśli masz pytania lub problemy:
@@ -719,6 +759,6 @@ Jeśli masz pytania lub problemy:
 
 ---
 
-**Wersja dokumentu:** 2.1
-**Data aktualizacji:** 2025-10-27
-**Zmiany:** Dodano sekcję o komórkach organizacyjnych i modelu dostępu
+**Wersja dokumentu:** 2.3
+**Data aktualizacji:** 2026-01-28
+**Zmiany:** Dodano sekcję o zarządzaniu bazami danych CLP/SVHC, poprawiono FAQ o kartach SDS
