@@ -169,9 +169,96 @@ def validate_svhc_excel(file_stream) -> Tuple[bool, str, Optional[pd.DataFrame]]
         return False, f"Błąd podczas odczytu pliku Excel: {str(e)}", None
 
 
+_EMPTYISH = {'', 'nan', 'none', 'null', 'na', 'n/a'}
+
+
+def _is_empty(val) -> bool:
+    """True for None, pandas NaN, and 'nan'-ish placeholder strings."""
+    if val is None:
+        return True
+    try:
+        # Catches float('nan') and numpy NaN without importing numpy directly
+        if val != val:  # NaN is the only value where val != val
+            return True
+    except Exception:
+        pass
+    if isinstance(val, str) and val.strip().lower() in _EMPTYISH:
+        return True
+    return False
+
+
+def _clean_record(record):
+    """Normalise a to_dict record so empty-ish values become real None
+    before hitting the DB (avoids storing 'NaN' / 'None' as strings)."""
+    for key, val in list(record.items()):
+        if _is_empty(val):
+            record[key] = None
+
+
+def _snapshot_existing(model, fields):
+    """Snapshot given fields from existing rows, keyed by CAS, EC, and name.
+
+    Returns three dicts (by_cas, by_ec, by_name) each mapping key -> {field: value}
+    for fields that hold real (non-empty) values. Used by merge-preserve
+    import logic so we don't lose curated data (SCL/M-factors, SVHC
+    reason, ...) when the incoming source file has those columns stripped.
+
+    Name is the last-resort key — kept for substances without CAS/EC
+    (petroleum fractions, complex mixtures). We only insert into by_name
+    if the name isn't already present to avoid ambiguous matches.
+    """
+    by_cas, by_ec, by_name = {}, {}, {}
+    columns = [getattr(model, 'cas'), getattr(model, 'ec_number'), getattr(model, 'name')]
+    columns.extend(getattr(model, f) for f in fields)
+    ambiguous_names = set()
+    for row in db.session.query(*columns).all():
+        payload = {f: getattr(row, f) for f in fields if not _is_empty(getattr(row, f))}
+        if not payload:
+            continue
+        if row.cas and not _is_empty(row.cas):
+            by_cas.setdefault(row.cas, payload)
+        if row.ec_number and not _is_empty(row.ec_number):
+            by_ec.setdefault(row.ec_number, payload)
+        if row.name and not _is_empty(row.name):
+            key = str(row.name).strip()
+            if key in by_name:
+                # Name collision — mark ambiguous so we skip name-based match
+                ambiguous_names.add(key)
+            else:
+                by_name[key] = payload
+    for k in ambiguous_names:
+        by_name.pop(k, None)
+    return by_cas, by_ec, by_name
+
+
+def _merge_preserve(record, by_cas, by_ec, by_name, fields):
+    """Fill empty fields on incoming record from snapshot. Returns per-field
+    count of preserved values (0 or 1). Match priority: CAS > EC > exact name."""
+    preserved = {f: 0 for f in fields}
+    snapshot = None
+    cas, ec, name = record.get('cas'), record.get('ec_number'), record.get('name')
+    if cas and cas in by_cas:
+        snapshot = by_cas[cas]
+    elif ec and ec in by_ec:
+        snapshot = by_ec[ec]
+    elif name and str(name).strip() in by_name:
+        snapshot = by_name[str(name).strip()]
+    if not snapshot:
+        return preserved
+    for f in fields:
+        if _is_empty(record.get(f)) and f in snapshot:
+            record[f] = snapshot[f]
+            preserved[f] = 1
+    return preserved
+
+
 def import_clp_data(file_stream) -> Tuple[bool, str, int]:
     """
-    Imports CLP data from Excel file into database.
+    Imports CLP data from Excel file into database with merge-preserve
+    semantics: if the incoming file has empty scl_mfactor / h_phrases /
+    classification for a substance already in the DB with a non-empty value,
+    the existing value is kept. This protects curated data (notably SCL and
+    M-factors) when ECHA's newer bulk exports strip those columns.
 
     Args:
         file_stream: File object from request.files
@@ -180,63 +267,68 @@ def import_clp_data(file_stream) -> Tuple[bool, str, int]:
         Tuple[bool, str, int]: (success, message, records_count)
     """
     try:
-        # Validate first
         is_valid, message, df = validate_clp_excel(file_stream)
         if not is_valid:
             return False, message, 0
 
-        # Column mapping
         column_map = {
             'International Chemical Identification': 'name',
             'CAS No': 'cas',
             'EC No': 'ec_number',
             'Classification': 'classification',
-            'Unnamed: 5': 'h_phrases',  # H-phrases column
-            'Specific Conc. Limits, M-factors': 'scl_mfactor'
+            'Unnamed: 5': 'h_phrases',
+            'Specific Conc. Limits, M-factors': 'scl_mfactor',
         }
-
-        # Rename columns
         df.rename(columns=column_map, inplace=True)
 
-        # Keep only mapped columns that exist
-        columns_to_keep = [v for v in column_map.values() if v in df.columns]
-
-        # Add missing columns as None
         for col in ['name', 'cas', 'ec_number', 'classification', 'h_phrases', 'scl_mfactor']:
             if col not in df.columns:
                 df[col] = None
-            else:
-                columns_to_keep.append(col) if col not in columns_to_keep else None
 
         df = df[['name', 'cas', 'ec_number', 'classification', 'h_phrases', 'scl_mfactor']]
-
-        # Replace NaN values with None to avoid storing "nan" strings
         df = df.where(pd.notna(df), None)
 
-        # Clear existing data
+        preserve_fields = ['scl_mfactor', 'h_phrases', 'classification']
+        by_cas, by_ec, by_name = _snapshot_existing(ExcelSourceSubstance, preserve_fields)
+        current_app.logger.info(
+            f"Snapshot przed importem CLP: {len(by_cas)} CAS + {len(by_ec)} EC + {len(by_name)} nazw z danymi do zachowania."
+        )
+
         current_app.logger.info("Czyszczenie tabeli excel_source_substances...")
         db.session.query(ExcelSourceSubstance).delete()
         db.session.commit()
 
-        # Convert DataFrame to list of dicts and insert
-        current_app.logger.info("Importowanie danych CLP do bazy...")
         data_to_insert = df.to_dict(orient='records')
+        preserved_totals = {f: 0 for f in preserve_fields}
+        for record in data_to_insert:
+            _clean_record(record)
+            counts = _merge_preserve(record, by_cas, by_ec, by_name, preserve_fields)
+            for f, c in counts.items():
+                preserved_totals[f] += c
 
-        # Batch insert for better performance
+        current_app.logger.info("Importowanie danych CLP do bazy...")
         db.session.bulk_insert_mappings(ExcelSourceSubstance, data_to_insert)
         db.session.commit()
 
         records_count = len(data_to_insert)
-        current_app.logger.info(f"Import CLP zakończony. Dodano {records_count} rekordów.")
+        preserved_parts = [
+            f"{v} × {k}" for k, v in preserved_totals.items() if v
+        ]
+        preserved_msg = f" Zachowano dane: {', '.join(preserved_parts)}." if preserved_parts else ""
+        current_app.logger.info(
+            f"Import CLP zakończony. Dodano {records_count} rekordów.{preserved_msg}"
+        )
 
-        return True, f"Import zakończony pomyślnie. Dodano {records_count} rekordów.", records_count
+        return (
+            True,
+            f"Import zakończony pomyślnie. Dodano {records_count} rekordów.{preserved_msg}",
+            records_count,
+        )
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error importing CLP data: {e}")
-        import traceback
-        traceback.print_exc()
-        return False, f"Błąd podczas importu: {str(e)}", 0
+        current_app.logger.exception(f"Error importing CLP data: {e}")
+        return False, f"Błąd podczas importu CLP: {str(e)}", 0
 
 
 def import_svhc_data(file_stream) -> Tuple[bool, str, int]:
@@ -255,36 +347,44 @@ def import_svhc_data(file_stream) -> Tuple[bool, str, int]:
         if not is_valid:
             return False, message, 0
 
-        # Try to map columns intelligently
+        # ECHA's SVHC export has changed column names over time — sometimes
+        # with a trailing space, sometimes not, and the date column may be absent.
+        # We match by keyword against normalised (stripped, lowercased) headers
+        # so both old and new formats work.
         column_map = {}
+        mapped_targets = set()
 
-        # First try exact matches (with trailing spaces as in original file)
-        exact_mappings = {
-            'Nazwa substancji ': 'name',
-            'Nr WE': 'ec_number',
-            'Nr CAS': 'cas',
-            'Powód włączenia ': 'reason',
-            'Data włączenia ': 'date_inclusion'
-        }
+        for col in df.columns:
+            col_norm = str(col).lower().strip()
+            if 'name' not in mapped_targets and (
+                'nazwa' in col_norm or 'name' in col_norm or 'substance' in col_norm
+            ):
+                column_map[col] = 'name'
+                mapped_targets.add('name')
+            elif 'cas' not in mapped_targets and 'cas' in col_norm:
+                column_map[col] = 'cas'
+                mapped_targets.add('cas')
+            elif 'ec_number' not in mapped_targets and (
+                col_norm in ('nr we', 'nr ec', 'ec no', 'we', 'ec')
+                or col_norm.startswith('nr we')
+                or col_norm.startswith('nr ec')
+                or col_norm.startswith('ec ')
+            ):
+                column_map[col] = 'ec_number'
+                mapped_targets.add('ec_number')
+            elif 'reason' not in mapped_targets and (
+                'powód' in col_norm or 'powod' in col_norm or 'reason' in col_norm or 'włączenia' in col_norm
+            ):
+                column_map[col] = 'reason'
+                mapped_targets.add('reason')
+            elif 'date_inclusion' not in mapped_targets and (
+                'data' in col_norm or 'date' in col_norm
+            ):
+                column_map[col] = 'date_inclusion'
+                mapped_targets.add('date_inclusion')
 
-        for original_col, mapped_col in exact_mappings.items():
-            if original_col in df.columns:
-                column_map[original_col] = mapped_col
-
-        # If exact matches failed, try keyword matching
-        if not column_map:
-            for col in df.columns:
-                col_lower = str(col).lower().strip()
-                if 'nazwa' in col_lower or 'name' in col_lower or 'substance' in col_lower:
-                    column_map[col] = 'name'
-                elif 'cas' in col_lower:
-                    column_map[col] = 'cas'
-                elif 'ec' in col_lower or 'we' in col_lower:
-                    column_map[col] = 'ec_number'
-                elif 'powód' in col_lower or 'reason' in col_lower:
-                    column_map[col] = 'reason'
-                elif 'data' in col_lower or 'date' in col_lower:
-                    column_map[col] = 'date_inclusion'
+        if 'name' not in mapped_targets:
+            return False, "Nie znaleziono kolumny z nazwą substancji w pliku SVHC.", 0
 
         # Rename columns
         df.rename(columns=column_map, inplace=True)
@@ -295,34 +395,47 @@ def import_svhc_data(file_stream) -> Tuple[bool, str, int]:
                 df[col] = None
 
         df = df[['name', 'cas', 'ec_number', 'reason', 'date_inclusion']]
-
-        # Replace NaN values with None to avoid storing "nan" strings
         df = df.where(pd.notna(df), None)
 
-        # Clear existing data
+        preserve_fields = ['reason', 'date_inclusion']
+        by_cas, by_ec, by_name = _snapshot_existing(SVHCSubstance, preserve_fields)
+        current_app.logger.info(
+            f"Snapshot przed importem SVHC: {len(by_cas)} CAS + {len(by_ec)} EC + {len(by_name)} nazw z danymi do zachowania."
+        )
+
         current_app.logger.info("Czyszczenie tabeli svhc_substances...")
         db.session.query(SVHCSubstance).delete()
         db.session.commit()
 
-        # Convert DataFrame to list of dicts and insert
-        current_app.logger.info("Importowanie danych SVHC do bazy...")
         data_to_insert = df.to_dict(orient='records')
+        preserved_totals = {f: 0 for f in preserve_fields}
+        for record in data_to_insert:
+            _clean_record(record)
+            counts = _merge_preserve(record, by_cas, by_ec, by_name, preserve_fields)
+            for f, c in counts.items():
+                preserved_totals[f] += c
 
-        # Batch insert for better performance
+        current_app.logger.info("Importowanie danych SVHC do bazy...")
         db.session.bulk_insert_mappings(SVHCSubstance, data_to_insert)
         db.session.commit()
 
         records_count = len(data_to_insert)
-        current_app.logger.info(f"Import SVHC zakończony. Dodano {records_count} rekordów.")
+        preserved_parts = [f"{v} × {k}" for k, v in preserved_totals.items() if v]
+        preserved_msg = f" Zachowano dane: {', '.join(preserved_parts)}." if preserved_parts else ""
+        current_app.logger.info(
+            f"Import SVHC zakończony. Dodano {records_count} rekordów.{preserved_msg}"
+        )
 
-        return True, f"Import zakończony pomyślnie. Dodano {records_count} rekordów.", records_count
+        return (
+            True,
+            f"Import zakończony pomyślnie. Dodano {records_count} rekordów.{preserved_msg}",
+            records_count,
+        )
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error importing SVHC data: {e}")
-        import traceback
-        traceback.print_exc()
-        return False, f"Błąd podczas importu: {str(e)}", 0
+        current_app.logger.exception(f"Error importing SVHC data: {e}")
+        return False, f"Błąd podczas importu SVHC: {str(e)}", 0
 
 
 def get_database_stats() -> Dict[str, int]:

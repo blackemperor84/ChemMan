@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -7,13 +7,18 @@ from flask_bcrypt import Bcrypt
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
+
+def _utcnow() -> datetime:
+    """Naive UTC datetime dla default= w kolumnach (Python 3.12+ compatible)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class Location(db.Model):
     """Model komórki organizacyjnej (działu/jednostki organizacyjnej)."""
     __tablename__ = 'locations'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
-    last_modified = db.Column(db.DateTime, default=datetime.utcnow)
+    last_modified = db.Column(db.DateTime, default=_utcnow)
 
     # Relacja: Jedna komórka organizacyjna -> wiele substancji
     # cascade="all, delete-orphan" zapewnia usunięcie substancji przy usuwaniu komórki
@@ -29,7 +34,7 @@ class Location(db.Model):
         Returns:
             Location: Zwraca samego siebie dla łańcuchowania metod
         """
-        self.last_modified = datetime.utcnow()
+        self.last_modified = _utcnow()
         return self
 
     def __repr__(self) -> str:
@@ -71,7 +76,7 @@ class SDSFile(db.Model):
     filename = db.Column(db.String(255), nullable=False)  # Nazwa pliku na dysku (z UUID)
     original_filename = db.Column(db.String(255), nullable=True)  # Oryginalna nazwa pliku
     manufacturer = db.Column(db.String(255), nullable=True)  # Producent/dostawca
-    upload_timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    upload_timestamp = db.Column(db.DateTime, default=_utcnow, nullable=False)
 
     def __repr__(self) -> str:
         return f'<SDSFile {self.original_filename} for Substance ID {self.substance_id}>'
@@ -175,7 +180,7 @@ class AuditLog(db.Model):
     __tablename__ = 'audit_log'
     
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Czas zdarzenia
+    timestamp = db.Column(db.DateTime, nullable=False, default=_utcnow)  # Czas zdarzenia
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Kto? (może być None dla akcji systemowych)
     username = db.Column(db.String(80), nullable=True)  # Przechowujemy też nazwę, na wypadek usunięcia użytkownika
     action = db.Column(db.String(100), nullable=False)  # Co? Np. CREATE_LOCATION, DELETE_SUBSTANCE

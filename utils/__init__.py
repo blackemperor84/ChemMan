@@ -1,5 +1,4 @@
-import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any, Callable, List
 import pytz
 from flask import current_app, flash, redirect, jsonify, request
@@ -7,6 +6,14 @@ from flask_login import current_user
 from sqlalchemy import or_
 
 from models import db, AuditLog, SVHCSubstance
+
+
+def utcnow() -> datetime:
+    """Naive UTC datetime (matches existing DB timestamp storage).
+
+    Replaces datetime.utcnow() which is deprecated in Python 3.12+.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def allowed_file(filename: str) -> bool:
@@ -38,7 +45,7 @@ def log_action(action: str, target_type: Optional[str] = None, target_id: Option
         username_log = current_user.username if current_user.is_authenticated else 'System/Unknown'
 
         log_entry = AuditLog(
-            timestamp=datetime.utcnow(),
+            timestamp=utcnow(),
             user_id=user_id_log,
             username=username_log,
             action=action,
@@ -51,8 +58,7 @@ def log_action(action: str, target_type: Optional[str] = None, target_id: Option
         current_app.logger.info(f"Zapisano log: {action} przez {username_log}")
 
     except Exception as e:
-        current_app.logger.error(f"KRYTYCZNY BŁĄD: Nie udało się zapisać wpisu do AuditLog dla akcji '{action}': {e}")
-        traceback.print_exc()
+        current_app.logger.exception(f"KRYTYCZNY BŁĄD: Nie udało się zapisać wpisu do AuditLog dla akcji '{action}': {e}")
 
 
 def convert_utc_to_local(utc_timestamp: Optional[datetime]) -> str:
@@ -93,134 +99,12 @@ def handle_exception(e: Exception, operation_name: str, redirect_url: Optional[s
     """
     db.session.rollback()
     error_message = f'Błąd podczas {operation_name}: {e}'
-    current_app.logger.error(error_message)
-    traceback.print_exc()
+    current_app.logger.exception(error_message)
     flash(error_message, 'error')
     
     if redirect_url:
         return redirect(redirect_url)
     return jsonify({'status': 'error', 'message': error_message}), 500
-
-
-# # W pliku utils.py, zaktualizuj funkcję search_substances_in_excel:
-
-# def search_substances_in_excel(query):
-#     """Wyszukuje substancje w pliku Excel."""
-#     current_app.logger.info(f"Rozpoczynam przeszukiwanie Excela dla: '{query}'")
-#     try:
-#         if not os.path.exists(current_app.config['EXCEL_FILE_PATH']):
-#             current_app.logger.error(f"BŁĄD KRYTYCZNY: Plik Excel nie istnieje: {current_app.config['EXCEL_FILE_PATH']}")
-#             return []
-
-#         # Odczyt pliku Excel
-#         try:
-#             df = pd.read_excel(current_app.config['EXCEL_FILE_PATH'], header=0)
-#             current_app.logger.info(f"Wczytano plik Excel: {current_app.config['EXCEL_FILE_PATH']}")
-#             current_app.logger.debug(f"Znalezione kolumny przez Pandas: {df.columns.tolist()}")
-#         except Exception as read_e:
-#             current_app.logger.error(f"BŁĄD KRYTYCZNY podczas odczytu pliku Excel: {read_e}")
-#             traceback.print_exc()
-#             return []
-
-#         # Definicje nazw kolumn
-#         name_col = 'International Chemical Identification'
-#         cas_col = 'CAS No'
-#         ec_col = 'EC No'  # Nazwa kolumny w Excelu
-#         classification_col = 'Classification'
-#         h_phrases_col = 'Unnamed: 5'  # Kolumna F
-#         scl_m_col = 'Specific Conc. Limits, M-factors'
-        
-#         # Wypisujemy wszystkie kolumny w pliku Excel dla debugowania
-#         current_app.logger.info(f"Dostępne kolumny w pliku Excel: {df.columns.tolist()}")
-        
-#         # Sprawdzamy, czy istnieje kolumna EC No
-#         if ec_col in df.columns:
-#             current_app.logger.info(f"Kolumna {ec_col} istnieje w pliku Excel")
-#             # Wypisujemy kilka przykładowych wartości dla debugowania
-#             current_app.logger.info(f"Przykładowe wartości EC No: {df[ec_col].head(5).tolist()}")
-#         else:
-#             current_app.logger.warning(f"Kolumna {ec_col} nie istnieje w pliku Excel")
-#             # Sprawdźmy alternatywne nazwy kolumn
-#             possible_ec_columns = [col for col in df.columns if 'ec' in col.lower() or 'we' in col.lower()]
-#             if possible_ec_columns:
-#                 current_app.logger.info(f"Możliwe alternatywne kolumny EC: {possible_ec_columns}")
-#                 ec_col = possible_ec_columns[0]  # Używamy pierwszej znalezionej
-#                 current_app.logger.info(f"Używam alternatywnej kolumny EC: {ec_col}")
-        
-#         # Filtrowanie 
-#         mask = (df[name_col].astype(str).str.contains(query, case=False, na=False)) | \
-#                (df[cas_col].astype(str).str.contains(query, case=False, na=False))
-               
-#         # Dodaj wyszukiwanie po EC No, ale tylko jeśli kolumna istnieje
-#         if ec_col in df.columns:
-#             mask = mask | (df[ec_col].astype(str).str.contains(query, case=False, na=False))
-            
-#         filtered_df = df[mask]
-#         current_app.logger.info(f"Znaleziono {len(filtered_df)} pasujących wierszy w DataFrame.")
-
-#         # Dla debugowania, wypisujemy pierwsze znalezione rekordy
-#         if not filtered_df.empty:
-#             current_app.logger.info(f"Pierwszy znaleziony rekord: {filtered_df.iloc[0].to_dict()}")
-        
-#         # Wybieramy kolumny, które istnieją
-#         available_cols = []
-#         for col in [name_col, cas_col, ec_col, classification_col, h_phrases_col, scl_m_col]:
-#             if col in df.columns:
-#                 available_cols.append(col)
-#             else:
-#                 current_app.logger.warning(f"Kolumna {col} nie istnieje w pliku Excel")
-        
-#         # Wybierz tylko dostępne kolumny
-#         results_df = filtered_df[available_cols].copy()
-#         results_df.fillna('', inplace=True)
-
-#         # Zmień nazwy kolumn
-#         rename_map = {
-#             name_col: 'name', 
-#             cas_col: 'cas',
-#             classification_col: 'classification',
-#             h_phrases_col: 'h_phrases', 
-#             scl_m_col: 'scl_mfactor'
-#         }
-        
-#         # Dodaj EC No do mapy, tylko jeśli kolumna istnieje
-#         if ec_col in available_cols:
-#             rename_map[ec_col] = 'ec_number'
-#             current_app.logger.info(f"Mapowanie kolumny {ec_col} na pole ec_number")
-        
-#         # DODAĆ: Zastosuj mapowanie nazw kolumn
-#         results_df = results_df.rename(columns=rename_map)
-#         current_app.logger.info(f"Zastosowano mapowanie kolumn: {rename_map}")
-#         current_app.logger.info(f"Nazwy kolumn po mapowaniu: {results_df.columns.tolist()}")
-
-#         # Po przekształceniu wyników, dodaj dodatkowe debugowanie
-#         results = results_df.to_dict('records')
-#         if results:
-#             # Sprawdź, czy 'ec_number' jest w wynikach
-#             if 'ec_number' in results[0]:
-#                 current_app.logger.info(f"EC number w wynikach: {results[0]['ec_number']}")
-#             else:
-#                 current_app.logger.warning("Brak pola ec_number w wynikach")
-#                 # Wypisz wszystkie klucze pierwszego wyniku
-#                 current_app.logger.info(f"Dostępne klucze: {list(results[0].keys())}")
-            
-#             # Sprawdź, czy 'name' jest w wynikach
-#             if 'name' in results[0]:
-#                 current_app.logger.info(f"Name w wynikach: {results[0]['name']}")
-#             else:
-#                 current_app.logger.warning("Brak pola name w wynikach")
-        
-#         # Dla debugowania, wypisujemy pierwszy przekształcony wynik
-#         if results:
-#             current_app.logger.info(f"Pierwszy przekształcony wynik: {results[0]}")
-        
-#         current_app.logger.info(f"Zwracam {len(results)} wyników jako słowniki.")
-#         return results
-
-#     except Exception as e:
-#         current_app.logger.error(f"BŁĄD KRYTYCZNY podczas przetwarzania danych z Excela: {e}")
-#         traceback.print_exc()
-#         return []
 
 
 def validate_json_data(required_fields: List[str]) -> Callable:
@@ -353,6 +237,5 @@ def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None
             return None
 
     except Exception as e:
-        current_app.logger.error(f"Błąd podczas sprawdzania SVHC: {e}")
-        traceback.print_exc()
+        current_app.logger.exception(f"Błąd podczas sprawdzania SVHC: {e}")
         return None # W razie błędu zwracamy None

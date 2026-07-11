@@ -1,6 +1,7 @@
 import os
 import string
 import secrets
+from functools import wraps
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 
@@ -21,15 +22,15 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 # Dekorator sprawdzający uprawnienia administratora
 def admin_required(f):
     """Sprawdza czy zalogowany użytkownik ma uprawnienia administratora."""
+    @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             flash('Musisz się zalogować, aby uzyskać dostęp do tej strony.', 'error')
             return redirect(url_for('auth.login'))
-        if not current_user.is_admin and current_user.username != 'admin':  # Tymczasowo obsługuje starszą wersję
+        if not current_user.is_admin:
             flash('Nie masz uprawnień do tej strony.', 'error')
             return redirect(url_for('locations.index'))
         return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
     return decorated_function
 
 
@@ -54,7 +55,7 @@ def manage_users():
 def delete_user(user_id):
     """Obsługuje usuwanie użytkownika."""
     # Znajdź użytkownika do usunięcia
-    user_to_delete = User.query.get(user_id)
+    user_to_delete = db.session.get(User, user_id)
 
     if not user_to_delete:
         flash('Nie znaleziono użytkownika do usunięcia.', 'error')
@@ -84,7 +85,7 @@ def delete_user(user_id):
 @admin_required
 def admin_reset_password(user_id):
     """Obsługuje resetowanie hasła użytkownika przez admina."""
-    user_to_reset = User.query.get(user_id)
+    user_to_reset = db.session.get(User, user_id)
 
     if not user_to_reset:
         flash('Nie znaleziono użytkownika do zresetowania hasła.', 'error')
@@ -161,7 +162,7 @@ def add_user():
             db.session.add(user)
             db.session.commit()
 
-            org_unit_name = Location.query.get(int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
+            org_unit_name = db.session.get(Location, int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
             log_action(
                 'ADD_USER',
                 target_type='User',
@@ -205,7 +206,7 @@ def edit_user_permissions(user_id):
 
         db.session.commit()
 
-        org_unit_name = Location.query.get(int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
+        org_unit_name = db.session.get(Location, int(organizational_unit_id)).name if organizational_unit_id else 'Brak'
         log_action(
             'UPDATE_USER_PERMISSIONS',
             target_type='User',
@@ -249,9 +250,7 @@ def view_changelog():
 
     except Exception as e:
         flash(f'Błąd podczas pobierania dziennika zmian: {e}', 'error')
-        current_app.logger.error(f"BŁĄD pobierania AuditLog: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"BŁĄD pobierania AuditLog: {e}")
         return render_template('admin/changelog.html', logs=[])
     
 #===== CZYSZCZENIE LOGÓW =====

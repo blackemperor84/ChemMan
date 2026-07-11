@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from decorators import add_permission_required, edit_permission_required, delete_permission_required, move_permission_required, copy_permission_required
 
 from models import db, Substance, Location
-from utils import log_action, handle_exception
+from utils import log_action, handle_exception, utcnow
 from datetime import datetime
 
 # Utworzenie blueprintu dla substancji
@@ -22,11 +22,11 @@ def add_substance_to_location(location_id):
         current_app.logger.warning(f"Użytkownik {current_user.username} próbował dodać substancję do komórki bez uprawnień ID: {location_id}")
         return jsonify({'status': 'error', 'message': 'Możesz dodawać substancje tylko do swojej komórki organizacyjnej.'}), 403
 
-    # Aktualizacja daty modyfikacji lokalizacji
-    from datetime import datetime
-    location = Location.query.get(location_id)
-    location.last_modified = datetime.utcnow()
-    
+    location = db.session.get(Location, location_id)
+    if not location:
+        return jsonify({'status': 'error', 'message': 'Lokalizacja nie istnieje.'}), 404
+    location.last_modified = utcnow()
+
     data = request.get_json()
     current_app.logger.debug(f"Otrzymano dane JSON: {data}")
 
@@ -96,15 +96,10 @@ def add_substance_to_location(location_id):
         db.session.flush()  # Uzyskaj ID
         current_app.logger.debug(f"ID nowej substancji po flush: {new_substance.id}")
 
-        location.last_modified = datetime.utcnow()
-        
-        db.session.add(new_substance)
-        db.session.flush()
-        
         # Logowanie akcji
         log_action(
-            'ADD_SUBSTANCE', 
-            target_type='Substance', 
+            'ADD_SUBSTANCE',
+            target_type='Substance',
             target_id=new_substance.id,
             details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if is_cmr else 'Nie'}, SVHC: {'Tak' if is_svhc else 'Nie'}, LokID: {location_id}, Źródło: Excel"
         )
@@ -130,10 +125,11 @@ def add_manual_substance(location_id):
         return jsonify({'status': 'error', 'message': 'Możesz dodawać substancje tylko do swojej komórki organizacyjnej.'}), 403
 
     # Sprawdź czy lokalizacja istnieje
-    from models import Location
-    location = Location.query.get_or_404(location_id)
-    location.last_modified = datetime.utcnow()
-    
+    location = db.session.get(Location, location_id)
+    if not location:
+        return jsonify({'status': 'error', 'message': 'Lokalizacja nie istnieje.'}), 404
+    location.last_modified = utcnow()
+
     data = request.get_json()
     if not data: 
         return jsonify({'status': 'error', 'message': 'Brak danych JSON.'}), 400
@@ -211,14 +207,7 @@ def add_manual_substance(location_id):
         )
         db.session.add(new_substance)
         db.session.flush()  # Uzyskaj ID
-        
-        # Zaktualizuj datę ostatniej modyfikacji lokalizacji
-        location = Location.query.get(location_id)
-        location.last_modified = datetime.utcnow()
-        
-        db.session.add(new_substance)
-        db.session.flush()
-        
+
         log_action(
             'ADD_SUBSTANCE',
             target_type='Substance',
@@ -254,8 +243,9 @@ def delete_substance(substance_id):
         sub_loc_name = substance.location.name  # Pobierzmy też nazwę lokalizacji dla logu
 
         # Zaktualizuj datę ostatniej modyfikacji lokalizacji
-        location = Location.query.get(sub_loc_id)
-        location.last_modified = datetime.utcnow()
+        location = db.session.get(Location, sub_loc_id)
+        if location:
+            location.last_modified = utcnow()
         
         # Usuń obiekt z sesji
         db.session.delete(substance)
@@ -371,9 +361,9 @@ def update_substance(substance_id):
             substance.contains_svhc = bool(data['contains_svhc'])
 
         # Zaktualizuj datę ostatniej modyfikacji lokalizacji
-        location = Location.query.get(substance.location_id)
+        location = db.session.get(Location, substance.location_id)
         if location:
-            location.last_modified = datetime.utcnow()
+            location.last_modified = utcnow()
 
         db.session.commit()
         current_app.logger.info(f"Pomyślnie zaktualizowano substancję ID: {substance_id}")
@@ -416,7 +406,7 @@ def move_substances():
     except (ValueError, TypeError):
         return jsonify({'status': 'error', 'message': 'Nieprawidłowe ID celu.'}), 400
     
-    target_location = Location.query.get(target_location_id)
+    target_location = db.session.get(Location, target_location_id)
 
     if not target_location:
         return jsonify({'status': 'error', 'message': 'Lokalizacja docelowa nie istnieje.'}), 404
@@ -428,14 +418,14 @@ def move_substances():
 
     try:
         substances_to_move = Substance.query.filter(Substance.id.in_(substance_ids)).all()
-        
+
         # DODANE: Słownik do śledzenia zmodyfikowanych lokalizacji źródłowych
         source_locations_modified = {}
 
         for sub in substances_to_move:
             # DODANE: Pobierz i zaktualizuj lokalizację źródłową
             if sub.location_id != target_location_id: # Tylko jeśli faktycznie zmieniamy lokalizację
-                original_location = Location.query.get(sub.location_id)
+                original_location = db.session.get(Location, sub.location_id)
                 if original_location:
                     source_locations_modified[original_location.id] = original_location
 
@@ -463,12 +453,12 @@ def move_substances():
 
         # DODANE: Aktualizacja czasu modyfikacji dla wszystkich zmienionych lokalizacji źródłowych
         for loc_id, loc_obj in source_locations_modified.items():
-            loc_obj.last_modified = datetime.utcnow()
+            loc_obj.last_modified = utcnow()
             db.session.add(loc_obj)
 
         # DODANE: Aktualizacja czasu modyfikacji dla lokalizacji docelowej, jeśli coś przeniesiono
         if moved_count > 0:
-            target_location.last_modified = datetime.utcnow()
+            target_location.last_modified = utcnow()
             db.session.add(target_location)
             
         db.session.commit()
@@ -515,7 +505,7 @@ def copy_substances():
     except (ValueError, TypeError):
         return jsonify({'status': 'error', 'message': 'Nieprawidłowe ID celu.'}), 400
     
-    target_location = Location.query.get(target_location_id) # Pobierz obiekt lokalizacji docelowej
+    target_location = db.session.get(Location, target_location_id) # Pobierz obiekt lokalizacji docelowej
 
     if not target_location:
         return jsonify({'status': 'error', 'message': 'Lokalizacja docelowa nie istnieje.'}), 404
@@ -563,7 +553,7 @@ def copy_substances():
                 
         # DODANE: Aktualizacja czasu modyfikacji dla lokalizacji docelowej, jeśli coś skopiowano
         if something_was_copied:
-            target_location.last_modified = datetime.utcnow()
+            target_location.last_modified = utcnow()
             db.session.add(target_location)
 
         db.session.commit()

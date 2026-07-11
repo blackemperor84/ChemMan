@@ -1,12 +1,10 @@
 import os
-import uuid
-from datetime import datetime
 from flask import Blueprint, request, flash, redirect, url_for, send_from_directory, current_app, abort
 from flask_login import login_required, current_user
 from decorators import upload_sds_permission_required, view_permission_required
 
 from models import db, Substance, Location, SDSFile
-from utils import allowed_file, log_action, handle_exception
+from utils import allowed_file, log_action, handle_exception, utcnow
 from utils.file_manager import FileManager
 from werkzeug.utils import secure_filename
 
@@ -97,9 +95,9 @@ def upload_sds(substance_id):
             original_filename = secure_filename(file.filename)
 
             # Zaktualizuj datę ostatniej modyfikacji lokalizacji
-            location = Location.query.get(substance.location_id)
+            location = db.session.get(Location, substance.location_id)
             if location:
-                location.last_modified = datetime.utcnow()
+                location.last_modified = utcnow()
             else:
                 current_app.logger.warning(f"Nie znaleziono lokalizacji ID: {substance.location_id} podczas uploadu SDS dla substancji ID: {substance.id}")
 
@@ -109,14 +107,14 @@ def upload_sds(substance_id):
                 filename=unique_filename,
                 original_filename=original_filename,
                 manufacturer=manufacturer if manufacturer else None,
-                upload_timestamp=datetime.utcnow()
+                upload_timestamp=utcnow()
             )
             db.session.add(new_sds_file)
 
             # Zachowaj kompatybilność wsteczną - zaktualizuj też stare pola
             if not substance.sds_filename:
                 substance.sds_filename = unique_filename
-                substance.sds_upload_timestamp = datetime.utcnow()
+                substance.sds_upload_timestamp = utcnow()
 
             db.session.commit()
 
@@ -163,9 +161,7 @@ def download_sds(filename):
         flash('Nie znaleziono żądanego pliku SDS.', 'error')
         abort(404)
     except Exception as e:
-        current_app.logger.error(f"BŁĄD podczas serwowania pliku SDS {filename}: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"BŁĄD podczas serwowania pliku SDS {filename}: {e}")
         flash(f'Wystąpił błąd podczas pobierania pliku: {e}', 'error')
         abort(500)
 
@@ -192,9 +188,9 @@ def delete_sds(substance_id, sds_file_id):
         file_deleted = FileManager.delete_sds_file(filename_to_delete)
 
         # Krok 2: Zaktualizuj datę ostatniej modyfikacji lokalizacji
-        location = Location.query.get(substance.location_id)
+        location = db.session.get(Location, substance.location_id)
         if location:
-            location.last_modified = datetime.utcnow()
+            location.last_modified = utcnow()
         else:
             current_app.logger.warning(f"Nie znaleziono lokalizacji ID: {substance.location_id} podczas usuwania SDS dla substancji ID: {substance.id}")
 
