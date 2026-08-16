@@ -54,7 +54,7 @@ def main():
     """Main entry point for demo application"""
 
     print("=" * 60)
-    print("  ChemMan v2.0.0 - Demo Version")
+    print("  ChemMan v2.3.1 - Demo Version")
     print("=" * 60)
     print()
     print("System Zarzadzania Substancjami Chemicznymi")
