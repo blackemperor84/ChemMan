@@ -820,5 +820,5 @@ Jeśli dokumentacja nie rozwiązuje Twojego problemu:
 
 ---
 
-**Aktualizacja:** 2026-01-28
-**Wersja:** 2.3.0
+**Aktualizacja:** 2026-08-16
+**Wersja:** 2.3.1

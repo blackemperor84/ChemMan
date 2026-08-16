@@ -6,6 +6,77 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.3.1] - 2026-08-16
+
+### 🛠️ Wzmocnienie Importu, Poprawki i Porządki - Patch Release
+
+Wydanie utrzymaniowe skupione na niezawodności importu baz CLP/SVHC, poprawkach
+błędów, usunięciu przestarzałych wywołań (deprecations) oraz uporządkowaniu kodu.
+Bez zmian w interfejsie użytkownika. Wszystkie 242 testy przechodzą.
+
+#### 🐛 Poprawiono
+
+**Import baz danych (`utils/database_import.py`):**
+- Import z zachowaniem danych (merge-preserve): przy ponownym imporcie istniejące
+  wartości `scl_mfactor` / `h_phrases` / `classification` (CLP) oraz `reason` /
+  `date_inclusion` (SVHC) są zachowywane, gdy nowy plik ma te kolumny puste.
+  Priorytet dopasowania: CAS → EC → dokładna nazwa. Chroni ręcznie uzupełnione
+  dane SCL/M-factor przed nadpisaniem przez eksporty ECHA CHEM, które pomijają te kolumny.
+- Obsługa nowego formatu nagłówków ECHA CHEM dla listy SVHC (dopasowanie po
+  słowach kluczowych zamiast dokładnego dopasowania z końcową spacją). Jawny błąd,
+  gdy nie znaleziono kolumny z nazwą substancji.
+- Normalizacja pustych wartości: NaN / 'nan' / 'None' / białe znaki są zapisywane
+  jako prawdziwy SQL NULL. Naprawia stare rekordy, w których literał 'NaN'
+  powodował wyniki wyszukiwania bez nazwy.
+
+**Trasy (routes):**
+- `substances.py`: usunięto podwójne `db.session.add/flush`; dodano zabezpieczenia
+  None przy wyszukiwaniu lokalizacji.
+- `admin.py`: usunięto obejście `username == 'admin'`, które omijało `is_admin`;
+  dodano `functools.wraps` do dekoratora `admin_required`.
+- `locations.py`: zastąpiono błędne użycie `accept_mimetypes.accept_json` funkcją
+  pomocniczą `_wants_json()`; naprawiono wywołanie `handle_exception`.
+- `export.py`: API wyszukiwania odfiltrowuje rekordy z pustą nazwą i usuwa
+  duplikaty wewnątrz listy SVHC (źródło powiela każdy wpis dla pod-substancji).
+
+#### 🔧 Zmieniono
+
+**Usunięto przestarzałe wywołania (deprecations):**
+- `datetime.utcnow()` → nowa funkcja pomocnicza `utcnow()` (bezpieczna dla Python 3.12+).
+- `Model.query.get()` → `db.session.get()` w kodzie produkcyjnym.
+- `traceback.print_exc()` → `logger.exception()`.
+- `commands.py`: surowy SQL opakowany w `text()` (zgodność z SQLAlchemy 2.x) + jawny commit.
+
+**Refaktoryzacja:**
+- Wyodrębniono `_build_substance_query()` w `routes/export.py`, eliminując ~150
+  linii zduplikowanych między `export_all_csv` a `view_all_substances`.
+- Dodano `joinedload(Substance.sds_files)` w widokach lokalizacji i wszystkich
+  substancji (naprawa problemu N+1 przy leniwym ładowaniu relacji SDS).
+- CLI `import-excel` / `import-svhc` korzystają teraz ze wspólnych funkcji z
+  `utils.database_import` zamiast duplikować logikę mapowania.
+
+#### 🗄️ Dane
+
+- Zaktualizowano `svhc.xlsx` do aktualnej listy kandydackiej SVHC ECHA
+  (aktualizacja luty 2026): 1029 rekordów (poprzednio 492), obejmujących wpisy
+  wraz z pod-substancjami/solami. Wyszukiwarka automatycznie usuwa duplikaty.
+
+#### 🧹 Porządki
+
+- Usunięto `config_backup.py`, zbłąkany `chem_man.log` w katalogu głównym, martwą
+  funkcję `configure_logging()` oraz ~100 linii zakomentowanego kodu
+  `search_substances_in_excel`.
+- Oczyszczono `requirements.txt` z niepotrzebnych pakietów (nodejs, react,
+  PyQt5*, distlib, virtualenv itp.); dodano brakujący `Flask-Limiter`.
+
+#### 🎬 Demo
+
+- `DEMO/build_demo.py` korzysta ze wspólnych funkcji importu, więc budowanie demo
+  automatycznie dziedziczy wszystkie poprawki. Automatyczne wykrywanie źródła
+  `svhc.xlsx` (lub `svhc__current.xlsx`).
+
+---
+
 ## [2.3.0] - 2026-01-28
 
 ### 🗄️ Aktualizacja Baz Danych przez Interfejs - New Feature!
@@ -554,6 +625,7 @@ Projekt stosuje [Semantic Versioning](https://semver.org/):
 
 | Wersja | Data | Główne zmiany |
 |--------|------|---------------|
+| 2.3.1 | 2026-08-16 | Wzmocnienie importu (merge-preserve), poprawki, porządki, aktualizacja listy SVHC |
 | 2.3.0 | 2026-01-28 | Aktualizacja baz danych CLP/SVHC przez interfejs web |
 | 2.2.1 | 2026-01-18 | Poprawki wyszukiwania CMR/SVHC, dialog usuwania |
 | 2.2.0 | 2026-01-18 | Wiele kart SDS, edycja inline, flagi CMR/SVHC |

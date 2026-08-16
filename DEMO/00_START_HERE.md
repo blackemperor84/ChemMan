@@ -10,7 +10,7 @@ To jest **przenośny system pakietu demo**, który przekształca Twoją aplikacj
 
 - ✅ **Samodzielny plik .exe** (Windows) lub plik binarny (Linux/Mac)
 - ✅ **Nie wymaga instalacji** - wystarczy dwukrotnie kliknąć i uruchomić
-- ✅ **Wstępnie załadowany z danymi** - 4400+ substancji CLP + 492 substancje SVHC
+- ✅ **Wstępnie załadowany z danymi** - 4400+ substancji CLP + aktualna lista SVHC ECHA (~1029 rekordów)
 - ✅ **Przenośny** - może działać z pendrive USB
 - ✅ **Idealny do demonstracji/prezentacji**
 
@@ -86,7 +86,7 @@ START_CHEMMAN_DEMO.bat
 Po zbudowaniu będziesz mieć folder `dist/ChemMan_Demo/` (~150 MB) zawierający:
 
 - ✅ Aplikację wykonywalną
-- ✅ Wstępnie załadowaną bazę danych (4400 CLP + 492 SVHC)
+- ✅ Wstępnie załadowaną bazę danych (4400 CLP + aktualna lista SVHC ECHA, ~1029 rekordów)
 - ✅ Użytkownika admin (admin/Demo1234)
 - ✅ Wszystkie szablony i pliki statyczne
 - ✅ Łatwy skrypt startowy
@@ -102,7 +102,7 @@ Po zbudowaniu będziesz mieć folder `dist/ChemMan_Demo/` (~150 MB) zawierający
 ```bash
 # Spakuj folder do ZIP
 # Windows PowerShell:
-Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.0.0.zip
+Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.3.1.zip
 
 # Wyślij przez:
 # - Email (jeśli < 25 MB po kompresji)
@@ -247,7 +247,7 @@ Przed wysłaniem demo do innych:
 
 5. **Wersjonuj swoje demo** - Dodaj datę do nazwy pliku ZIP:
    ```
-   ChemMan_Demo_v2.0.0_2025-10-23.zip
+   ChemMan_Demo_v2.3.1_2026-08-16.zip
    ```
 
 ---
@@ -285,5 +285,5 @@ build_demo_package.bat
 
 ---
 
-**ChemMan v2.0.0 - System pakietu demo**
-© 2025 NITROERG
+**ChemMan v2.3.1 - System pakietu demo**
+© 2025-2026 NITROERG

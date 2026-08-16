@@ -6,7 +6,7 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 
 - 📦 Zarządzanie substancjami w komórkach organizacyjnych (jednostki/działy)
 - 🏢 System przypisywania użytkowników do komórek organizacyjnych z kontrolą dostępu
-- 🔍 Wyszukiwanie w bazie CLP (4400+ substancji) i SVHC (490+ substancji)
+- 🔍 Wyszukiwanie w bazie CLP (4400+ substancji) i SVHC (aktualna lista kandydacka ECHA)
 - 🌍 Dwujęzyczne nazwy (angielski/polski)
 - ⚠️ Automatyczne i ręczne oznaczanie CMR i SVHC
 - 📄 Wiele kart SDS na substancję z informacją o producencie
@@ -57,7 +57,7 @@ python -c "from app import create_app; from models import db; from config import
 
 # Zaimportuj dane referencyjne
 python import_excel.py    # 4400 substancji CLP
-python import_svhc.py     # 492 substancji SVHC
+python import_svhc.py     # aktualna lista SVHC ECHA (~1000 rekordów)
 
 # Utwórz użytkownika admin
 python create_admin.py
@@ -80,7 +80,23 @@ python -m pytest tests/ --cov=. --cov-report=html
 # Oczekiwany wynik: 242 testy, 80% pokrycia
 ```
 
-## Co nowego w v2.3.0? 🎉
+## Co nowego w v2.3.1? 🎉
+
+### 🛠️ Wzmocnienie importu, poprawki i porządki (patch)
+- ✅ Import z zachowaniem danych (merge-preserve) — ponowny import nie nadpisuje
+  ręcznie uzupełnionych SCL/M-factor, zwrotów H i klasyfikacji pustymi kolumnami
+- ✅ Obsługa nowego formatu nagłówków ECHA CHEM dla listy SVHC
+- ✅ Normalizacja pustych wartości (NaN/None → SQL NULL) — koniec wyników bez nazwy
+- ✅ Poprawki bezpieczeństwa i błędów w trasach (admin, substancje, lokalizacje, eksport)
+- ✅ Usunięto przestarzałe wywołania (`datetime.utcnow()`, `Model.query.get()`)
+- ✅ Refaktoryzacja eksportu (–150 linii duplikacji) i naprawa problemu N+1
+- ✅ Zaktualizowano listę SVHC do aktualnej listy kandydackiej ECHA (luty 2026)
+- ✅ Wszystkie 242 testy przechodzą
+
+### 📦 Poprzednie wersje
+
+<details>
+<summary>Co było nowego w v2.3.0</summary>
 
 ### 🗄️ Aktualizacja baz danych przez interfejs web
 - ✅ Nowa strona `/admin/databases` do zarządzania bazami substancji
@@ -90,8 +106,7 @@ python -m pytest tests/ --cov=. --cov-report=html
 - ✅ Walidacja plików Excel (rozszerzenie, MIME, struktura kolumn)
 - ✅ Nowe uprawnienie `can_update_databases` dla wybranych użytkowników
 - ✅ Poprawiono wyświetlanie wartości NaN i wyrównanie kolumn w tabelach
-
-### 📦 Poprzednie wersje
+</details>
 
 <details>
 <summary>Co było nowego w v2.2.0 / v2.2.1</summary>
