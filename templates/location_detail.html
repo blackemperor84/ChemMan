@@ -177,20 +177,20 @@
 
                     <!-- Klasyfikacja -->
                     <td class="editable-cell" data-field="classification">
-                        <div class="view-mode">{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification else '' }}</div>
-                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.classification or '' }}</textarea></div>
+                        <div class="view-mode">{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification and sub_data.classification not in ['nan', 'NaN', 'None'] else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.classification if sub_data.classification and sub_data.classification not in ['nan', 'NaN', 'None'] else '' }}</textarea></div>
                     </td>
 
                     <!-- Zwroty H -->
                     <td class="editable-cell" data-field="h_phrases">
-                        <div class="view-mode">{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases else '' }}</div>
-                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.h_phrases or '' }}</textarea></div>
+                        <div class="view-mode">{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases and sub_data.h_phrases not in ['nan', 'NaN', 'None'] else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.h_phrases if sub_data.h_phrases and sub_data.h_phrases not in ['nan', 'NaN', 'None'] else '' }}</textarea></div>
                     </td>
 
                     <!-- SCL/ M-factor -->
                     <td class="editable-cell" data-field="scl_mfactor">
-                        <div class="view-mode">{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor else '' }}</div>
-                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.scl_mfactor or '' }}</textarea></div>
+                        <div class="view-mode">{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor and sub_data.scl_mfactor not in ['nan', 'NaN', 'None'] else '' }}</div>
+                        <div class="edit-mode" style="display: none;"><textarea class="edit-input" rows="2" style="width: 100%;">{{ sub_data.scl_mfactor if sub_data.scl_mfactor and sub_data.scl_mfactor not in ['nan', 'NaN', 'None'] else '' }}</textarea></div>
                     </td>
 
                     <!-- Lokalizacja -->

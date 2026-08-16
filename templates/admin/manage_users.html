@@ -51,6 +51,7 @@
                                 {% if user.can_upload_sds %}{% set perms = perms + ['Zarządzanie SDS'] %}{% endif %}
                                 {% if user.can_add_location %}{% set perms = perms + ['Dodawanie lokalizacji'] %}{% endif %}
                                 {% if user.can_delete_location %}{% set perms = perms + ['Usuwanie lokalizacji'] %}{% endif %}
+                                {% if user.can_update_databases %}{% set perms = perms + ['Aktualizacja baz'] %}{% endif %}
                                 
                                 {{ perms|join(', ') }}
                                 
@@ -93,6 +94,10 @@
                                             <label class="checkbox-label">
                                                 <input type="checkbox" name="can_delete_location" {% if user.can_delete_location %}checked{% endif %}>
                                                 Usuwanie lokalizacji
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" name="can_update_databases" {% if user.can_update_databases %}checked{% endif %}>
+                                                Aktualizacja baz danych
                                             </label>
                                         </div>
                                         <div style="margin-top: 10px;">
@@ -213,9 +218,13 @@
                         <input type="checkbox" name="can_delete_location">
                         Usuwanie lokalizacji
                     </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="can_update_databases">
+                        Aktualizacja baz danych
+                    </label>
                 </div>
             </div>
-            
+
             <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
                 <span style="color: white; font-weight: bold; margin-right: 5px;">&plus;</span> Dodaj użytkownika
             </button>

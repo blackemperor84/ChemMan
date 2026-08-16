@@ -1,6 +1,9 @@
 """
 Build Demo Database for ChemMan
-Creates a pre-populated SQLite database for the demo version
+Creates a pre-populated SQLite database for the demo version.
+
+Uses the shared import helpers from utils.database_import so any bug fix
+or format change to the CLP/SVHC parsing applies here automatically.
 """
 
 import os
@@ -16,25 +19,36 @@ os.environ['FLASK_ENV'] = 'demo'
 
 from app import create_app
 from models import db, User, ExcelSourceSubstance, SVHCSubstance
+from utils.database_import import import_clp_data, import_svhc_data
 from config_demo import DemoConfig
-import pandas as pd
+
+
+CLP_XLSX_CANDIDATES = ['substancje_baza.xlsx']
+SVHC_XLSX_CANDIDATES = ['svhc.xlsx', 'svhc__current.xlsx']
+
+
+def _find_source(candidates):
+    """Return the first existing source file from the parent directory."""
+    parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    for name in candidates:
+        path = os.path.join(parent, name)
+        if os.path.exists(path):
+            return path
+    return None
+
 
 def create_demo_database():
-    """Create and populate demo database"""
-
+    """Create and populate demo database."""
     print("ChemMan - Building Demo Database")
     print("=" * 50)
 
-    # Create app with demo config
     app = create_app(DemoConfig)
 
     with app.app_context():
-        # 1. Create all tables
         print("\nStep 1: Creating database schema...")
         db.create_all()
         print("[OK] Schema created")
 
-        # 2. Create admin user
         print("\nStep 2: Creating admin user...")
         admin = User.query.filter_by(username='admin').first()
         if admin:
@@ -53,132 +67,53 @@ def create_demo_database():
             can_copy=True,
             can_upload_sds=True,
             can_add_location=True,
-            can_delete_location=True
+            can_delete_location=True,
+            can_update_databases=True,
         )
         admin.set_password('Demo1234')
         db.session.add(admin)
         db.session.commit()
         print("[OK] Admin user created (username: admin, password: Demo1234)")
 
-        # 3. Import CLP database
         print("\nStep 3: Importing CLP database...")
-        excel_path = os.path.join(os.path.dirname(__file__), '..', 'substancje_baza.xlsx')
-
-        if not os.path.exists(excel_path):
-            print(f"[ERROR] File not found: {excel_path}")
-            print("Please ensure substancje_baza.xlsx is in the parent directory")
+        clp_path = _find_source(CLP_XLSX_CANDIDATES)
+        if not clp_path:
+            print(f"[ERROR] CLP source file not found. Looked for: {CLP_XLSX_CANDIDATES}")
             return False
+        print(f"       Source: {clp_path}")
+        with open(clp_path, 'rb') as f:
+            ok, message, count = import_clp_data(f)
+        if not ok:
+            print(f"[ERROR] {message}")
+            return False
+        print(f"[OK] {message}")
 
-        df = pd.read_excel(excel_path, header=0, skiprows=[1])
-
-        column_map = {
-            'International Chemical Identification': 'name',
-            'CAS No': 'cas',
-            'EC No': 'ec_number',
-            'Classification': 'classification',
-            'Unnamed: 5': 'h_phrases',
-            'Specific Conc. Limits, M-factors': 'scl_mfactor'
-        }
-
-        df.rename(columns=column_map, inplace=True)
-        df = df[list(column_map.values())]
-
-        # Clear existing data
-        db.session.query(ExcelSourceSubstance).delete()
-        db.session.commit()
-
-        # Import with type conversion
-        def safe_str(val):
-            if pd.isna(val):
-                return None
-            return str(val)
-
-        count = 0
-        for idx, row in df.iterrows():
-            substance = ExcelSourceSubstance(
-                name=safe_str(row['name']),
-                cas=safe_str(row['cas']),
-                ec_number=safe_str(row['ec_number']),
-                classification=safe_str(row['classification']),
-                h_phrases=safe_str(row['h_phrases']),
-                scl_mfactor=safe_str(row['scl_mfactor'])
-            )
-            db.session.add(substance)
-            count += 1
-
-            if count % 100 == 0:
-                db.session.commit()
-                print(f"  Imported {count} substances...")
-
-        # Commit remaining
-        if count % 100 != 0:
-            db.session.commit()
-
-        print(f"[OK] Imported {count} CLP substances")
-
-        # 4. Import SVHC database
         print("\nStep 4: Importing SVHC database...")
-        svhc_path = os.path.join(os.path.dirname(__file__), '..', 'svhc.xlsx')
-
-        if not os.path.exists(svhc_path):
-            print(f"[ERROR] File not found: {svhc_path}")
-            print("Please ensure svhc.xlsx is in the parent directory")
+        svhc_path = _find_source(SVHC_XLSX_CANDIDATES)
+        if not svhc_path:
+            print(f"[ERROR] SVHC source file not found. Looked for: {SVHC_XLSX_CANDIDATES}")
             return False
+        print(f"       Source: {svhc_path}")
+        with open(svhc_path, 'rb') as f:
+            ok, message, count_svhc = import_svhc_data(f)
+        if not ok:
+            print(f"[ERROR] {message}")
+            return False
+        print(f"[OK] {message}")
 
-        df_svhc = pd.read_excel(svhc_path, header=0)
+        clp_count = ExcelSourceSubstance.query.count()
+        svhc_count = SVHCSubstance.query.count()
 
-        column_map_svhc = {
-            'Nazwa substancji ': 'name',
-            'Nr WE': 'ec_number',
-            'Nr CAS': 'cas',
-            'Powód włączenia ': 'reason',
-            'Data włączenia ': 'date_inclusion'
-        }
-
-        df_svhc.rename(columns=column_map_svhc, inplace=True)
-
-        for col in ['name', 'cas', 'ec_number', 'reason', 'date_inclusion']:
-            if col not in df_svhc.columns:
-                df_svhc[col] = None
-
-        df_svhc = df_svhc[['name', 'cas', 'ec_number', 'reason', 'date_inclusion']]
-
-        # Clear existing data
-        db.session.query(SVHCSubstance).delete()
-        db.session.commit()
-
-        count_svhc = 0
-        for idx, row in df_svhc.iterrows():
-            svhc = SVHCSubstance(
-                name=safe_str(row['name']),
-                cas=safe_str(row['cas']),
-                ec_number=safe_str(row['ec_number']),
-                reason=safe_str(row['reason']),
-                date_inclusion=safe_str(row['date_inclusion'])
-            )
-            db.session.add(svhc)
-            count_svhc += 1
-
-            if count_svhc % 50 == 0:
-                db.session.commit()
-                print(f"  Imported {count_svhc} SVHC substances...")
-
-        # Commit remaining
-        if count_svhc % 50 != 0:
-            db.session.commit()
-
-        print(f"[OK] Imported {count_svhc} SVHC substances")
-
-        # 5. Summary
         print("\n" + "=" * 50)
         print("[SUCCESS] Demo database built successfully!")
-        print(f"CLP Substances: {count}")
-        print(f"SVHC Substances: {count_svhc}")
+        print(f"CLP Substances: {clp_count}")
+        print(f"SVHC Substances: {svhc_count}")
         print(f"Admin User: admin / Demo1234")
         print(f"Database: {DemoConfig.SQLALCHEMY_DATABASE_URI}")
         print("=" * 50)
 
         return True
+
 
 if __name__ == '__main__':
     success = create_demo_database()

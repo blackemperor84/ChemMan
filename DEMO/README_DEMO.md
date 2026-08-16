@@ -1,7 +1,7 @@
 # ChemMan - Wersja Demo (Standalone)
 
-**Wersja:** 2.1.0 Demo
-**Data:** 2025-10-27
+**Wersja:** 2.3.1 Demo
+**Data:** 2026-08-16
 **Cel:** Prezentacja/demonstracja funkcjonalności aplikacji
 
 ---
@@ -12,7 +12,7 @@ To jest **samodzielna wersja demonstracyjna** aplikacji ChemMan, która:
 - ✅ Działa bez instalacji Python
 - ✅ Działa bez instalacji PostgreSQL
 - ✅ Zawiera pełną funkcjonalność
-- ✅ Ma wstępnie załadowane dane (4400 CLP + 492 SVHC)
+- ✅ Ma wstępnie załadowane dane (4400 CLP + aktualna lista SVHC ECHA, ~1029 rekordów)
 - ✅ Uruchamia się jednym kliknięciem
 - ✅ Jest przenośna (można uruchomić z pendrive)
 
@@ -26,7 +26,7 @@ To jest **samodzielna wersja demonstracyjna** aplikacji ChemMan, która:
 
 Jeśli już masz spakowaną wersję demo:
 
-1. Rozpakuj folder `ChemMan_Demo_v2.1.0.zip`
+1. Rozpakuj folder `ChemMan_Demo_v2.3.1.zip`
 2. Wejdź do folderu `ChemMan_Demo`
 3. Kliknij dwukrotnie `START_CHEMMAN_DEMO.bat`
 4. Poczekaj aż otworzy się przeglądarka
@@ -108,7 +108,7 @@ Wersja demo zawiera **wszystkie funkcje** wersji produkcyjnej:
 ### ✅ Dostępne funkcje:
 - 📦 Zarządzanie komórkami organizacyjnymi i substancjami
 - 🏢 System przypisywania użytkowników do komórek z kontrolą dostępu (v2.1.0)
-- 🔍 Wyszukiwanie w bazach CLP (4400+) i SVHC (492)
+- 🔍 Wyszukiwanie w bazach CLP (4400+) i SVHC (aktualna lista ECHA, ~1029 rekordów)
 - ⚠️ Detekcja CMR i SVHC
 - 📄 Upload kart SDS (PDF)
 - 📊 Eksport do CSV
@@ -257,7 +257,7 @@ Problemy z wersją demo?
 
 ## 📜 Licencja
 
-© 2025 NITROERG
+© 2025-2026 NITROERG
 Wersja Demo - tylko do celów prezentacyjnych/demonstracyjnych
 
 ---

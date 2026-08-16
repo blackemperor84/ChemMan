@@ -2,6 +2,7 @@ import os
 import click
 from flask import current_app
 from flask.cli import with_appcontext
+from sqlalchemy import text
 from models import db, User, SVHCSubstance
 
 @click.command('init-db')
@@ -59,9 +60,7 @@ def init_db_command():
             current_app.logger.error(f"Błąd podczas konfiguracji konta admin: {admin_err}")
         
     except Exception as e:
-        current_app.logger.error(f"Błąd podczas inicjalizacji bazy danych lub folderu: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"Błąd podczas inicjalizacji bazy danych lub folderu: {e}")
 
 @click.command('add-permission-columns')
 @with_appcontext
@@ -98,23 +97,22 @@ def add_permission_columns_command():
                         default_clause = f"DEFAULT {default_value}"
                     
                     sql = f"ALTER TABLE users ADD COLUMN {col_name} {col_type} {default_clause}"
-                    conn.execute(sql)
+                    conn.execute(text(sql))
                     current_app.logger.info(f"Dodano kolumnę {col_name}")
-            
+
             # Ustaw odpowiednie uprawnienia dla istniejących adminów
-            conn.execute("""
-                UPDATE users 
+            conn.execute(text("""
+                UPDATE users
                 SET can_view = 1, can_add = 1, can_edit = 1, can_delete = 1,
                     can_move = 1, can_copy = 1, can_upload_sds = 1
                 WHERE is_admin = 1
-            """)
+            """))
+            conn.commit()
             
             current_app.logger.info("Zakończono dodawanie kolumn uprawnień.")
             
     except Exception as e:
-        current_app.logger.error(f"Błąd podczas dodawania kolumn uprawnień: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"Błąd podczas dodawania kolumn uprawnień: {e}")
 
 @click.command('migrate-permissions')
 @with_appcontext
@@ -156,9 +154,7 @@ def migrate_permissions_command():
             current_app.logger.info("Migracja zakończona. Nie było potrzeby aktualizacji użytkowników.")
         
     except Exception as e:
-        current_app.logger.error(f"Błąd podczas migracji uprawnień: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"Błąd podczas migracji uprawnień: {e}")
         db.session.rollback()
 
 @click.command('add-svhc-column')
@@ -181,7 +177,8 @@ def add_svhc_column_command():
                     default_clause = "DEFAULT FALSE"
                 
                 sql = f"ALTER TABLE substances ADD COLUMN is_svhc BOOLEAN {default_clause}"
-                conn.execute(sql)
+                conn.execute(text(sql))
+                conn.commit()
                 current_app.logger.info("Dodano kolumnę is_svhc")
                 
                 # Aktualizuj wartości is_svhc dla istniejących substancji
@@ -207,6 +204,4 @@ def add_svhc_column_command():
                 current_app.logger.info("Kolumna is_svhc już istnieje")
                 
     except Exception as e:
-        current_app.logger.error(f"Błąd podczas dodawania kolumny is_svhc: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"Błąd podczas dodawania kolumny is_svhc: {e}")

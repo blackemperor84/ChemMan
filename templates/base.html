@@ -23,6 +23,7 @@
         {% if current_user.is_authenticated %}
             {% if current_user.is_admin %}
                 <a href="{{ url_for('admin.manage_users') }}">Zarządzaj Użtk.</a> |
+                <a href="{{ url_for('admin.manage_databases') }}">Bazy Danych</a> |
                 <a href="{{ url_for('admin.view_changelog') }}">Dziennik Zmian</a> |
             {% endif %}
             <a href="{{ url_for('auth.change_password') }}">Zmień hasło</a> |
@@ -58,7 +59,7 @@
     {% endblock %}
     <footer>
         <div>NITROERG &copy; {{ now().year }}</div>
-        <div class="version">Chem-Man v2.2.1</div>
+        <div class="version">Chem-Man v2.3.1</div>
     </footer>
 
     

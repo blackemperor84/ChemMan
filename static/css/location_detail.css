@@ -94,8 +94,14 @@
 #substances-table td:nth-child(5) {
     white-space: pre-line; /* Zachowaj podziały linii z danych */
     line-height: 1.4;      /* Lepsza czytelność */
-    text-align: left;      /* Wyrównanie do lewej */
+    text-align: center;    /* Wyrównanie do środka */
     padding: 8px 12px;     /* Nieco większy padding dla czytelności */
+    vertical-align: middle;
+}
+
+#substances-table td:nth-child(5) .view-mode {
+    display: inline-block;
+    text-align: left;      /* Tekst wewnątrz wyrównany do lewej */
 }
 
 
@@ -104,8 +110,15 @@
 #substances-table td:nth-child(7) {
     white-space: pre-line; /* Zachowaj podziały linii z danych */
     line-height: 1.4;      /* Lepsza czytelność */
-    text-align: center;      /* Wyrównanie do lewej */
+    text-align: center;    /* Wyrównanie do środka */
     padding: 8px 12px;     /* Nieco większy padding dla czytelności */
+    vertical-align: middle;
+}
+
+#substances-table td:nth-child(6) .view-mode,
+#substances-table td:nth-child(7) .view-mode {
+    display: inline-block;
+    text-align: left;      /* Tekst wewnątrz wyrównany do lewej */
 }
 
 
@@ -314,4 +327,73 @@ tr.editing-mode {
     padding: 5px;
     border-radius: 4px;
     border: 1px solid #ccc;
+}
+
+/* ======================================== */
+/* Style dla przycisków akcji w tabeli     */
+/* ======================================== */
+
+.actions-cell {
+    min-width: 90px;
+}
+
+.actions-cell .view-mode-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+}
+
+.actions-cell .view-mode-actions button {
+    width: 100%;
+    min-width: 70px;
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    white-space: nowrap;
+}
+
+.actions-cell .view-mode-actions button:hover {
+    background-color: #e9ecef;
+}
+
+.actions-cell .edit-mode-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+}
+
+.actions-cell .edit-mode-actions button {
+    width: 100%;
+    min-width: 70px;
+    padding: 5px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* Kolumna SDS - wyrównanie przycisku */
+.sds-cell {
+    min-width: 120px;
+}
+
+.sds-cell .show-sds-upload-form {
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid #28a745;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #d4edda;
+    color: #155724;
+    white-space: nowrap;
+}
+
+.sds-cell .show-sds-upload-form:hover {
+    background-color: #c3e6cb;
 }

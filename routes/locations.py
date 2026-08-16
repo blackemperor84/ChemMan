@@ -1,12 +1,25 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from decorators import view_permission_required, add_permission_required, edit_permission_required, delete_permission_required, add_location_permission_required, delete_location_permission_required
 from werkzeug.exceptions import NotFound # Dodaj import NotFound
 
 from models import db, Location, Substance, SDSFile
-from utils import log_action, convert_utc_to_local, handle_exception, is_svhc_substance
+from utils import log_action, convert_utc_to_local, handle_exception, is_svhc_substance, utcnow
 
-from datetime import datetime
+
+def _wants_json() -> bool:
+    """True gdy klient wysłał JSON lub jawnie prosi o JSON (AJAX/XHR).
+
+    Nie polegamy na accept_mimetypes.accept_json — przeglądarki wysyłają '*/*',
+    które błędnie zwracały True dla zwykłych POSTów z formularzy.
+    """
+    if request.is_json:
+        return True
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return True
+    accept_header = request.headers.get('Accept', '')
+    return 'application/json' in accept_header and 'text/html' not in accept_header
 
 # Utworzenie blueprintu dla lokalizacji
 locations_bp = Blueprint('locations', __name__)
@@ -97,9 +110,13 @@ def view_location(location_id):
         # Sprawdź, czy użytkownik może modyfikować tę komórkę
         can_modify = current_user.can_modify_organizational_unit(location_id)
 
-        paginated_substances = Substance.query.filter_by(location_id=location_id).order_by(
-            Substance.name
-        ).paginate(page=page, per_page=per_page, error_out=False)
+        paginated_substances = (
+            Substance.query
+            .options(joinedload(Substance.sds_files))
+            .filter_by(location_id=location_id)
+            .order_by(Substance.name)
+            .paginate(page=page, per_page=per_page, error_out=False)
+        )
 
         # Użytkownicy mogą kopiować/przenosić tylko do swojej przypisanej komórki
         if current_user.is_admin:
@@ -185,7 +202,7 @@ def update_location_name(location_id):
 
     # Pobierz lokalizację LUB zwróć błąd 404 jeśli nie istnieje
     location = Location.query.get_or_404(location_id)
-    location.last_modified = datetime.utcnow()
+    location.last_modified = utcnow()
     # Zapamiętaj starą nazwę PRZED próbą zmiany
     old_name = location.name
 
@@ -236,9 +253,7 @@ def update_location_name(location_id):
         })  # Zwracamy nową nazwę
     except Exception as e:
         db.session.rollback()  # Wycofaj zmiany w razie błędu zapisu
-        current_app.logger.error(f"BŁĄD podczas aktualizacji nazwy lokalizacji (ID: {location_id}): {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception(f"BŁĄD podczas aktualizacji nazwy lokalizacji (ID: {location_id}): {e}")
         return jsonify({'status': 'error', 'message': f'Wystąpił wewnętrzny błąd serwera: {e}'}), 500
 
 
@@ -252,7 +267,7 @@ def delete_location(location_id):
         # Sprawdź czy użytkownik może modyfikować tę komórkę organizacyjną
         if not current_user.can_modify_organizational_unit(location_id):
             current_app.logger.warning(f"Użytkownik {current_user.username} próbował usunąć komórkę bez uprawnień ID: {location_id}")
-            if request.accept_mimetypes.accept_json or request.content_type == 'application/json':
+            if _wants_json():
                 return jsonify({'status': 'error', 'message': 'Możesz usuwać tylko komórki organizacyjne przypisane do Ciebie.'}), 403
             flash('Możesz usuwać tylko komórki organizacyjne przypisane do Ciebie.', 'error')
             return redirect(url_for('locations.index'))
@@ -266,7 +281,7 @@ def delete_location(location_id):
             current_app.logger.warning(f"Użytkownik {current_user.username} próbował usunąć chronioną lokalizację ID: {location_id}")
             flash('Nie można usunąć chronionej lokalizacji "admin".', 'error')
             # Sprawdź, czy żądanie oczekuje JSON
-            if request.accept_mimetypes.accept_json or request.content_type == 'application/json':
+            if _wants_json():
                  return jsonify({'status': 'error', 'message': 'Nie można usunąć chronionej lokalizacji "admin".'}), 403
             return redirect(url_for('locations.index'))
 
@@ -284,7 +299,7 @@ def delete_location(location_id):
 
         # Zwróć JSON lub przekieruj - **POPRAWIONY WARUNEK**
         # Sprawdź, czy klient akceptuje JSON lub wysłał JSON
-        if request.accept_mimetypes.accept_json or request.content_type == 'application/json':
+        if _wants_json():
             return jsonify({
                 'status': 'success',
                 'message': f'Lokalizacja "{location_name}" (oraz jej zawartość) została usunięta.'
@@ -297,15 +312,11 @@ def delete_location(location_id):
         db.session.rollback()
         current_app.logger.warning(f"Próba usunięcia nieistniejącej lokalizacji ID: {location_id}")
          # Sprawdź, czy klient akceptuje JSON lub wysłał JSON - **POPRAWIONY WARUNEK**
-        if request.accept_mimetypes.accept_json or request.content_type == 'application/json':
+        if _wants_json():
             return jsonify({'status': 'error', 'message': f'Lokalizacja o ID {location_id} nie została znaleziona.'}), 404
         flash(f'Lokalizacja o ID {location_id} nie została znaleziona.', 'error')
         return redirect(url_for('locations.index'))
 
     except Exception as e: # Ogólna obsługa innych błędów
-        db.session.rollback()
-        # Logowanie błędu przez handle_exception
-        return handle_exception(e, f"usuwania lokalizacji ID: {location_id}",
-                                redirect_url=url_for('locations.index'),
-                                return_json= (request.accept_mimetypes.accept_json or request.content_type == 'application/json') # Przekaż informację, czy zwrócić JSON
-                               )
+        redirect_url = None if _wants_json() else url_for('locations.index')
+        return handle_exception(e, f"usuwania lokalizacji ID: {location_id}", redirect_url)

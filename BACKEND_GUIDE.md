@@ -177,6 +177,7 @@ class User(db.Model, UserMixin):
     can_upload_sds = db.Column(db.Boolean, default=False)
     can_add_location = db.Column(db.Boolean, default=False)
     can_delete_location = db.Column(db.Boolean, default=False)
+    can_update_databases = db.Column(db.Boolean, default=False)  # Import baz CLP/SVHC
 ```
 
 #### Substance
@@ -335,6 +336,9 @@ def convert_utc_to_local(utc_dt):
 | GET | `/export/all/csv` | Eksport CSV | `can_view` |
 | POST | `/upload_sds/<id>` | Upload pliku SDS | `can_upload_sds` |
 | GET | `/download_sds/<filename>` | Pobierz SDS | `can_view` |
+| GET | `/admin/databases` | Zarządzanie bazami CLP/SVHC | `is_admin` |
+| POST | `/admin/databases/upload/clp` | Import bazy CLP | `is_admin` |
+| POST | `/admin/databases/upload/svhc` | Import listy SVHC | `is_admin` |
 
 ### API wyszukiwania - `/search_substances`
 
@@ -816,5 +820,5 @@ Jeśli dokumentacja nie rozwiązuje Twojego problemu:
 
 ---
 
-**Aktualizacja:** 2025-10-27
-**Wersja:** 2.1.0
+**Aktualizacja:** 2026-08-16
+**Wersja:** 2.3.1
