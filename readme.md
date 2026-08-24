@@ -66,7 +66,8 @@ python create_admin.py
 python app.py
 ```
 
-Domyślne logowanie: `admin` / `F23pADFE!` (zmień po pierwszym logowaniu!)
+Logowanie: `admin` / hasło ustawione w `CHEM_MAN_ADMIN_PASSWORD` (lub podane
+interaktywnie przy `create_admin.py`). Nie ma hasła domyślnego.
 
 ### Testy
 

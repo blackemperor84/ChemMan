@@ -3,6 +3,7 @@ from typing import Optional, Any, Callable, List
 import pytz
 from flask import current_app, flash, redirect, jsonify, request
 from flask_login import current_user
+from markupsafe import Markup, escape
 from sqlalchemy import or_
 
 from models import db, AuditLog, SVHCSubstance
@@ -59,6 +60,27 @@ def log_action(action: str, target_type: Optional[str] = None, target_id: Option
 
     except Exception as e:
         current_app.logger.exception(f"KRYTYCZNY BŁĄD: Nie udało się zapisać wpisu do AuditLog dla akcji '{action}': {e}")
+
+
+def nl2br(value: Any, separator: str = '<br>') -> Markup:
+    """
+    Zamienia znaki nowej linii na znacznik HTML, escapując najpierw treść.
+
+    Zastępuje wzorzec `value|replace("\\n", "<br>")|safe`, który przepuszczał
+    HTML wpisany przez użytkownika (podatność XSS typu stored).
+
+    Args:
+        value: Wartość do wyrenderowania (dowolny typ, None daje pusty wynik)
+        separator: Znacznik HTML wstawiany w miejsce nowej linii.
+                   Pochodzi z szablonu, nie od użytkownika, więc nie jest escapowany.
+
+    Returns:
+        Markup: Bezpieczny HTML - treść jest zescapowana, separator nie.
+    """
+    if value is None:
+        return Markup('')
+
+    return Markup(separator).join(escape(part) for part in str(value).split('\n'))
 
 
 def convert_utc_to_local(utc_timestamp: Optional[datetime]) -> str:

@@ -208,7 +208,7 @@ SECRET_KEY=WYGENERUJ_LOSOWY_KLUCZ_TUTAJ
 FLASK_DEBUG=0
 
 # Użytkownik Admin (pierwsze logowanie)
-DEFAULT_PASSWORD=ZMIEŃ_TO_NATYCHMIAST
+CHEM_MAN_ADMIN_PASSWORD=ZMIEŃ_TO_NATYCHMIAST
 
 # Rate Limiting
 RATELIMIT_STORAGE_URL=redis://localhost:6379
@@ -317,6 +317,16 @@ limit_request_fields = 100
 limit_request_field_size = 8190
 ```
 
+> **WAŻNE - punkt wejścia WSGI**
+>
+> Uruchamiaj gunicorna przez `wsgi:app`, nie przez `app:create_app()`.
+> Moduł `wsgi.py` gwarantuje, że konfiguracja zostanie wybrana na podstawie
+> `FLASK_ENV`. Upewnij się też, że `FLASK_ENV=production` jest widoczne dla
+> procesu (w `.env` w katalogu roboczym albo w `Environment=` w usłudze systemd) -
+> bez tego aplikacja wystartuje na `DevelopmentConfig`, czyli m.in. bez
+> `SESSION_COOKIE_SECURE`. Przy starcie w logu pojawi się ostrzeżenie, jeśli
+> `FLASK_ENV` nie jest ustawione na `production`.
+
 #### 3. Utworzenie Usługi Systemd
 
 Utwórz plik `/etc/systemd/system/chemman.service`:
@@ -332,7 +342,8 @@ User=chemman
 Group=chemman
 WorkingDirectory=/opt/chemman
 Environment="PATH=/opt/chemman/venv/bin"
-ExecStart=/opt/chemman/venv/bin/gunicorn -c gunicorn_config.py "app:create_app()"
+Environment="FLASK_ENV=production"
+ExecStart=/opt/chemman/venv/bin/gunicorn -c gunicorn_config.py wsgi:app
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5

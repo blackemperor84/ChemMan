@@ -53,6 +53,12 @@ def upload_sds(substance_id):
     current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/upload_sds")
     substance = Substance.query.get_or_404(substance_id)
 
+    # Sprawdź czy użytkownik może modyfikować komórkę organizacyjną substancji
+    if not current_user.can_modify_organizational_unit(substance.location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował dodać SDS do substancji bez uprawnień do komórki ID: {substance.location_id}")
+        flash('Możesz dodawać karty SDS tylko do substancji w swojej komórce organizacyjnej.', 'error')
+        return redirect(url_for('locations.view_location', location_id=substance.location_id))
+
     # Sprawdź, czy plik został wysłany
     if 'sds_file' not in request.files:
         flash('Nie wybrano pliku do wysłania.', 'error')
@@ -174,6 +180,12 @@ def delete_sds(substance_id, sds_file_id):
     current_app.logger.debug(f"Otrzymano POST na /substance/{substance_id}/delete_sds/{sds_file_id}")
     substance = Substance.query.get_or_404(substance_id)
     sds_file = SDSFile.query.get_or_404(sds_file_id)
+
+    # Sprawdź czy użytkownik może modyfikować komórkę organizacyjną substancji
+    if not current_user.can_modify_organizational_unit(substance.location_id):
+        current_app.logger.warning(f"Użytkownik {current_user.username} próbował usunąć SDS z substancji bez uprawnień do komórki ID: {substance.location_id}")
+        flash('Możesz usuwać karty SDS tylko z substancji w swojej komórce organizacyjnej.', 'error')
+        return redirect(url_for('locations.view_location', location_id=substance.location_id))
 
     # Sprawdź, czy plik SDS należy do tej substancji
     if sds_file.substance_id != substance_id:

@@ -7,7 +7,7 @@ from flask_login import LoginManager
 from dotenv import load_dotenv
 load_dotenv()
 
-from config import Config
+from config import Config, config as config_by_name
 from models import db, bcrypt, User
 from routes import register_blueprints
 
@@ -20,8 +20,31 @@ from flask.cli import with_appcontext
 from limiter import limiter
 
 
-def create_app(config_class=Config):
-    """Fabryka aplikacji Flask"""
+def resolve_config():
+    """
+    Wybiera klasę konfiguracji na podstawie zmiennej środowiskowej FLASK_ENV.
+
+    Returns:
+        type: Klasa konfiguracji (DevelopmentConfig / TestingConfig / ProductionConfig)
+    """
+    env = os.environ.get('FLASK_ENV', 'development')
+    return config_by_name.get(env, config_by_name['default'])
+
+
+def create_app(config_class=None):
+    """
+    Fabryka aplikacji Flask.
+
+    Args:
+        config_class: Klasa konfiguracji. Gdy None (domyślnie), konfiguracja jest
+                      wybierana na podstawie FLASK_ENV. Dzięki temu uruchomienie
+                      przez WSGI (gunicorn) nie ląduje na bazowym `Config`, w którym
+                      SESSION_COOKIE_SECURE i pozostałe zabezpieczenia produkcyjne
+                      są wyłączone.
+    """
+    if config_class is None:
+        config_class = resolve_config()
+
     app = Flask(__name__)
     limiter.init_app(app)
     app.config.from_object(config_class)
@@ -44,11 +67,12 @@ def create_app(config_class=Config):
     login_manager.login_message = app.config['LOGIN_MESSAGE']
     login_manager.login_message_category = app.config['LOGIN_MESSAGE_CATEGORY']
     
-    from utils import convert_utc_to_local
+    from utils import convert_utc_to_local, nl2br
     app.jinja_env.globals.update(
         now=lambda: datetime.now(timezone.utc),
         convert_utc_to_local=convert_utc_to_local
     )
+    app.jinja_env.filters['nl2br'] = nl2br
     
     # Konfiguracja dodatkowa aplikacji
     config_class.init_app(app)
@@ -111,11 +135,8 @@ def create_app(config_class=Config):
 
 
 if __name__ == '__main__':
-    # Determine which config to use based on FLASK_ENV
-    from config import config
+    # Konfiguracja wybierana na podstawie FLASK_ENV (patrz resolve_config)
     env = os.environ.get('FLASK_ENV', 'development')
-    config_class = config.get(env, config['development'])
-
-    app = create_app(config_class)
+    app = create_app()
     app.logger.info(f"Uruchamianie aplikacji Chem-Man (env={env}, debug={app.debug})")
     app.run(debug=app.debug, host='0.0.0.0')

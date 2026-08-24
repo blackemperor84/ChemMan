@@ -294,10 +294,8 @@ def import_clp_data(file_stream) -> Tuple[bool, str, int]:
             f"Snapshot przed importem CLP: {len(by_cas)} CAS + {len(by_ec)} EC + {len(by_name)} nazw z danymi do zachowania."
         )
 
-        current_app.logger.info("Czyszczenie tabeli excel_source_substances...")
-        db.session.query(ExcelSourceSubstance).delete()
-        db.session.commit()
-
+        # Przygotuj komplet danych PRZED dotknięciem bazy - błąd parsowania
+        # nie może zostawić transakcji w połowie.
         data_to_insert = df.to_dict(orient='records')
         preserved_totals = {f: 0 for f in preserve_fields}
         for record in data_to_insert:
@@ -306,7 +304,15 @@ def import_clp_data(file_stream) -> Tuple[bool, str, int]:
             for f, c in counts.items():
                 preserved_totals[f] += c
 
-        current_app.logger.info("Importowanie danych CLP do bazy...")
+        # Zabezpieczenie: pusty zestaw danych nigdy nie może wyczyścić bazy referencyjnej.
+        if not data_to_insert:
+            return False, "Plik nie zawiera rekordów do zaimportowania. Baza CLP nie została zmieniona.", 0
+
+        # JEDNA TRANSAKCJA: usunięcie starych rekordów i wstawienie nowych.
+        # Bez tego nieudany insert zostawiał pustą tabelę bez możliwości odtworzenia
+        # (rollback nie cofał już zatwierdzonego DELETE).
+        current_app.logger.info("Podmiana danych CLP (usunięcie + wstawienie w jednej transakcji)...")
+        db.session.query(ExcelSourceSubstance).delete()
         db.session.bulk_insert_mappings(ExcelSourceSubstance, data_to_insert)
         db.session.commit()
 
@@ -403,10 +409,8 @@ def import_svhc_data(file_stream) -> Tuple[bool, str, int]:
             f"Snapshot przed importem SVHC: {len(by_cas)} CAS + {len(by_ec)} EC + {len(by_name)} nazw z danymi do zachowania."
         )
 
-        current_app.logger.info("Czyszczenie tabeli svhc_substances...")
-        db.session.query(SVHCSubstance).delete()
-        db.session.commit()
-
+        # Przygotuj komplet danych PRZED dotknięciem bazy - błąd parsowania
+        # nie może zostawić transakcji w połowie.
         data_to_insert = df.to_dict(orient='records')
         preserved_totals = {f: 0 for f in preserve_fields}
         for record in data_to_insert:
@@ -415,7 +419,15 @@ def import_svhc_data(file_stream) -> Tuple[bool, str, int]:
             for f, c in counts.items():
                 preserved_totals[f] += c
 
-        current_app.logger.info("Importowanie danych SVHC do bazy...")
+        # Zabezpieczenie: pusty zestaw danych nigdy nie może wyczyścić bazy referencyjnej.
+        if not data_to_insert:
+            return False, "Plik nie zawiera rekordów do zaimportowania. Baza SVHC nie została zmieniona.", 0
+
+        # JEDNA TRANSAKCJA: usunięcie starych rekordów i wstawienie nowych.
+        # Bez tego nieudany insert zostawiał pustą tabelę bez możliwości odtworzenia
+        # (rollback nie cofał już zatwierdzonego DELETE).
+        current_app.logger.info("Podmiana danych SVHC (usunięcie + wstawienie w jednej transakcji)...")
+        db.session.query(SVHCSubstance).delete()
         db.session.bulk_insert_mappings(SVHCSubstance, data_to_insert)
         db.session.commit()
 

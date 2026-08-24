@@ -156,7 +156,7 @@
             {% for sub_data in all_substances_data %}
                 <tr data-cmr="{{ sub_data.is_cmr|lower }}" data-svhc="{{ sub_data.is_svhc|lower }}" data-has-sds="{{ (sub_data.sds_filename is not none)|lower }}" data-physical-location="{{ sub_data.physical_location }}" data-user-location="{{ sub_data.location_name }}" data-location-id="{{ sub_data.location_id }}">
                     <td>
-                        <div class="substance-name">{{ sub_data.name|replace("\n", "<span class='name-spacer'></span>")|safe }}</div>
+                        <div class="substance-name">{{ sub_data.name|nl2br("<span class='name-spacer'></span>") }}</div>
                         {% if sub_data.is_cmr %}
                             <span class="cmr-badge" title="Substancja CMR">CMR</span>
                         {% endif %}
@@ -172,9 +172,9 @@
                     </td>
                     <td>{{ sub_data.cas or '' }}</td>
                     <td>{{ sub_data.ec_number or '' }}</td>
-                    <td>{{ sub_data.classification|replace("\n", "<br>")|safe if sub_data.classification and sub_data.classification not in ['nan', 'NaN', 'None'] else '' }}</td>
-                    <td>{{ sub_data.h_phrases|replace("\n", "<br>")|safe if sub_data.h_phrases and sub_data.h_phrases not in ['nan', 'NaN', 'None'] else '' }}</td>
-                    <td>{{ sub_data.scl_mfactor|replace("\n", "<br>")|safe if sub_data.scl_mfactor and sub_data.scl_mfactor not in ['nan', 'NaN', 'None'] else '' }}</td>
+                    <td>{{ sub_data.classification|nl2br if sub_data.classification and sub_data.classification not in ['nan', 'NaN', 'None'] else '' }}</td>
+                    <td>{{ sub_data.h_phrases|nl2br if sub_data.h_phrases and sub_data.h_phrases not in ['nan', 'NaN', 'None'] else '' }}</td>
+                    <td>{{ sub_data.scl_mfactor|nl2br if sub_data.scl_mfactor and sub_data.scl_mfactor not in ['nan', 'NaN', 'None'] else '' }}</td>
                     <td>{{ sub_data.location_name }}</td> <!-- Będzie wyśrodkowane przez CSS -->
                     <td>{{ sub_data.physical_location }}</td> <!-- Będzie wyśrodkowane przez CSS -->
                     <td>{{ sub_data.comment or '' }}</td>
