@@ -1,0 +1,98 @@
+# Buduje obraz ChemMana i publikuje go w GitHub Container Registry (ghcr.io).
+#
+# Dzieki temu wdrozenie na serwerze sprowadza sie do `docker compose pull`
+# — bez kompilowania czegokolwiek na maszynie produkcyjnej.
+#
+# Obrazy powstaja dla:
+#   - kazdego tagu vX.Y.Z  -> :vX.Y.Z, :X.Y, :latest
+#   - gałęzi master        -> :master  (do testow, nie do produkcji)
+#
+# Pierwszy opublikowany pakiet jest domyslnie PRYWATNY. Aby serwer mogl go
+# pobrac bez logowania, zmien widocznosc pakietu na public w ustawieniach
+# repozytorium (Packages -> chemman -> Package settings), albo zaloguj serwer:
+#   echo $TOKEN | docker login ghcr.io -u <uzytkownik> --password-stdin
+
+name: Build and publish Docker image
+
+on:
+  push:
+    tags: ["v*.*.*"]
+    branches: ["master"]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # Token wystawiany automatycznie przez GitHub Actions — nie trzeba
+          # zakladac wlasnego sekretu.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Cache warstw miedzy przebiegami — bez tego kazdy build kompiluje
+          # od zera zaleznosci natywne (numpy, pandas, lxml, pillow).
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test the built image
+        # Sprawdza, ze obraz w ogole startuje i ze aplikacja odpowiada.
+        # Migracje sa wylaczone: to test obrazu, nie bazy.
+        run: |
+          docker run -d --name chemman_smoke \
+            -e SECRET_KEY=smoke-test-key-not-for-production \
+            -e FLASK_ENV=production \
+            -e RUN_MIGRATIONS=0 \
+            -e RATELIMIT_STORAGE_URL=memory:// \
+            -e DATABASE_URL=sqlite:////tmp/smoke.db \
+            -p 8000:8000 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/login > /dev/null; then
+              echo "Aplikacja odpowiada."
+              docker rm -f chemman_smoke
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Aplikacja nie wystartowala. Logi kontenera:"
+          docker logs chemman_smoke
+          docker rm -f chemman_smoke
+          exit 1

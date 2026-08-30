@@ -1,0 +1,82 @@
+# ChemMan - uruchomienie produkcyjne
+#
+#   1. cp .env.docker.example .env
+#   2. uzupelnij SECRET_KEY, POSTGRES_PASSWORD i CHEM_MAN_ADMIN_PASSWORD
+#   3. docker compose up -d
+#
+# Domyslnie stawiany jest komplet: aplikacja + PostgreSQL + Redis.
+#
+# Masz juz wlasny serwer bazy danych?
+#   - ustaw DATABASE_URL w .env (wskazujac na swoja baze),
+#   - wystartuj wylacznie aplikacje:  docker compose up -d app
+# Uslugi `db` i `redis` nie zostana wtedy uruchomione.
+
+services:
+  app:
+    # Obraz z GHCR — brak budowania na serwerze. Podmien tag na konkretna wersje,
+    # np. :v2.4.1 — `latest` utrudnia kontrolowany rollback.
+    image: ghcr.io/blackemperor84/chemman:latest
+    # Budowanie lokalnie zamiast pobierania:  docker compose build
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY:?ustaw SECRET_KEY w pliku .env}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://chemman:${POSTGRES_PASSWORD}@db:5432/chemman}
+      RATELIMIT_STORAGE_URL: ${RATELIMIT_STORAGE_URL:-redis://redis:6379}
+      # Aplikacja stoi za nginx-em na hoscie -> 1 zaufane proxy.
+      # Ustaw 0, jesli wystawiasz port 8000 bezposrednio: inaczej naglowek
+      # X-Forwarded-For mozna podrobic i obejsc limity zapytan.
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
+      # Gunicorn w kontenerze musi sluchac na wszystkich interfejsach.
+      GUNICORN_BIND: 0.0.0.0:8000
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
+      GUNICORN_FORWARDED_ALLOW_IPS: "*"
+      # Podane haslo zaklada konto admina przy pierwszym starcie.
+      # Po pierwszym zalogowaniu usun te zmienna z .env.
+      CHEM_MAN_ADMIN_PASSWORD: ${CHEM_MAN_ADMIN_PASSWORD:-}
+    volumes:
+      # Zalaczniki SDS i logi musza przetrwac aktualizacje obrazu.
+      - chemman_uploads:/app/instance/uploads
+      - chemman_logs:/app/logs
+    ports:
+      # Tylko localhost — ruch z sieci ma isc przez nginx z TLS.
+      # Bez TLS ciasteczka sesji (SESSION_COOKIE_SECURE=True) nie zadzialaja.
+      - "127.0.0.1:8000:8000"
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chemman
+      POSTGRES_USER: chemman
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ustaw POSTGRES_PASSWORD w pliku .env}
+      # Wymuszenie scram-sha-256 zamiast slabszego domyslnego uwierzytelniania.
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - chemman_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Aplikacja czeka na ten stan (depends_on: condition: service_healthy).
+      test: ["CMD-SHELL", "pg_isready -U chemman -d chemman"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Port bazy nie jest wystawiany na hosta — dostep tylko z sieci compose.
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Bez trwalego zapisu: to tylko liczniki limitow zapytan, ich utrata
+    # przy restarcie jest nieszkodliwa.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+volumes:
+  chemman_pgdata:
+  chemman_uploads:
+  chemman_logs:
