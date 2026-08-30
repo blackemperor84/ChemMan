@@ -6,6 +6,57 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [2.4.1] - 2026-08-30
+
+### 🔒 Poprawki po ponownym audycie v2.4.0
+
+Zewnętrzny przegląd commita `9b9dfd6` znalazł cztery błędy, których nie wykrywał
+zestaw testów — dwa z nich powstały przy naprawach w v2.4.0. Wszystkie 363 testy
+przechodzą (12 nowych, każdy zweryfikowany jako czerwony bez poprawki).
+
+#### 🐛 Poprawiono
+
+- **[P1] Wstrzyknięcie formuł do CSV przez pola CAS/WE.** Identyfikatory były
+  budowane jako `="{cas}"`, żeby Excel traktował je jak tekst. Cudzysłów wewnątrz
+  wartości pozwalał wyjść poza literał — CAS `"&SUM(1,1)&"` dawał działającą
+  formułę `=""&SUM(1,1)&""`. Pierwsza fala poprawek (`csv_safe`) celowo omijała
+  te komórki, więc luka pozostała. **Konstrukcji `="..."` nie da się uratować
+  escapowaniem**: każda komórka zaczynająca się od `=` jest formułą, a podwojenie
+  cudzysłowów nadal zostawia działające `&SUM(1,1)&`. Identyfikatory są teraz
+  eksportowane jako zwykły tekst przez `csv_safe()`.
+  *Skutek uboczny:* znika wymuszanie formatu tekstowego w Excelu. Realne numery
+  CAS/WE nie mają formatu daty, więc w praktyce nic się nie zmienia.
+- **[P1] Nieudana weryfikacja SVHC nadal zapisywała wynik negatywny.** Obie ścieżki
+  dodawania substancji logowały błąd, po czym zapisywały `is_svhc=False`.
+  Teraz zapis jest **odrzucany** (HTTP 503) — fałszywe „nie SVHC" w rejestrze jest
+  groźniejsze niż nieudane dodanie. Wyjątek: gdy użytkownik sam ustawił status
+  SVHC, jego decyzja wystarczy i automat nie jest potrzebny.
+- **[P2] Odznaczone checkboxy kasowały auto-detekcję.** Klient wysyłał `false` dla
+  nietkniętych pól, a backend traktował to jak świadome nadpisanie — substancja
+  z klasyfikacją `Carc. 1B` i pustymi zwrotami H zapisywała się jako **nie-CMR**.
+  Checkbox może teraz tylko **dodać** oznaczenie, nigdy go nie zdjąć
+  (`final = auto or manual`), a `location_detail.js` w ogóle nie wysyła flagi,
+  której użytkownik nie zaznaczył. Zdjęcie błędnego oznaczenia pozostaje możliwe
+  przez edycję substancji.
+- **[P2] Sprzątanie po uploadzie SDS kasowało już zapisany plik.** Blok `except`
+  usuwał plik przy *każdym* wyjątku, także po udanym commicie — błąd w logowaniu
+  akcji zostawiał wiersz w bazie bez pliku PDF. Sprzątanie działa teraz wyłącznie,
+  gdy commit się nie powiódł.
+
+#### 📚 Dokumentacja
+
+- `BACKEND_GUIDE.md`: poprawiona sygnatura `is_cmr_substance()` (kolejność
+  argumentów była odwrotna) oraz **usunięty błędny przykład `Repr. 2 → CMR`** —
+  kategoria 2 celowo nie jest CMR. Dodana wyraźna notka o zakresie 1A/1B
+  i o tym, że w ścieżkach zapisu należy używać `check_svhc_substance()`.
+- `DEPLOYMENT_GUIDE.md`: udokumentowana zmienna `TRUSTED_PROXY_COUNT`.
+- `INSTALLATION.md`: dodane odesłania do `wsgi.py`/`FLASK_ENV` i do procedury
+  `flask db stamp`; zaktualizowana wersja w stopce (była 2.0.0).
+- Zaktualizowane liczby testów w `readme.md`, `TODO.md`, `DEMO/README_DEMO.md`
+  (podawały 242). Usunięte niezweryfikowane deklaracje „80% pokrycia kodu".
+
+---
+
 ## [2.4.0] - 2026-08-30
 
 ### 🔒 Wzmocnienie bezpieczeństwa (audyt zewnętrzny)

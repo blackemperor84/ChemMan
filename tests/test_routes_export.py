@@ -329,7 +329,7 @@ class TestExportLocationCSV:
         for row in csv_reader:
             if 'Test Chemical' in row[0]:
                 found = True
-                assert '="123-45-6"' in row[1]  # CAS is formatted for Excel
+                assert row[1] == '123-45-6'  # CAS is plain text, never an Excel formula
                 assert 'Carc. 1A' in row[2]
                 assert 'H350' in row[3]
                 assert 'M=10' in row[4]
@@ -375,8 +375,16 @@ class TestExportLocationCSV:
         rows = list(csv_reader)
         assert len(rows) == 1  # Only header row
 
-    def test_export_cas_number_excel_formatting(self, client, admin_user, test_location, app):
-        """Test that CAS numbers are formatted for Excel to prevent auto-conversion."""
+    def test_export_cas_number_is_never_a_formula(self, client, admin_user, test_location, app):
+        """CAS numbers are exported as plain text, never as an Excel formula.
+
+        These cells used to be written as ="1-2-3" so Excel would keep them as
+        text instead of parsing them as dates. That construction was injectable:
+        a CAS containing a quote broke out of the literal, and since any cell
+        beginning with '=' is a formula, escaping the inner quotes could not fix
+        it. Real CAS/EC values are not date-shaped, so plain text is the safe
+        trade. See tests/test_codex_followup_fixes.py for the injection cases.
+        """
         # Add substance with CAS that might be converted to date in Excel
         with app.app_context():
             location = Location.query.first()
@@ -404,8 +412,8 @@ class TestExportLocationCSV:
         found = False
         for row in csv_reader:
             if 'Test Substance' in row[0]:
-                # CAS should be formatted with Excel formula to prevent auto-conversion
-                assert '="1-2-3"' in row[1] or row[1] == '="1-2-3"'
+                assert row[1] == '1-2-3'
+                assert not row[1].startswith('='), 'CAS cell must not be a formula'
                 found = True
                 break
 

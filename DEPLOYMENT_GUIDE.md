@@ -211,7 +211,16 @@ FLASK_DEBUG=0
 CHEM_MAN_ADMIN_PASSWORD=ZMIEŃ_TO_NATYCHMIAST
 
 # Rate Limiting
+# Wspoldzielony magazyn licznikow. Bez tego kazdy worker gunicorna ma wlasne
+# liczniki i faktyczny limit jest ich wielokrotnoscia.
 RATELIMIT_STORAGE_URL=redis://localhost:6379
+
+# Liczba zaufanych odwrotnych proxy (nginx). Bez tego aplikacja widzi adres
+# proxy zamiast klienta i WSZYSCY uzytkownicy dziela jeden limit zapytan.
+# Ustaw 1 dla typowej konfiguracji z jednym nginx-em.
+# UWAGA: nie ustawiaj > 0, jesli aplikacja jest wystawiona bezposrednio —
+# naglowek X-Forwarded-For mozna wtedy podrobic.
+TRUSTED_PROXY_COUNT=1
 
 # Nagłówki Bezpieczeństwa
 SESSION_COOKIE_SECURE=True
