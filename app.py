@@ -46,8 +46,21 @@ def create_app(config_class=None):
         config_class = resolve_config()
 
     app = Flask(__name__)
-    limiter.init_app(app)
     app.config.from_object(config_class)
+
+    # Za odwrotnym proxy (nginx) kazde zadanie przychodzi z adresu proxy, wiec bez
+    # ProxyFix wszyscy uzytkownicy dziela jeden limit. Wlaczane jawnie liczba
+    # zaufanych proxy — bez tego naglowek X-Forwarded-For mozna podrobic.
+    trusted_proxies = int(os.environ.get('TRUSTED_PROXY_COUNT', '0'))
+    if trusted_proxies > 0:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=trusted_proxies, x_proto=trusted_proxies,
+            x_host=trusted_proxies, x_port=trusted_proxies
+        )
+
+    # init_app po wczytaniu konfiguracji — flask-limiter czyta RATELIMIT_* wlasnie tutaj.
+    limiter.init_app(app)
     csrf = CSRFProtect(app)  # Inicjalizacja CSRF
     
     # Inicjalizacja rozszerzeń z aplikacją

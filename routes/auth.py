@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from limiter import limiter
 from models import db, User
-from utils import log_action, handle_exception
+from utils import log_action, handle_exception, is_safe_redirect_url
 
 # Utworzenie blueprintu dla uwierzytelniania
 auth_bp = Blueprint('auth', __name__)
@@ -43,7 +43,12 @@ def login():
         if user and user.check_password(password):
             # Logowanie udane
             login_user(user)
+            # Walidacja ?next= — bez niej parametr pozwalałby przekierować
+            # zalogowanego użytkownika na obcą domenę (open redirect).
             next_page = request.args.get('next')
+            if next_page and not is_safe_redirect_url(next_page):
+                current_app.logger.warning("Odrzucono niebezpieczny adres przekierowania po logowaniu")
+                next_page = None
             flash(f'Witaj {user.username}! Zalogowano pomyślnie.', 'success')
             current_app.logger.info(f"Logowanie udane dla użytkownika")
             return redirect(next_page or url_for('locations.index'))

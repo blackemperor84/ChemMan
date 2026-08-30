@@ -63,12 +63,16 @@ def add_substance_to_location(location_id):
 
     try:
         # Sprawdź, czy substancja jest CMR na podstawie zwrotów H
-        from utils import is_cmr_substance, is_svhc_substance
-        is_cmr = is_cmr_substance(h_phrases)
-        
+        from utils import is_cmr_substance, check_svhc_substance
+        is_cmr = is_cmr_substance(h_phrases, classification)
+
         # Sprawdź, czy substancja jest na liście SVHC
-        svhc_reason = is_svhc_substance(cas=cas, ec_number=ec_number, name=name)
-        is_svhc = svhc_reason is not None
+        svhc = check_svhc_substance(cas=cas, ec_number=ec_number, name=name)
+        is_svhc = svhc.is_svhc
+        if not svhc.verified:
+            current_app.logger.error(
+                f"Nie udało się zweryfikować SVHC dla '{name}' — zapisano bez flagi SVHC."
+            )
         
         # Stwórz obiekt
         new_substance = Substance(
@@ -176,16 +180,22 @@ def add_manual_substance(location_id):
 
     try:
         # Sprawdź, czy substancja jest CMR na podstawie zwrotów H (auto-detekcja)
-        from utils import is_cmr_substance, is_svhc_substance
-        auto_is_cmr = is_cmr_substance(h_phrases)
+        from utils import is_cmr_substance, check_svhc_substance
+        auto_is_cmr = is_cmr_substance(h_phrases, classification)
 
         # Sprawdź, czy substancja jest na liście SVHC (auto-detekcja)
-        svhc_reason = is_svhc_substance(
+        svhc = check_svhc_substance(
             cas=cas if cas else None,
             ec_number=ec_number if ec_number else None,
             name=name
         )
-        auto_is_svhc = svhc_reason is not None
+        auto_is_svhc = svhc.is_svhc
+        # Nieudana weryfikacja nie może cicho oznaczyć substancji jako nie-SVHC.
+        svhc_unverified = not svhc.verified and manual_is_svhc is None
+        if svhc_unverified:
+            current_app.logger.error(
+                f"Nie udało się zweryfikować SVHC dla '{name}' — zapisano bez flagi SVHC."
+            )
 
         # Użyj flag ręcznych jeśli podane, w przeciwnym razie użyj auto-detekcji
         final_is_cmr = manual_is_cmr if manual_is_cmr is not None else auto_is_cmr
@@ -217,7 +227,11 @@ def add_manual_substance(location_id):
         
         db.session.commit()
         current_app.logger.info(f"Dodano ręcznie: '{name}' do lokacji ID {location_id}")
-        return jsonify({'status': 'success', 'message': f'Dodano ręcznie "{name}" do "{location.name}".'})
+        message = f'Dodano ręcznie "{name}" do "{location.name}".'
+        if svhc_unverified:
+            # Użytkownik musi wiedzieć, że statusu SVHC nie potwierdzono automatycznie.
+            message += ' UWAGA: nie udało się sprawdzić listy SVHC — zweryfikuj status ręcznie.'
+        return jsonify({'status': 'success', 'message': message, 'svhc_verified': not svhc_unverified})
     except Exception as e:
         return handle_exception(e, "dodawania ręcznego substancji", None)
 
@@ -560,7 +574,9 @@ def copy_substances():
                     scl_mfactor=sub_original.scl_mfactor,
                     physical_location=sub_original.physical_location, # Kopiowanie lokalizacji fizycznej
                     is_cmr=sub_original.is_cmr,  # DODANE: Kopiowanie flagi CMR
-                    is_svhc=sub_original.is_svhc  # DODANE: Kopiowanie flagi SVHC
+                    is_svhc=sub_original.is_svhc,  # DODANE: Kopiowanie flagi SVHC
+                    contains_cmr=sub_original.contains_cmr,  # Flaga mieszaniny zawierającej CMR
+                    contains_svhc=sub_original.contains_svhc  # Flaga mieszaniny zawierającej SVHC
                 )
                 db.session.add(new_substance)
                 copied_count += 1

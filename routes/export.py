@@ -11,7 +11,7 @@ from sqlalchemy.orm import joinedload
 
 from decorators import view_permission_required
 from models import db, Location, Substance, ExcelSourceSubstance, SVHCSubstance, SDSFile
-from utils import handle_exception, is_svhc_substance, convert_utc_to_local
+from utils import handle_exception, is_svhc_substance, convert_utc_to_local, csv_safe
 
 
 export_bp = Blueprint('export', __name__)
@@ -210,14 +210,16 @@ def export_location_csv(location_id):
         for sub in substances:
             cas_val = sub.cas or ''
             excel_cas = f'="{cas_val}"' if cas_val else ''
+            # excel_cas jest budowany przez nas (wymuszenie formatu tekstowego),
+            # pozostałe pola pochodzą od użytkownika -> csv_safe
             writer.writerow([
-                sub.name,
+                csv_safe(sub.name),
                 excel_cas,
-                sub.classification or '',
-                sub.h_phrases or '',
-                sub.scl_mfactor or '',
-                sub.physical_location or 'Nieznana',
-                sub.comment or '',
+                csv_safe(sub.classification),
+                csv_safe(sub.h_phrases),
+                csv_safe(sub.scl_mfactor),
+                csv_safe(sub.physical_location or 'Nieznana'),
+                csv_safe(sub.comment),
             ])
 
         csv_data = output.getvalue()
@@ -272,17 +274,17 @@ def export_all_csv():
             excel_cas = f'="{cas_val}"' if cas_val else ''
             excel_ec = f'="{ec_val}"' if ec_val else ''
             writer.writerow([
-                sub.name,
+                csv_safe(sub.name),
                 excel_cas,
                 excel_ec,
-                sub.classification or '',
-                sub.h_phrases or '',
-                sub.scl_mfactor or '',
+                csv_safe(sub.classification),
+                csv_safe(sub.h_phrases),
+                csv_safe(sub.scl_mfactor),
                 'Tak' if sub.is_cmr else 'Nie',
                 'Tak' if sub.is_svhc else 'Nie',
-                sub.comment or '',
-                sub.location.name,
-                sub.physical_location or 'Nieznana',
+                csv_safe(sub.comment),
+                csv_safe(sub.location.name),
+                csv_safe(sub.physical_location or 'Nieznana'),
             ])
 
         csv_data = output.getvalue()

@@ -40,10 +40,15 @@ class TestSVHCDetection:
         assert result is not None
 
     def test_cas_without_dashes(self, svhc_test_data):
-        """Test CAS number matching without dashes."""
-        # The function should handle CAS with or without dashes
+        """A dash-less CAS is not matched against dashed records in the DB.
+
+        is_svhc_substance() strips separators from the *query*, not from the
+        stored value, so '7439921' cannot match a stored '7439-92-1'. Asserting
+        the real behaviour keeps this honest; if lookup is ever made
+        separator-insensitive on both sides, this test should flip to a match.
+        """
         result = is_svhc_substance(cas='7439921')  # Lead without dashes
-        assert result is not None or result is None  # Depends on implementation
+        assert result is None
 
     def test_invalid_cas_returns_none(self, svhc_test_data):
         """Test that invalid CAS number returns None."""
