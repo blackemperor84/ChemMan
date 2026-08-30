@@ -42,6 +42,41 @@ sys.exit(1)
 PYWAIT
 fi
 
+# --- 1b. Czekanie na Redis -------------------------------------------------
+# Nieosiagalny Redis nie psuje startu aplikacji, tylko kazde zapytanie objete
+# limitem — flask-limiter zwraca wtedy 500, takze na /login. Lepiej zatrzymac
+# sie tutaj z czytelnym komunikatem niz wystawic aplikacje, ktora nie pozwala
+# sie zalogowac.
+case "${RATELIMIT_STORAGE_URL:-}" in
+  redis://*|rediss://*)
+    echo "[entrypoint] Czekam na Redis..."
+    python <<'PYREDIS'
+import os, sys, time
+import redis
+
+url = os.environ['RATELIMIT_STORAGE_URL']
+deadline = time.time() + float(os.environ.get('REDIS_WAIT_SECONDS', '30'))
+last = None
+while time.time() < deadline:
+    try:
+        redis.Redis.from_url(url, socket_connect_timeout=3).ping()
+        print('[entrypoint] Redis odpowiada.')
+        sys.exit(0)
+    except Exception as exc:
+        last = exc
+        time.sleep(2)
+
+print('[entrypoint] BLAD: Redis (%s) nie odpowiada: %s' % (url, last), file=sys.stderr)
+print('[entrypoint] Ustaw RATELIMIT_STORAGE_URL=memory:// albo uruchom Redisa.',
+      file=sys.stderr)
+sys.exit(1)
+PYREDIS
+    ;;
+  *)
+    echo "[entrypoint] RATELIMIT_STORAGE_URL=${RATELIMIT_STORAGE_URL:-<puste>} — pomijam sprawdzenie Redisa."
+    ;;
+esac
+
 # --- 2. Migracje -----------------------------------------------------------
 # Pusta baza zostanie zbudowana od migracji bazowej `chemman_baseline`.
 # UWAGA: baza zbudowana wczesniej przez db.create_all() NIE ma tabeli

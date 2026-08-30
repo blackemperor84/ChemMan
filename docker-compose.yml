@@ -4,12 +4,19 @@
 #   2. uzupelnij SECRET_KEY, POSTGRES_PASSWORD i CHEM_MAN_ADMIN_PASSWORD
 #   3. docker compose up -d
 #
-# Domyslnie stawiany jest komplet: aplikacja + PostgreSQL + Redis.
+# Domyslnie stawiany jest komplet: aplikacja + PostgreSQL + Redis. Decyduje o tym
+# COMPOSE_PROFILES=bundled w pliku .env (patrz .env.docker.example) — uslugi `db`
+# i `redis` naleza do profilu `bundled`.
 #
-# Masz juz wlasny serwer bazy danych?
-#   - ustaw DATABASE_URL w .env (wskazujac na swoja baze),
-#   - wystartuj wylacznie aplikacje:  docker compose up -d app
-# Uslugi `db` i `redis` nie zostana wtedy uruchomione.
+# Masz juz wlasne serwery bazy i Redisa?
+#   1. usun (lub zakomentuj) COMPOSE_PROFILES w .env,
+#   2. ustaw DATABASE_URL **oraz** RATELIMIT_STORAGE_URL,
+#   3. `docker compose up -d`
+# Wtedy startuje wylacznie kontener aplikacji.
+#
+# UWAGA: RATELIMIT_STORAGE_URL trzeba ustawic razem z DATABASE_URL. Gdy aplikacja
+# wskazuje na nieistniejacego Redisa, limiter zwraca 500 przy KAZDYM zapytaniu
+# objetym limitem — w tym na /login, czyli logowanie przestaje dzialac.
 
 services:
   app:
@@ -21,9 +28,9 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
+    # Brak depends_on celowo: uslugi `db`/`redis` sa w profilu `bundled` i przy
+    # zewnetrznej bazie w ogole nie istnieja, a zaleznosc wymuszalaby ich start.
+    # Na gotowosc bazy i Redisa czeka docker-entrypoint.sh.
     environment:
       FLASK_ENV: production
       SECRET_KEY: ${SECRET_KEY:?ustaw SECRET_KEY w pliku .env}
@@ -51,6 +58,8 @@ services:
 
   db:
     image: postgres:16-alpine
+    # Startuje tylko z profilem `bundled` (COMPOSE_PROFILES=bundled w .env).
+    profiles: ["bundled"]
     restart: unless-stopped
     environment:
       POSTGRES_DB: chemman
@@ -61,7 +70,7 @@ services:
     volumes:
       - chemman_pgdata:/var/lib/postgresql/data
     healthcheck:
-      # Aplikacja czeka na ten stan (depends_on: condition: service_healthy).
+      # Informacyjnie dla `docker compose ps`; na gotowosc bazy czeka entrypoint.
       test: ["CMD-SHELL", "pg_isready -U chemman -d chemman"]
       interval: 10s
       timeout: 5s
@@ -71,6 +80,8 @@ services:
 
   redis:
     image: redis:7-alpine
+    # Startuje tylko z profilem `bundled` (COMPOSE_PROFILES=bundled w .env).
+    profiles: ["bundled"]
     restart: unless-stopped
     # Bez trwalego zapisu: to tylko liczniki limitow zapytan, ich utrata
     # przy restarcie jest nieszkodliwa.
