@@ -1,6 +1,6 @@
 # ChemMan - Wersja Demo (Standalone)
 
-**Wersja:** 2.3.1 Demo
+**Wersja:** 2.4.0 Demo
 **Data:** 2026-08-16
 **Cel:** Prezentacja/demonstracja funkcjonalności aplikacji
 
@@ -26,7 +26,7 @@ To jest **samodzielna wersja demonstracyjna** aplikacji ChemMan, która:
 
 Jeśli już masz spakowaną wersję demo:
 
-1. Rozpakuj folder `ChemMan_Demo_v2.3.1.zip`
+1. Rozpakuj folder `ChemMan_Demo_v2.4.0.zip`
 2. Wejdź do folderu `ChemMan_Demo`
 3. Kliknij dwukrotnie `START_CHEMMAN_DEMO.bat`
 4. Poczekaj aż otworzy się przeglądarka
