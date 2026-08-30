@@ -6,6 +6,61 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
+## [Nieopublikowane]
+
+### 🔒 Wzmocnienie bezpieczeństwa (audyt zewnętrzny)
+
+Realizacja zaleceń audytu bezpieczeństwa, w partiach 1-5. Wszystkie 330 testów przechodzi.
+
+#### 🛡️ Bezpieczeństwo
+
+**Partie 1-3 (commit `e48b3cb`):**
+- Trwały XSS: nowy filtr Jinja `nl2br` (escapuje, a dopiero potem łączy linie);
+  usunięto wszystkie 8 wystąpień `|replace(...)|safe` z szablonów oraz trzy
+  zduplikowane implementacje toastów w JS.
+- Kontrola dostępu: `routes/files.py` nie sprawdzał komórki organizacyjnej —
+  dodano `can_modify_organizational_unit` w `upload_sds` i `delete_sds`.
+  Trasa przenoszenia waliduje teraz również komórkę źródłową.
+- Konfiguracja produkcyjna: `create_app()` wybiera konfigurację na podstawie
+  `FLASK_ENV` (`resolve_config()`), dodano `wsgi.py`. `SESSION_COOKIE_SECURE`
+  jest wreszcie `True` w produkcji.
+- Hasła administratora: usunięto wbudowane hasła awaryjne; logika w
+  `utils/admin_password.py`, ujednolicona zmienna `CHEM_MAN_ADMIN_PASSWORD`.
+- Atomowość importu: DELETE+INSERT w jednej transakcji, zabezpieczenie przed
+  pustym zbiorem danych.
+- Migracje: nowa migracja bazowa `chemman_baseline` (5 tabel nigdy nie było
+  w łańcuchu) oraz `widen_ref_text` (kolumny `Text` zamiast `VARCHAR`, co
+  psułoby import CLP/SVHC na PostgreSQL).
+
+**Partia 4:**
+- Wykrywanie CMR uwzględnia pole `classification`, a nie tylko zwroty H.
+  Rekord z „Carc. 1B" i pustymi zwrotami H nie był wcześniej oznaczany jako CMR.
+  Zakres pozostaje bez zmian: wyłącznie kategoria 1A/1B, zgodnie z polskim
+  rejestrem czynników rakotwórczych lub mutagennych (kategoria 2 celowo poza).
+- Nieudana weryfikacja SVHC nie jest już nieodróżnialna od „nie znaleziono".
+  Nowe `check_svhc_substance()` zwraca status `found` / `not_found` / `unknown`;
+  przy `unknown` ścieżki zapisu logują błąd, a dodawanie ręczne ostrzega
+  użytkownika w komunikacie zwrotnym.
+- Kopiowanie substancji zachowuje flagi `contains_cmr` / `contains_svhc`
+  (mieszaniny zawierające CMR/SVHC traciły dotąd te oznaczenia).
+- Open redirect: parametr `?next=` przy logowaniu jest walidowany
+  (`is_safe_redirect_url()`) — wcześniej pozwalał przekierować na obcą domenę.
+- Wstrzyknięcie formuł do CSV: komórki zaczynające się od `=`, `+`, `-`, `@`,
+  tabulatora lub CR są neutralizowane (`csv_safe()`) w eksporcie substancji
+  i dziennika audytu. Celowe komórki `="..."` (format tekstowy CAS/WE) bez zmian.
+
+**Partia 5:**
+- `limiter.py` czyta `RATELIMIT_STORAGE_URL` zamiast wymuszać `memory://`.
+- `limiter.init_app()` wywoływane po wczytaniu konfiguracji (wcześniej ustawienia
+  `RATELIMIT_*` były czytane, zanim aplikacja je znała).
+- Opcjonalny `ProxyFix` sterowany zmienną `TRUSTED_PROXY_COUNT` — za odwrotnym
+  proxy wszyscy klienci dzielili dotąd jeden limit zapytań.
+- Usunięto zawsze prawdziwą asercję w `tests/test_svhc_detection.py`.
+- Higiena repozytorium: `instance/chem_man.db`, załączony PDF karty SDS oraz trzy
+  pliki `.pyc` przestały być śledzone przez Git (pliki pozostają na dysku).
+
+---
+
 ## [2.3.1] - 2026-08-16
 
 ### 🛠️ Wzmocnienie Importu, Poprawki i Porządki - Patch Release

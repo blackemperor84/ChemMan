@@ -1,5 +1,7 @@
+import re
 from datetime import datetime, timezone
-from typing import Optional, Any, Callable, List
+from typing import Optional, Any, Callable, List, NamedTuple
+from urllib.parse import urljoin, urlparse
 import pytz
 from flask import current_app, flash, redirect, jsonify, request
 from flask_login import current_user
@@ -156,48 +158,82 @@ def validate_json_data(required_fields: List[str]) -> Callable:
         return wrapped
     return decorator
 
-def is_cmr_substance(h_phrases: Optional[str]) -> bool:
-    """
-    Sprawdza, czy substancja jest klasyfikowana jako CMR na podstawie zwrotów H.
-    CMR to substancje: Carcinogenic (rakotwórcze), Mutagenic (mutagenne), Reprotoxic (działające szkodliwie na rozrodczość).
+# Zwroty H odpowiadające kategorii 1A/1B (polski rejestr czynników rakotwórczych
+# lub mutagennych obejmuje wyłącznie kategorię 1A/1B — H341/H351/H361 to kategoria 2
+# i celowo NIE są tu uwzględnione).
+CMR_H_PHRASES = ('h340', 'h350', 'h360')
 
-    Sprawdza obecność następujących zwrotów H:
-    - H340: Może powodować wady genetyczne (mutagenne)
-    - H350: Może powodować raka (rakotwórcze)
-    - H360: Może działać szkodliwie na płodność lub dziecko w łonie matki (reprotoksyczne)
+# Klasyfikacja tekstowa CLP w kategorii 1A/1B, np. "Carc. 1B", "Muta. 1A", "Repr. 1B".
+# Kategoria 2 ("Carc. 2") celowo nie pasuje do tego wzorca.
+_CMR_CLASSIFICATION_RE = re.compile(r'\b(?:carc|muta|repr)\.?\s*1\s*[ab]\b', re.IGNORECASE)
+
+# Zwroty H z dodatkowymi literami, np. H360FD, H350i.
+_CMR_H_PHRASE_RE = re.compile('|'.join(f'{p}[a-z]*' for p in CMR_H_PHRASES), re.IGNORECASE)
+
+
+def is_cmr_substance(h_phrases: Optional[str], classification: Optional[str] = None) -> bool:
+    """
+    Sprawdza, czy substancja jest klasyfikowana jako CMR (kategoria 1A/1B).
+
+    CMR to substancje: Carcinogenic (rakotwórcze), Mutagenic (mutagenne),
+    Reprotoxic (działające szkodliwie na rozrodczość).
+
+    Sprawdzane są dwa źródła, ponieważ karty charakterystyki bywają niekompletne
+    — zdarzają się rekordy z klasyfikacją "Carc. 1B" i pustym polem zwrotów H:
+
+    1. Zwroty H:
+       - H340: Może powodować wady genetyczne (mutagenne)
+       - H350: Może powodować raka (rakotwórcze)
+       - H360: Może działać szkodliwie na płodność lub dziecko w łonie matki
+    2. Klasyfikacja tekstowa CLP w kategorii 1A/1B, np. "Carc. 1B", "Muta. 1A".
+
+    Kategoria 2 (H341/H351/H361, "Carc. 2") NIE jest traktowana jako CMR — polski
+    rejestr czynników rakotwórczych lub mutagennych obejmuje tylko kategorię 1A/1B.
 
     Args:
         h_phrases: String zawierający zwroty H (może być None)
+        classification: String z klasyfikacją CLP (może być None)
 
     Returns:
         bool: True jeśli substancja jest CMR, False w przeciwnym razie
     """
-    if not h_phrases:
-        return False
-        
-    # Konwertuj na string i zamień na małe litery dla spójności
-    h_phrases_lower = str(h_phrases).lower()
-    
-    # Lista głównych zwrotów CMR
-    cmr_phrases = ['h340', 'h350', 'h360']
-    
-    # Sprawdź, czy którykolwiek ze zwrotów CMR występuje w h_phrases
-    for phrase in cmr_phrases:
-        if phrase in h_phrases_lower:
-            return True
-            
-    # Sprawdź przypadki z dodatkowymi literami (H340A, H350i, itp.)
-    for phrase in cmr_phrases:
-        # Użyj regex, aby znaleźć zwroty z dodatkowymi literami
-        import re
-        pattern = re.compile(f"{phrase}[a-z]", re.IGNORECASE)
-        if pattern.search(h_phrases_lower):
-            return True
-            
+    if h_phrases and _CMR_H_PHRASE_RE.search(str(h_phrases)):
+        return True
+
+    if classification and _CMR_CLASSIFICATION_RE.search(str(classification)):
+        return True
+
     return False
 
 
-def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None, name: Optional[str] = None) -> Optional[str]:
+SVHC_FOUND = 'found'
+SVHC_NOT_FOUND = 'not_found'
+SVHC_UNKNOWN = 'unknown'
+
+
+class SVHCResult(NamedTuple):
+    """Wynik sprawdzenia listy SVHC.
+
+    Rozróżnia "nie znaleziono na liście" od "nie udało się zweryfikować"
+    (np. błąd bazy danych) — wcześniej oba przypadki zwracały None, przez co
+    substancja mogła zostać cicho zapisana jako nie-SVHC mimo nieudanej weryfikacji.
+    """
+
+    status: str
+    reason: Optional[str]
+
+    @property
+    def is_svhc(self) -> bool:
+        """True tylko przy potwierdzonym trafieniu na liście SVHC."""
+        return self.status == SVHC_FOUND
+
+    @property
+    def verified(self) -> bool:
+        """False, jeśli weryfikacja się nie powiodła i wynik jest niewiarygodny."""
+        return self.status != SVHC_UNKNOWN
+
+
+def check_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None, name: Optional[str] = None) -> 'SVHCResult':
     """
     Sprawdza, czy substancja jest na liście SVHC (Substance of Very High Concern) i zwraca powód, jeśli tak.
 
@@ -214,12 +250,12 @@ def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None
         name: Nazwa substancji (opcjonalna)
 
     Returns:
-        Optional[str]: Powód włączenia na listę SVHC jako string, lub None jeśli nie znaleziono.
+        SVHCResult: status weryfikacji (found / not_found / unknown) oraz powód.
     """
     try:
         if not cas and not ec_number and not name:
             # current_app.logger.warning("Brak danych do sprawdzenia SVHC") # Można odkomentować dla debugowania
-            return None
+            return SVHCResult(SVHC_NOT_FOUND, None)
 
         query_filters = []
         if cas:
@@ -246,18 +282,86 @@ def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None
                  query_filters.append(SVHCSubstance.name.ilike(f"%{name}%"))
 
         if not query_filters:
-            return None
+            return SVHCResult(SVHC_NOT_FOUND, None)
 
         # Szukamy pasującego rekordu SVHC
         svhc_record = SVHCSubstance.query.filter(or_(*query_filters)).first()
 
         if svhc_record:
             # current_app.logger.info(f"Znaleziono SVHC: {svhc_record.name}. Powód: {svhc_record.reason}")
-            return svhc_record.reason or "Brak informacji o powodzie w bazie danych" # <--- KLUCZOWE: Zwraca powód
+            return SVHCResult(SVHC_FOUND, svhc_record.reason or "Brak informacji o powodzie w bazie danych")
         else:
             # current_app.logger.debug(f"Nie znaleziono SVHC dla: CAS={cas}, EC={ec_number}, Name={name}")
-            return None
+            return SVHCResult(SVHC_NOT_FOUND, None)
 
     except Exception as e:
         current_app.logger.exception(f"Błąd podczas sprawdzania SVHC: {e}")
-        return None # W razie błędu zwracamy None
+        # Weryfikacja się nie powiodła — to NIE jest to samo co "nie znaleziono".
+        return SVHCResult(SVHC_UNKNOWN, None)
+
+
+def is_svhc_substance(cas: Optional[str] = None, ec_number: Optional[str] = None, name: Optional[str] = None) -> Optional[str]:
+    """
+    Zwraca powód włączenia na listę SVHC albo None.
+
+    Cienka nakładka na check_svhc_substance() zachowana dla zgodności z kodem
+    wyświetlającym. UWAGA: None oznacza tu zarówno "nie znaleziono", jak i
+    "weryfikacja nieudana". W ścieżkach zapisu używaj check_svhc_substance(),
+    aby rozróżnić te przypadki.
+    """
+    return check_svhc_substance(cas=cas, ec_number=ec_number, name=name).reason
+
+
+def is_safe_redirect_url(target: Optional[str]) -> bool:
+    """
+    Sprawdza, czy adres przekierowania wskazuje na tę samą aplikację.
+
+    Chroni przed open redirect: parametr ?next= pochodzi od użytkownika i bez
+    walidacji pozwalałby przekierować zalogowaną osobę na obcą domenę
+    (np. na podrobioną stronę logowania).
+
+    Args:
+        target: Adres do sprawdzenia (może być None)
+
+    Returns:
+        bool: True jeśli adres jest lokalny i bezpieczny
+    """
+    if not target:
+        return False
+
+    # "//evil.com" i "\evil.com" są traktowane przez przeglądarki jak adres
+    # bezwzględny, a urlparse nie zawsze je tak widzi — odrzucamy je wprost.
+    if target.startswith('//') or target.startswith(chr(92)):
+        return False
+
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+
+def csv_safe(value: Any) -> str:
+    """
+    Neutralizuje wstrzyknięcie formuły w eksporcie CSV.
+
+    Excel/LibreOffice traktują komórkę zaczynającą się od '=', '+', '-', '@'
+    (a także tabulatora lub CR) jak formułę, więc dane wpisane przez użytkownika
+    mogłyby wykonać kod po otwarciu pliku. Poprzedzamy taką komórkę apostrofem.
+
+    Nie używaj tej funkcji do celowo tworzonych komórek typu ="0012-34-5",
+    które wymuszają tekstowy format numerów CAS/WE.
+
+    Args:
+        value: Wartość komórki (dowolny typ, None -> pusty string)
+
+    Returns:
+        str: Bezpieczna zawartość komórki
+    """
+    if value is None:
+        return ''
+
+    text = str(value)
+    if text and text[0] in ('=', '+', '-', '@', chr(9), chr(13)):
+        return "'" + text
+
+    return text

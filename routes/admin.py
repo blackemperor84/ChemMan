@@ -6,7 +6,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from models import db, User, AuditLog, Location
-from utils import log_action, handle_exception
+from utils import log_action, handle_exception, csv_safe
 from utils.database_import import (
     validate_excel_mime_type,
     allowed_excel_file,
@@ -323,11 +323,11 @@ def export_changelog_csv():
                 log.id,
                 log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '',
                 convert_utc_to_local(log.timestamp) if log.timestamp else '',
-                log.username or 'System',
-                log.action,
-                log.target_type or '',
+                csv_safe(log.username or 'System'),
+                csv_safe(log.action),
+                csv_safe(log.target_type),
                 log.target_id or '',
-                log.details or ''
+                csv_safe(log.details)
             ])
             
         # Finalizacja i przygotowanie odpowiedzi
