@@ -6,6 +6,7 @@ Kompletny przewodnik wdrażania aplikacji do zarządzania substancjami chemiczny
 
 ## Spis Treści
 
+0. [Wdrożenie przez Docker (zalecane)](#wdrozenie-przez-docker-zalecane)
 1. [Wymagania Wstępne](#wymagania-wstępne)
 2. [Konfiguracja Serwera](#konfiguracja-serwera)
 3. [Instalacja Bazy Danych (PostgreSQL)](#instalacja-bazy-danych-postgresql)
@@ -18,6 +19,111 @@ Kompletny przewodnik wdrażania aplikacji do zarządzania substancjami chemiczny
 10. [Strategia Backupu](#strategia-backupu)
 11. [Monitoring i Utrzymanie](#monitoring-i-utrzymanie)
 12. [Rozwiązywanie Problemów](#rozwiązywanie-problemów)
+
+---
+
+## Wdrozenie przez Docker (zalecane)
+
+Najszybsza sciezka wdrozenia. Serwer nie kompiluje niczego — pobiera gotowy obraz
+z GitHub Container Registry. Rozdzialy 2-7 ponizej opisuja instalacje reczna
+(bez Dockera) i przy tym wariancie mozna je pominac; nadal potrzebne sa
+[reverse proxy](#konfiguracja-reverse-proxy), [SSL/TLS](#konfiguracja-ssltls)
+i [backup](#strategia-backupu).
+
+### Wymagania
+
+- Docker Engine 24+ z wtyczka `docker compose`
+- ok. 2 GB RAM i 5 GB miejsca na dysku
+
+### Pierwsze uruchomienie
+
+```bash
+# 1. Pobierz pliki wdrozeniowe (wystarcza trzy)
+mkdir -p /opt/chemman && cd /opt/chemman
+curl -O https://raw.githubusercontent.com/blackemperor84/ChemMan/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/blackemperor84/ChemMan/master/.env.docker.example
+
+# 2. Przygotuj konfiguracje
+cp .env.docker.example .env
+python3 -c "import secrets; print('SECRET_KEY=' + secrets.token_hex(32))" >> .env
+nano .env          # uzupelnij POSTGRES_PASSWORD i CHEM_MAN_ADMIN_PASSWORD
+
+# 3. Start
+docker compose up -d
+
+# 4. Sprawdz
+docker compose ps
+docker compose logs -f app
+```
+
+Aplikacja slucha na `127.0.0.1:8000`. Skieruj na nia nginx z TLS —
+patrz [Reverse Proxy](#konfiguracja-reverse-proxy) i [SSL/TLS](#konfiguracja-ssltls).
+
+> **Bez HTTPS nie zalogujesz sie.** W konfiguracji produkcyjnej
+> `SESSION_COOKIE_SECURE=True`, wiec przegladarka nie odesle ciasteczka sesji
+> po zwyklym HTTP.
+
+Migracje bazy wykonuja sie automatycznie przy starcie kontenera. Konto `admin`
+zakladane jest przy pierwszym uruchomieniu, jesli ustawiono
+`CHEM_MAN_ADMIN_PASSWORD`. **Po pierwszym zalogowaniu usun te zmienna z `.env`.**
+
+### Aktualizacja
+
+```bash
+cd /opt/chemman
+docker compose pull        # pobiera nowy obraz
+docker compose up -d       # restart; migracje wykonaja sie same
+```
+
+Zrob backup bazy przed aktualizacja — patrz [Strategia Backupu](#strategia-backupu).
+Aby przypiac konkretna wersje zamiast `latest`, ustaw w `docker-compose.yml`
+`image: ghcr.io/blackemperor84/chemman:v2.4.1`.
+
+### Zewnetrzna baza danych
+
+Masz juz serwer PostgreSQL? Ustaw w `.env`:
+
+```
+DATABASE_URL=postgresql://uzytkownik:haslo@host:5432/chemman
+```
+
+i uruchom wylacznie aplikacje — kontenery `db` i `redis` nie wystartuja:
+
+```bash
+docker compose up -d app
+```
+
+> **Baza zbudowana wczesniej przez `db.create_all()`** nie ma tabeli
+> `alembic_version` i automatyczna migracja na niej padnie
+> (`table locations already exists`). Trzeba ja raz oznaczyc `flask db stamp` —
+> procedura w sekcji *Migracje bazy danych* w `MAINTENANCE.md`. Do czasu
+> oznaczenia startuj z `RUN_MIGRATIONS=0`.
+
+### Dane trwale
+
+Trzy wolumeny Dockera przezywaja aktualizacje obrazu:
+
+| Wolumen | Zawartosc |
+|---|---|
+| `chemman_pgdata` | baza PostgreSQL |
+| `chemman_uploads` | zalaczniki (karty SDS) |
+| `chemman_logs` | logi aplikacji |
+
+Backup bazy z dzialajacego zestawu:
+
+```bash
+docker compose exec -T db pg_dump -U chemman chemman > backup_$(date +%F).sql
+```
+
+### Przydatne polecenia
+
+```bash
+docker compose logs -f app                      # logi aplikacji
+docker compose restart app                      # restart samej aplikacji
+docker compose exec app flask db current        # aktualna rewizja bazy
+docker compose exec app python update_admin_password.py   # zmiana hasla admina
+docker compose down                             # zatrzymanie (wolumeny zostaja)
+```
 
 ---
 
@@ -296,13 +402,29 @@ Użytkownicy: 1
 
 ### Opcja 1: Gunicorn (Linux - Zalecane)
 
-#### 1. Instalacja Gunicorn
+#### 1. Instalacja zaleznosci produkcyjnych
 
 ```bash
-pip install gunicorn
+pip install -r requirements-prod.txt
 ```
 
-#### 2. Utworzenie Konfiguracji Gunicorn
+Plik `requirements-prod.txt` zaciaga cale `requirements.txt` oraz dwie zaleznosci
+potrzebne wylacznie na serwerze: `gunicorn` i `redis` (klient dla
+`RATELIMIT_STORAGE_URL`). Sa trzymane osobno, bo gunicorn nie dziala na Windows,
+a srodowisko deweloperskie tego projektu jest windowsowe.
+
+> **Nie instaluj gunicorna recznie** (`pip install gunicorn`). Wersja bylaby
+> nieprzypieta i nieodtwarzalna. Uwaga takze na `redis`: `flask-limiter`
+> wymaga `redis<7.0.0`, dlatego wersja jest przypieta w pliku.
+
+#### 2. Konfiguracja Gunicorn
+
+Repozytorium zawiera gotowy `gunicorn_config.py` w katalogu glownym — ponizszy
+listing opisuje jego zawartosc i mozna go uzyc bez zmian. Wartosci sterowane sa
+zmiennymi srodowiskowymi (`GUNICORN_WORKERS`, `GUNICORN_BIND`, `GUNICORN_TIMEOUT`).
+
+<details>
+<summary>Alternatywnie: wlasny plik konfiguracyjny</summary>
 
 Utwórz plik `gunicorn_config.py`:
 
@@ -325,6 +447,7 @@ limit_request_line = 4096
 limit_request_fields = 100
 limit_request_field_size = 8190
 ```
+</details>
 
 > **WAŻNE - punkt wejścia WSGI**
 >

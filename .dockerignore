@@ -1,0 +1,42 @@
+# Srodowiska i artefakty budowania — nigdy nie moga trafic do obrazu.
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Pakiet demo: ~175 MB gotowych zipow i rozpakowanych buildow.
+DEMO/dist/
+DEMO/build/
+DEMO/*.db
+
+# Lokalne dane instancji. Zalaczniki SDS i baza montowane sa jako wolumeny,
+# a skopiowanie ich do obrazu nadpisaloby dane produkcyjne przy aktualizacji.
+instance/
+logs/
+*.db
+*.sqlite3
+
+# Sekrety. .env montuje sie/podaje przez compose, nie wbudowuje w obraz.
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# Repozytorium i narzedzia
+.git/
+.github/
+.gitignore
+.claude/
+
+# Testy i dokumentacja nie sa potrzebne w obrazie uruchomieniowym.
+tests/
+checks/
+*.md
+!readme.md
+
+# Zrodlowe pliki Excel (kilkaset kB) — importowane przez UI, nie potrzebne w obrazie.
+svhc_old.xlsx

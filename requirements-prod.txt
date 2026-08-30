@@ -1,0 +1,17 @@
+# Zaleznosci potrzebne wylacznie na serwerze produkcyjnym.
+# Instalacja:  pip install -r requirements-prod.txt
+# (plik zaciaga takze pelne requirements.txt)
+#
+# Trzymane osobno, bo gunicorn nie dziala na Windows (brak modulu fcntl),
+# a srodowisko deweloperskie tego projektu jest windowsowe.
+
+-r requirements.txt
+
+# Serwer WSGI. NIE uruchamiaj produkcji przez `python app.py` — to serwer
+# deweloperski Werkzeuga, jednowatkowy i bez zabezpieczen.
+gunicorn==23.0.0
+
+# Klient Redis dla wspoldzielonego magazynu limitow (RATELIMIT_STORAGE_URL).
+# UWAGA: limits 5.x (zaleznosc flask-limiter) deklaruje `redis<7.0.0`,
+# wiec NIE podnos tego do 7.x/8.x bez sprawdzenia flask-limiter.
+redis==6.4.0

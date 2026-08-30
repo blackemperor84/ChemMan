@@ -1,0 +1,27 @@
+# Domyslnie git sam wykrywa pliki tekstowe i normalizuje konce linii w repo do LF.
+* text=auto
+
+# Pliki, ktore MUSZA miec LF niezaleznie od systemu autora.
+# Skrypt powloki z CRLF zabija kontener bledem "bad interpreter: /bin/sh^M",
+# bo jadro Linuksa doklada \r do sciezki interpretera z shebanga.
+*.sh            text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+.dockerignore   text eol=lf
+.env.example    text eol=lf
+.env.docker.example text eol=lf
+
+# Pliki wsadowe Windows wymagaja CRLF.
+*.bat           text eol=crlf
+
+# Pliki binarne - bez zadnej konwersji.
+*.db            binary
+*.xlsx          binary
+*.pdf           binary
+*.png           binary
+*.jpg           binary
+*.ico           binary
+*.zip           binary
+*.exe           binary
