@@ -3,7 +3,7 @@ REM Build ChemMan Demo Package for Windows
 REM This script creates a standalone executable package
 
 echo ============================================================
-echo   ChemMan v2.3.0 - Building Demo Package
+echo   ChemMan v2.4.0 - Building Demo Package
 echo ============================================================
 echo.
 
@@ -56,7 +56,7 @@ echo [5/5] Creating startup script...
 (
 echo @echo off
 echo echo ============================================================
-echo echo   ChemMan v2.3.0 - Demo Version
+echo echo   ChemMan v2.4.0 - Demo Version
 echo echo ============================================================
 echo echo.
 echo echo Starting ChemMan Demo...
