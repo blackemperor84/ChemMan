@@ -95,6 +95,9 @@ def upload_sds(substance_id):
 
     # Jeśli wszystkie walidacje przeszły - zapisz plik
     if file:
+        # Plik trafia na dysk przed commitem, wiec przy bledzie zapisu do bazy
+        # trzeba go skasowac — inaczej zostaje osierocony plik bez wpisu w DB.
+        unique_filename = None
         try:
             # Użyj menedżera plików do zapisania pliku (nie usuwamy starych - obsługujemy wiele)
             unique_filename = FileManager.save_sds_file(file, None)
@@ -137,6 +140,18 @@ def upload_sds(substance_id):
             )
 
         except Exception as e:
+            # Wycofaj transakcje, a nastepnie posprzataj plik zapisany na dysku.
+            db.session.rollback()
+            if unique_filename:
+                try:
+                    FileManager.delete_sds_file(unique_filename)
+                    current_app.logger.info(
+                        f"Wycofano zapis SDS — usunieto osierocony plik: {unique_filename}"
+                    )
+                except Exception as cleanup_error:
+                    current_app.logger.exception(
+                        f"Nie udalo sie usunac osieroconego pliku {unique_filename}: {cleanup_error}"
+                    )
             return handle_exception(e, "zapisywania pliku SDS",
                                    url_for('locations.view_location', location_id=substance.location_id))
 
@@ -196,26 +211,38 @@ def delete_sds(substance_id, sds_file_id):
     original_filename = sds_file.original_filename
 
     try:
-        # Krok 1: Użyj FileManager do usunięcia pliku
-        file_deleted = FileManager.delete_sds_file(filename_to_delete)
+        # Kolejnosc ma znaczenie: najpierw baza, potem dysk. Gdyby plik znikal
+        # pierwszy, a commit sie nie powiodl, w bazie zostalby wpis wskazujacy
+        # na nieistniejacy plik. Osierocony plik po nieudanym kasowaniu z dysku
+        # jest znacznie mniej szkodliwy niz martwy odnosnik w interfejsie.
 
-        # Krok 2: Zaktualizuj datę ostatniej modyfikacji lokalizacji
+        # Krok 1: Zaktualizuj datę ostatniej modyfikacji lokalizacji
         location = db.session.get(Location, substance.location_id)
         if location:
             location.last_modified = utcnow()
         else:
             current_app.logger.warning(f"Nie znaleziono lokalizacji ID: {substance.location_id} podczas usuwania SDS dla substancji ID: {substance.id}")
 
-        # Krok 3: Usuń wpis z bazy danych
+        # Krok 2: Usuń wpis z bazy danych
         db.session.delete(sds_file)
+        db.session.flush()
 
-        # Krok 4: Jeśli to był jedyny plik, wyczyść stare pola w substance
+        # Krok 3: Jeśli to był jedyny plik, wyczyść stare pola w substance
         remaining_files = SDSFile.query.filter_by(substance_id=substance_id).count()
         if remaining_files == 0:
             substance.sds_filename = None
             substance.sds_upload_timestamp = None
 
         db.session.commit()
+
+        # Krok 4: Dopiero teraz usun plik z dysku
+        try:
+            FileManager.delete_sds_file(filename_to_delete)
+        except Exception as file_error:
+            current_app.logger.exception(
+                f"Wpis SDS usuniety z bazy, ale nie udalo sie skasowac pliku "
+                f"{filename_to_delete}: {file_error}"
+            )
 
         # Krok 5: Zapisz log akcji
         try:

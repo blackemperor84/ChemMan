@@ -5,6 +5,7 @@ from functools import wraps
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 
+from decorators import update_databases_permission_required
 from models import db, User, AuditLog, Location
 from utils import log_action, handle_exception, csv_safe
 from utils.database_import import (
@@ -363,7 +364,7 @@ def export_changelog_csv():
 #===== ZARZĄDZANIE BAZAMI DANYCH SUBSTANCJI =====
 
 @admin_bp.route('/databases')
-@admin_required
+@update_databases_permission_required
 def manage_databases():
     """Wyświetla stronę zarządzania bazami danych substancji (CLP, SVHC)."""
     try:
@@ -387,7 +388,7 @@ def manage_databases():
 
 
 @admin_bp.route('/databases/upload/clp', methods=['POST'])
-@admin_required
+@update_databases_permission_required
 def upload_clp_database():
     """Obsługuje upload i import bazy danych CLP."""
     # Sprawdź, czy plik został wysłany
@@ -448,7 +449,7 @@ def upload_clp_database():
 
 
 @admin_bp.route('/databases/upload/svhc', methods=['POST'])
-@admin_required
+@update_databases_permission_required
 def upload_svhc_database():
     """Obsługuje upload i import bazy danych SVHC."""
     # Sprawdź, czy plik został wysłany
