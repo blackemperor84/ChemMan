@@ -79,19 +79,35 @@ Zrob backup bazy przed aktualizacja — patrz [Strategia Backupu](#strategia-bac
 Aby przypiac konkretna wersje zamiast `latest`, ustaw w `docker-compose.yml`
 `image: ghcr.io/blackemperor84/chemman:v2.4.1`.
 
-### Zewnetrzna baza danych
+### Zewnetrzne uslugi (wlasny PostgreSQL / Redis)
 
-Masz juz serwer PostgreSQL? Ustaw w `.env`:
+Uslugi `db` i `redis` naleza do profilu compose `bundled`, wlaczanego wpisem
+`COMPOSE_PROFILES=bundled` w `.env`. Aby uzyc wlasnych serwerow:
+
+1. usun (lub zakomentuj) `COMPOSE_PROFILES` w `.env`,
+2. ustaw **obie** zmienne:
 
 ```
 DATABASE_URL=postgresql://uzytkownik:haslo@host:5432/chemman
+RATELIMIT_STORAGE_URL=redis://host:6379
 ```
 
-i uruchom wylacznie aplikacje — kontenery `db` i `redis` nie wystartuja:
+3. uruchom normalnie — wystartuje wylacznie kontener aplikacji:
 
 ```bash
-docker compose up -d app
+docker compose up -d
 ```
+
+> **`RATELIMIT_STORAGE_URL` jest obowiazkowe przy wlasnej bazie.** Domyslna
+> wartosc wskazuje na kontener `redis`, ktory bez profilu `bundled` nie istnieje.
+> Gdy aplikacja nie moze polaczyc sie z Redisem, `flask-limiter` zwraca **500 przy
+> kazdym zapytaniu objetym limitem — w tym na `/login`**, wiec logowanie przestaje
+> dzialac. Kontener zatrzyma sie na starcie z czytelnym komunikatem, zamiast
+> wystawiac niedzialajaca aplikacje.
+>
+> Nie masz Redisa? Ustaw `RATELIMIT_STORAGE_URL=memory://`. Dziala, ale kazdy
+> worker gunicorna trzyma wlasne liczniki, wiec przy `GUNICORN_WORKERS=3`
+> limit „10/min" zachowuje sie jak 30/min.
 
 > **Baza zbudowana wczesniej przez `db.create_all()`** nie ma tabeli
 > `alembic_version` i automatyczna migracja na niej padnie

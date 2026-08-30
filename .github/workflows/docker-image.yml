@@ -22,7 +22,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -34,6 +33,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Compute lowercase image name
+        id: img
+        # github.repository zachowuje wielkosc liter ("blackemperor84/ChemMan"),
+        # a odwolania do obrazow Dockera MUSZA byc pisane malymi literami —
+        # inaczej build konczy sie bledem
+        # "invalid reference format: repository name must be lowercase".
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,7 +58,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.img.outputs.name }}
           tags: |
             type=semver,pattern=v{{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -81,7 +88,7 @@ jobs:
             -e RATELIMIT_STORAGE_URL=memory:// \
             -e DATABASE_URL=sqlite:////tmp/smoke.db \
             -p 8000:8000 \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ steps.img.outputs.name }}:${{ steps.meta.outputs.version }}
 
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8000/login > /dev/null; then
