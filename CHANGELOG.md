@@ -6,11 +6,11 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/).
 
 ---
 
-## [Nieopublikowane]
+## [2.4.0] - 2026-08-30
 
 ### 🔒 Wzmocnienie bezpieczeństwa (audyt zewnętrzny)
 
-Realizacja zaleceń audytu bezpieczeństwa, w partiach 1-5. Wszystkie 330 testów przechodzi.
+Realizacja zaleceń audytu bezpieczeństwa, w partiach 1-6. Wszystkie 351 testów przechodzi.
 
 #### 🛡️ Bezpieczeństwo
 
@@ -58,6 +58,42 @@ Realizacja zaleceń audytu bezpieczeństwa, w partiach 1-5. Wszystkie 330 testó
 - Usunięto zawsze prawdziwą asercję w `tests/test_svhc_detection.py`.
 - Higiena repozytorium: `instance/chem_man.db`, załączony PDF karty SDS oraz trzy
   pliki `.pyc` przestały być śledzone przez Git (pliki pozostają na dysku).
+
+**Partia 6:**
+- `log_action()` przyjmuje `commit=False`. W sześciu miejscach (dodanie/usunięcie
+  substancji, utworzenie/zmiana nazwy/usunięcie lokalizacji) operacja i jej wpis
+  w dzienniku są teraz jedną transakcją — wcześniej dziennik commitował transakcję
+  wywołującego przedwcześnie, uniemożliwiając wycofanie zmian.
+- `log_action()` wykonuje `rollback()` przy błędzie zapisu. Wcześniej wyjątek był
+  połykany bez wycofania, przez co sesja zostawała w stanie błędu i wywracały się
+  kolejne zapytania wywołującego — mimo że jego własna operacja już się powiodła.
+- Upload karty SDS: przy nieudanym zapisie do bazy plik jest usuwany z dysku
+  (wcześniej zostawał osierocony, bez wpisu w bazie).
+- Usuwanie karty SDS: najpierw commit w bazie, dopiero potem kasowanie pliku.
+  Odwrotna kolejność mogła zostawić w bazie wpis wskazujący na nieistniejący plik.
+
+#### ✨ Naprawione działanie
+
+- Uprawnienie `can_update_databases` (ogłoszone w v2.3.0) wreszcie działa. Trasy
+  `/admin/databases` używały `admin_required`, więc zaznaczenie „Aktualizacja baz"
+  w panelu administratora nie dawało użytkownikowi żadnego dostępu. Teraz trasy
+  korzystają z `update_databases_permission_required` (administrator LUB
+  uprawnienie), a link „Bazy Danych" pojawia się w nawigacji uprawnionym osobom.
+  Zarządzanie użytkownikami i dziennik zmian pozostają wyłącznie dla administratora.
+
+#### ⚠️ Uwagi do aktualizacji
+
+Ta wersja zmienia sposób wdrożenia — przeczytaj przed aktualizacją:
+
+- Nowy `wsgi.py`; konfiguracja jest wybierana na podstawie `FLASK_ENV`.
+  W produkcji ustaw `FLASK_ENV=production` (patrz `DEPLOYMENT_GUIDE.md`).
+- `CHEM_MAN_ADMIN_PASSWORD` jest wymagane — wbudowane hasła awaryjne zostały
+  usunięte, więc `create_admin.py` i `update_admin_password.py` odmówią działania
+  bez tej zmiennej (lub hasła podanego interaktywnie).
+- Nowe zmienne opcjonalne: `RATELIMIT_STORAGE_URL`, `TRUSTED_PROXY_COUNT`.
+- Łańcuch migracji ma nowy korzeń. Baza zbudowana przez `db.create_all()` nie ma
+  tabeli `alembic_version` i wymaga `flask db stamp` przed `flask db upgrade` —
+  procedura opisana w sekcji *Migracje bazy danych* w `MAINTENANCE.md`.
 
 ---
 

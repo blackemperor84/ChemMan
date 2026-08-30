@@ -105,7 +105,8 @@ def add_substance_to_location(location_id):
             'ADD_SUBSTANCE',
             target_type='Substance',
             target_id=new_substance.id,
-            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if is_cmr else 'Nie'}, SVHC: {'Tak' if is_svhc else 'Nie'}, LokID: {location_id}, Źródło: Excel"
+            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if is_cmr else 'Nie'}, SVHC: {'Tak' if is_svhc else 'Nie'}, LokID: {location_id}, Źródło: Excel",
+            commit=False  # utrwala commit ponizej — substancja i log w jednej transakcji
         )
 
         db.session.commit()  # Zapisz substancję i log
@@ -222,7 +223,8 @@ def add_manual_substance(location_id):
             'ADD_SUBSTANCE',
             target_type='Substance',
             target_id=new_substance.id,
-            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if final_is_cmr else 'Nie'}, SVHC: {'Tak' if final_is_svhc else 'Nie'}, Zaw.CMR: {'Tak' if manual_contains_cmr else 'Nie'}, Zaw.SVHC: {'Tak' if manual_contains_svhc else 'Nie'}, LokID: {location_id}, Źródło: Ręczne"
+            details=f"Nazwa: {name}, CAS: {cas}, EC: {ec_number}, CMR: {'Tak' if final_is_cmr else 'Nie'}, SVHC: {'Tak' if final_is_svhc else 'Nie'}, Zaw.CMR: {'Tak' if manual_contains_cmr else 'Nie'}, Zaw.SVHC: {'Tak' if manual_contains_svhc else 'Nie'}, LokID: {location_id}, Źródło: Ręczne",
+            commit=False  # utrwala commit ponizej — substancja i log w jednej transakcji
         )
         
         db.session.commit()
@@ -269,7 +271,8 @@ def delete_substance(substance_id):
             action='DELETE_SUBSTANCE',
             target_type='Substance',
             target_id=sub_id,
-            details=f"Usunięto: '{substance_name}', Lok.: '{sub_loc_name}' (ID: {sub_loc_id})"
+            details=f"Usunięto: '{substance_name}', Lok.: '{sub_loc_name}' (ID: {sub_loc_id})",
+            commit=False  # utrwala commit ponizej — usuniecie i log w jednej transakcji
         )
 
         # Zatwierdź zmiany (usunięcie i log)

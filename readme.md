@@ -78,10 +78,44 @@ python -m pytest tests/ -v
 # Z pokryciem kodu
 python -m pytest tests/ --cov=. --cov-report=html
 
-# Oczekiwany wynik: 242 testy, 80% pokrycia
+# Oczekiwany wynik: 351 testów
 ```
 
-## Co nowego w v2.3.1? 🎉
+## Co nowego w v2.4.0? 🎉
+
+### 🔒 Wzmocnienie bezpieczeństwa (audyt zewnętrzny)
+- ✅ Naprawiono trwały XSS — nowy filtr `nl2br` escapuje treść przed zamianą
+  znaków nowej linii; usunięto wszystkie wystąpienia `|safe` z szablonów
+- ✅ Kontrola dostępu do kart SDS — upload i usuwanie sprawdzają komórkę
+  organizacyjną użytkownika (wcześniej nie sprawdzały jej wcale)
+- ✅ Konfiguracja produkcyjna wybierana na podstawie `FLASK_ENV` + nowy `wsgi.py`
+- ✅ Usunięto wbudowane hasła awaryjne administratora
+- ✅ Wykrywanie CMR uwzględnia pole klasyfikacji (np. „Carc. 1B" bez zwrotów H)
+- ✅ Nieudana weryfikacja SVHC jest odróżnialna od „nie znaleziono"
+- ✅ Kopiowanie substancji zachowuje flagi „zawiera CMR/SVHC"
+- ✅ Walidacja przekierowania `?next=` przy logowaniu (open redirect)
+- ✅ Neutralizacja wstrzyknięcia formuł w eksporcie CSV
+- ✅ Operacje na plikach SDS i bazie są spójne — brak osieroconych plików
+  i martwych odnośników przy błędzie zapisu
+- ✅ Uprawnienie `can_update_databases` wreszcie działa (patrz niżej)
+- ✅ Atomowy import baz CLP/SVHC i uzupełniony łańcuch migracji
+- ✅ Wszystkie 351 testów przechodzi
+
+### 🔑 Naprawione uprawnienie „Aktualizacja baz"
+Uprawnienie `can_update_databases`, ogłoszone w v2.3.0, nie działało — trasy
+`/admin/databases` wymagały konta administratora, więc zaznaczenie tej opcji
+nie dawało użytkownikowi żadnego dostępu. Teraz działa zgodnie z opisem:
+uprawniona osoba widzi w menu „Bazy Danych" i może importować listy CLP/SVHC,
+nie uzyskując przy tym dostępu do zarządzania użytkownikami ani dziennika zmian.
+
+> **Aktualizujesz z wcześniejszej wersji?** Ta wersja zmienia sposób wdrożenia
+> (`FLASK_ENV`, `wsgi.py`, wymagane `CHEM_MAN_ADMIN_PASSWORD`, nowy korzeń
+> migracji). Przeczytaj sekcję *Uwagi do aktualizacji* w `CHANGELOG.md`.
+
+### 📦 Poprzednie wersje
+
+<details>
+<summary>Co było nowego w v2.3.1</summary>
 
 ### 🛠️ Wzmocnienie importu, poprawki i porządki (patch)
 - ✅ Import z zachowaniem danych (merge-preserve) — ponowny import nie nadpisuje
@@ -93,8 +127,7 @@ python -m pytest tests/ --cov=. --cov-report=html
 - ✅ Refaktoryzacja eksportu (–150 linii duplikacji) i naprawa problemu N+1
 - ✅ Zaktualizowano listę SVHC do aktualnej listy kandydackiej ECHA (luty 2026)
 - ✅ Wszystkie 242 testy przechodzą
-
-### 📦 Poprzednie wersje
+</details>
 
 <details>
 <summary>Co było nowego w v2.3.0</summary>

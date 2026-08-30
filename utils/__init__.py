@@ -33,35 +33,56 @@ def allowed_file(filename: str) -> bool:
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
 
-def log_action(action: str, target_type: Optional[str] = None, target_id: Optional[int] = None, details: Optional[str] = None) -> None:
+def log_action(action: str, target_type: Optional[str] = None, target_id: Optional[int] = None,
+               details: Optional[str] = None, commit: bool = True) -> None:
     """
-    Zapisuje wpis do dziennika zmian (audit log) i commituje go.
+    Zapisuje wpis do dziennika zmian (audit log).
 
     Args:
         action: Opis wykonywanej akcji
         target_type: Typ obiektu docelowego (np. 'Substance', 'Location')
         target_id: ID obiektu docelowego
-        details: Dodatkowe szczegóły akcji
-    """
-    try:
-        user_id_log = current_user.id if current_user.is_authenticated else None
-        username_log = current_user.username if current_user.is_authenticated else 'System/Unknown'
+        details: Dodatkowe szczegoly akcji
+        commit: Gdy True (domyslnie) wpis jest commitowany od razu — tryb dla
+                wywolan PO commicie wlasciwej operacji. Gdy False, wpis jest
+                tylko dodawany do sesji i utrwala go commit wywolujacego, dzieki
+                czemu operacja i jej slad w dzienniku sa jedna transakcja.
 
-        log_entry = AuditLog(
-            timestamp=utcnow(),
-            user_id=user_id_log,
-            username=username_log,
-            action=action,
-            target_type=target_type,
-            target_id=target_id,
-            details=details
-        )
+    Raises:
+        Wyjatek zapisu jest propagowany tylko przy commit=False — wtedy transakcja
+        wywolujacego jeszcze trwa i moze zostac wycofana w calosci. Przy commit=True
+        operacja jest juz utrwalona, wiec blad dziennika jest logowany, a sesja
+        wycofana, zeby nie zatruc kolejnych zapytan wywolujacego.
+    """
+    user_id_log = current_user.id if current_user.is_authenticated else None
+    username_log = current_user.username if current_user.is_authenticated else 'System/Unknown'
+
+    log_entry = AuditLog(
+        timestamp=utcnow(),
+        user_id=user_id_log,
+        username=username_log,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        details=details
+    )
+
+    if not commit:
+        # Transakcja wywolujacego obejmuje ten wpis — blad ma sie wydostac na zewnatrz.
+        db.session.add(log_entry)
+        return
+
+    try:
         db.session.add(log_entry)
         db.session.commit()
         current_app.logger.info(f"Zapisano log: {action} przez {username_log}")
-
     except Exception as e:
-        current_app.logger.exception(f"KRYTYCZNY BŁĄD: Nie udało się zapisać wpisu do AuditLog dla akcji '{action}': {e}")
+        # Bez rollbacku sesja zostaje w stanie bledu i wywracaja sie kolejne zapytania
+        # wywolujacego — mimo ze jego wlasna operacja zostala juz zatwierdzona.
+        db.session.rollback()
+        current_app.logger.exception(
+            f"KRYTYCZNY BLAD: Nie udalo sie zapisac wpisu do AuditLog dla akcji '{action}': {e}"
+        )
 
 
 def nl2br(value: Any, separator: str = '<br>') -> Markup:

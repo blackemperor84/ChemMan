@@ -77,7 +77,8 @@ def add_location():
             'CREATE_LOCATION', 
             target_type='Location', 
             target_id=new_loc.id, 
-            details=f"Nazwa: {new_loc.name}"
+            details=f"Nazwa: {new_loc.name}",
+            commit=False  # utrwala commit ponizej — lokalizacja i log w jednej transakcji
         )
         
         db.session.commit()
@@ -242,7 +243,8 @@ def update_location_name(location_id):
             'UPDATE_LOCATION', 
             target_type='Location', 
             target_id=location_id, 
-            details=f"Zmieniono nazwę z '{old_name}' na '{new_name}'"
+            details=f"Zmieniono nazwę z '{old_name}' na '{new_name}'",
+            commit=False  # utrwala commit ponizej
         )
         db.session.commit()  # Zapisuje zmianę nazwy i log
         current_app.logger.info(f"Pomyślnie zaktualizowano nazwę lokalizacji ID: {location_id} na '{new_name}'")
@@ -289,7 +291,8 @@ def delete_location(location_id):
             'DELETE_LOCATION',
             target_type='Location',
             target_id=loc_id,
-            details=f"Nazwa: {location_name}"
+            details=f"Nazwa: {location_name}",
+            commit=False  # utrwala commit ponizej
         )
 
         # Cascade='all, delete-orphan' w modelu powinien usunąć powiązane substancje
