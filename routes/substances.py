@@ -68,11 +68,18 @@ def add_substance_to_location(location_id):
 
         # Sprawdź, czy substancja jest na liście SVHC
         svhc = check_svhc_substance(cas=cas, ec_number=ec_number, name=name)
-        is_svhc = svhc.is_svhc
         if not svhc.verified:
+            # Nie zapisujemy is_svhc=False, gdy weryfikacja sie nie powiodla — falszywe
+            # "nie SVHC" w rejestrze jest grozniejsze niz odrzucenie zapisu.
             current_app.logger.error(
-                f"Nie udało się zweryfikować SVHC dla '{name}' — zapisano bez flagi SVHC."
+                f"Nie udalo sie zweryfikowac SVHC dla '{name}' — odrzucono dodanie substancji."
             )
+            return jsonify({
+                'status': 'error',
+                'message': ('Nie udalo sie sprawdzic listy SVHC, wiec substancja nie zostala dodana. '
+                            'Sprobuj ponownie lub dodaj ja recznie, ustawiajac status SVHC samodzielnie.')
+            }), 503
+        is_svhc = svhc.is_svhc
         
         # Stwórz obiekt
         new_substance = Substance(
@@ -148,7 +155,11 @@ def add_manual_substance(location_id):
     physical_location = data.get('physical_location', '').strip()
 
     # Pobierz flagi CMR/SVHC z formularza (mogą nadpisać auto-detekcję)
-    manual_is_cmr = data.get('is_cmr', None)  # None oznacza brak flagi, False oznacza odznaczony checkbox
+    # Checkbox moze tylko DODAC oznaczenie, nigdy go nie zdejmie. Klient wysylajacy
+    # `false` dla nieruszonego pola nie moze przez to skasowac auto-detekcji — w
+    # rejestrze BHP falszywe "nie CMR" jest grozniejsze niz nadmiarowe oznaczenie.
+    # Zdjecie blednego oznaczenia jest mozliwe przez edycje substancji (PATCH nizej).
+    manual_is_cmr = data.get('is_cmr', None)
     manual_is_svhc = data.get('is_svhc', None)
     manual_contains_cmr = data.get('contains_cmr', False)
     manual_contains_svhc = data.get('contains_svhc', False)
@@ -191,16 +202,22 @@ def add_manual_substance(location_id):
             name=name
         )
         auto_is_svhc = svhc.is_svhc
-        # Nieudana weryfikacja nie może cicho oznaczyć substancji jako nie-SVHC.
-        svhc_unverified = not svhc.verified and manual_is_svhc is None
-        if svhc_unverified:
+        # Nieudana weryfikacja nie moze cicho oznaczyc substancji jako nie-SVHC.
+        # Gdy uzytkownik sam ustawil status, jego decyzja wystarczy i nie potrzebujemy
+        # automatu; w przeciwnym razie odrzucamy zapis zamiast zgadywac.
+        if not svhc.verified and manual_is_svhc is None:
             current_app.logger.error(
-                f"Nie udało się zweryfikować SVHC dla '{name}' — zapisano bez flagi SVHC."
+                f"Nie udalo sie zweryfikowac SVHC dla '{name}' — odrzucono dodanie substancji."
             )
+            return jsonify({
+                'status': 'error',
+                'message': ('Nie udalo sie sprawdzic listy SVHC. Zaznacz status SVHC recznie '
+                            'albo sprobuj ponownie — substancja nie zostala dodana.')
+            }), 503
 
         # Użyj flag ręcznych jeśli podane, w przeciwnym razie użyj auto-detekcji
-        final_is_cmr = manual_is_cmr if manual_is_cmr is not None else auto_is_cmr
-        final_is_svhc = manual_is_svhc if manual_is_svhc is not None else auto_is_svhc
+        final_is_cmr = auto_is_cmr or bool(manual_is_cmr)
+        final_is_svhc = auto_is_svhc or bool(manual_is_svhc)
 
         new_substance = Substance(
             location_id=location_id,
@@ -230,10 +247,7 @@ def add_manual_substance(location_id):
         db.session.commit()
         current_app.logger.info(f"Dodano ręcznie: '{name}' do lokacji ID {location_id}")
         message = f'Dodano ręcznie "{name}" do "{location.name}".'
-        if svhc_unverified:
-            # Użytkownik musi wiedzieć, że statusu SVHC nie potwierdzono automatycznie.
-            message += ' UWAGA: nie udało się sprawdzić listy SVHC — zweryfikuj status ręcznie.'
-        return jsonify({'status': 'success', 'message': message, 'svhc_verified': not svhc_unverified})
+        return jsonify({'status': 'success', 'message': message})
     except Exception as e:
         return handle_exception(e, "dodawania ręcznego substancji", None)
 

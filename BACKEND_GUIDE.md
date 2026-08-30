@@ -263,21 +263,30 @@ chem-man/
 
 #### `is_cmr_substance()`
 
-Sprawdza czy substancja jest CMR na podstawie klasyfikacji i zwrotów H.
+Sprawdza czy substancja jest CMR na podstawie zwrotów H i klasyfikacji.
 ```python
-def is_cmr_substance(classification=None, h_phrases=None):
+def is_cmr_substance(h_phrases, classification=None):
     """
     Zwraca True jeśli substancja zawiera:
-    - Zwroty H: H340, H350, H360 (lub warianty)
-    - Klasyfikację: Carc., Muta., Repr.
+    - Zwroty H: H340, H350, H360 (lub warianty, np. H360FD)
+    - Klasyfikację kategorii 1A/1B: Carc./Muta./Repr. 1A lub 1B
     """
     # Implementacja: regex pattern matching
 ```
 
+> **Zakres: wyłącznie kategoria 1A/1B.** Polski *rejestr czynników rakotwórczych
+> lub mutagennych* obejmuje tylko kategorię 1A/1B, dlatego kategoria 2
+> (H341/H351/H361, `Carc. 2`, `Muta. 2`, `Repr. 2`) celowo **nie** jest
+> traktowana jako CMR. To decyzja dziedzinowa, nie luka — nie "naprawiaj" jej
+> bez konsultacji ze służbą BHP.
+
 **Przykłady:**
 - `H350` → Może powodować raka → CMR
+- `H360FD` → Wariant z sufiksem → CMR
 - `Carc. 1A` → Rakotwórczość kat. 1A → CMR
-- `Repr. 2` → Toksyczność rozrodcza kat. 2 → CMR
+- `Carc. 1B` bez zwrotów H → CMR (wykrywane z pola `classification`)
+- `Repr. 2` → Toksyczność rozrodcza kat. 2 → **nie** CMR (poza zakresem rejestru)
+- `Flam. Liq. 1B` → zawiera "1B", ale to nie klasa CMR → **nie** CMR
 
 #### `is_svhc_substance()`
 
@@ -287,13 +296,21 @@ def is_svhc_substance(cas=None, ec_number=None, name=None):
     """
     Wyszukuje substancję w tabeli SVHCSubstance.
     Zwraca 'reason' (powód włączenia) lub None.
-    
+
     Priorytet dopasowania:
     1. CAS number (najdokładniejsze)
     2. EC number
     3. Nazwa (fuzzy matching)
     """
 ```
+
+> **W ścieżkach zapisu używaj `check_svhc_substance()`.** `is_svhc_substance()`
+> zwraca `None` zarówno gdy substancji nie ma na liście, jak i gdy wyszukiwanie
+> się nie powiodło — tych przypadków nie da się rozróżnić, więc nadaje się tylko
+> do wyświetlania. `check_svhc_substance()` zwraca `SVHCResult(status, reason)`
+> ze statusem `found` / `not_found` / `unknown` oraz właściwościami `.is_svhc`
+> i `.verified`. Przy `unknown` trasy dodawania substancji **odrzucają zapis**
+> (HTTP 503) zamiast utrwalać fałszywe „nie SVHC".
 
 **Przykład:**
 ```python
@@ -821,4 +838,4 @@ Jeśli dokumentacja nie rozwiązuje Twojego problemu:
 ---
 
 **Aktualizacja:** 2026-08-30
-**Wersja:** 2.4.0
+**Wersja:** 2.4.1

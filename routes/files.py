@@ -98,6 +98,10 @@ def upload_sds(substance_id):
         # Plik trafia na dysk przed commitem, wiec przy bledzie zapisu do bazy
         # trzeba go skasowac — inaczej zostaje osierocony plik bez wpisu w DB.
         unique_filename = None
+        # Po udanym commicie plik jest juz powiazany z wierszem w bazie — sprzatanie
+        # musi sie wtedy zatrzymac, inaczej blad PO zapisie (np. w logowaniu akcji)
+        # skasowalby PDF nalezacy do istniejacego rekordu.
+        db_committed = False
         try:
             # Użyj menedżera plików do zapisania pliku (nie usuwamy starych - obsługujemy wiele)
             unique_filename = FileManager.save_sds_file(file, None)
@@ -126,6 +130,7 @@ def upload_sds(substance_id):
                 substance.sds_upload_timestamp = utcnow()
 
             db.session.commit()
+            db_committed = True
 
             flash_msg = f'Plik SDS "{original_filename}" został pomyślnie przesłany dla {substance.name}.'
             if manufacturer:
@@ -140,7 +145,16 @@ def upload_sds(substance_id):
             )
 
         except Exception as e:
-            # Wycofaj transakcje, a nastepnie posprzataj plik zapisany na dysku.
+            if db_committed:
+                # Wiersz SDS istnieje — plik MUSI zostac. Blad zglaszamy, ale niczego
+                # nie kasujemy, bo skasowalibysmy zalacznik dzialajacego rekordu.
+                current_app.logger.exception(
+                    f"Blad po zapisaniu SDS '{unique_filename}' — plik i wpis zostaja nienaruszone: {e}"
+                )
+                return handle_exception(e, "zapisywania pliku SDS",
+                                       url_for('locations.view_location', location_id=substance.location_id))
+
+            # Zapis do bazy sie nie powiodl: wycofaj transakcje i posprzataj plik.
             db.session.rollback()
             if unique_filename:
                 try:

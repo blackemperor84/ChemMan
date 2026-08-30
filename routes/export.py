@@ -208,13 +208,12 @@ def export_location_csv(location_id):
         writer.writerow(['Nazwa chemiczna', 'Nr CAS', 'Klasyfikacja', 'Zwroty H', 'SCL/M-factor', 'Lokalizacja', 'Komentarz'])
 
         for sub in substances:
-            cas_val = sub.cas or ''
-            excel_cas = f'="{cas_val}"' if cas_val else ''
-            # excel_cas jest budowany przez nas (wymuszenie formatu tekstowego),
-            # pozostałe pola pochodzą od użytkownika -> csv_safe
+            # Nie budujemy komorek ="..." — wartosc CAS pochodzi od uzytkownika i
+            # cudzyslow w srodku pozwalal wyjsc poza literal, np. CAS `"&SUM(1,1)&"`
+            # dawal dzialajaca formule ="&SUM(1,1)&". Eksportujemy zwykly tekst.
             writer.writerow([
                 csv_safe(sub.name),
-                excel_cas,
+                csv_safe(sub.cas),
                 csv_safe(sub.classification),
                 csv_safe(sub.h_phrases),
                 csv_safe(sub.scl_mfactor),
@@ -269,14 +268,11 @@ def export_all_csv():
         ])
 
         for sub in substances_to_export:
-            cas_val = sub.cas or ''
-            ec_val = sub.ec_number or ''
-            excel_cas = f'="{cas_val}"' if cas_val else ''
-            excel_ec = f'="{ec_val}"' if ec_val else ''
+            # Patrz uwaga wyzej: identyfikatory eksportujemy jako tekst, nie formule.
             writer.writerow([
                 csv_safe(sub.name),
-                excel_cas,
-                excel_ec,
+                csv_safe(sub.cas),
+                csv_safe(sub.ec_number),
                 csv_safe(sub.classification),
                 csv_safe(sub.h_phrases),
                 csv_safe(sub.scl_mfactor),

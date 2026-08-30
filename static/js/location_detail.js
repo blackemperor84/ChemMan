@@ -566,11 +566,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 h_phrases: document.getElementById('manual-hphrases').value.trim(),
                 comment: document.getElementById('manual-comment').value.trim(),
                 physical_location: physicalLocationField.value,
-                is_cmr: document.getElementById('manual-is-cmr').checked,
-                is_svhc: document.getElementById('manual-is-svhc').checked,
                 contains_cmr: document.getElementById('manual-contains-cmr').checked,
                 contains_svhc: document.getElementById('manual-contains-svhc').checked
             };
+
+            // Flagi CMR/SVHC wysylamy tylko gdy uzytkownik je zaznaczyl. Wyslanie
+            // `false` dla nietknietego pola bylo traktowane przez backend jak swiadome
+            // nadpisanie i kasowalo auto-detekcje (np. "Carc. 1B" bez zwrotow H
+            // zapisywalo sie jako nie-CMR). Brak klucza = "zdaj sie na auto-detekcje".
+            if (document.getElementById('manual-is-cmr').checked) {
+                substanceData.is_cmr = true;
+            }
+            if (document.getElementById('manual-is-svhc').checked) {
+                substanceData.is_svhc = true;
+            }
 
             console.log(`Próba ręcznego dodania (Loc ID: ${locationId}):`, substanceData);
 

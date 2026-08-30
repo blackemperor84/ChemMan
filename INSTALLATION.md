@@ -470,4 +470,13 @@ W razie trwałych problemów zachowaj:
 
 **Data aktualizacji:** 22.10.2025
 
-**Wersja:** 2.0.0 (PostgreSQL, testy automatyczne, production-ready)
+> **Wdrozenie produkcyjne:** uruchamiaj przez `wsgi.py` (gunicorn/waitress),
+> nie przez `app.py`, i ustaw `FLASK_ENV=production` — inaczej aplikacja wystartuje
+> z konfiguracja developerska (m.in. `SESSION_COOKIE_SECURE=False`).
+> Szczegoly: `DEPLOYMENT_GUIDE.md`.
+>
+> **Istniejaca baza bez tabeli `alembic_version`** (zbudowana przez `db.create_all()`)
+> wymaga `flask db stamp` przed pierwszym `flask db upgrade` — procedura opisana
+> w sekcji *Migracje bazy danych* w `MAINTENANCE.md`.
+
+**Wersja:** 2.4.1 (PostgreSQL, testy automatyczne, production-ready)

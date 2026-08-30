@@ -1,6 +1,6 @@
 # ChemMan - Wersja Demo (Standalone)
 
-**Wersja:** 2.4.0 Demo
+**Wersja:** 2.4.1 Demo
 **Data:** 2026-08-16
 **Cel:** Prezentacja/demonstracja funkcjonalności aplikacji
 
@@ -149,7 +149,7 @@ Wersja demo zawiera **wszystkie funkcje** wersji produkcyjnej:
 
 1. **Architektura:** Omów technologie (Flask, SQLite/PostgreSQL)
 2. **Bezpieczeństwo:** Rate limiting, CSRF, bcrypt, MIME validation
-3. **Testy:** Pokaż 242 testy, 80% pokrycia kodu
+3. **Testy:** Pokaż 363 testy
 4. **Dokumentacja:** DEPLOYMENT_GUIDE.md
 5. **Skalowalność:** Wytłumacz przejście SQLite → PostgreSQL
 6. **Kod źródłowy:** Pokaż clean code, struktura projektu

@@ -21,7 +21,7 @@ System do zarządzania inwentaryzacją substancji chemicznych z obsługą baz CL
 - **Backend:** Flask (Python 3.11+)
 - **Baza danych:** PostgreSQL 14+ (produkcja), SQLite (testy)
 - **Frontend:** HTML, CSS, JavaScript (vanilla)
-- **Testing:** pytest (242 testy, 80% pokrycia kodu)
+- **Testing:** pytest (363 testy, 84% pokrycia kodu)
 
 ## Szybki start (Development)
 
@@ -78,8 +78,20 @@ python -m pytest tests/ -v
 # Z pokryciem kodu
 python -m pytest tests/ --cov=. --cov-report=html
 
-# Oczekiwany wynik: 351 testów
+# Oczekiwany wynik: 363 testy
 ```
+
+## Co nowego w v2.4.1? 🎉
+
+### 🔒 Poprawki po ponownym audycie
+- ✅ Wstrzykniecie formul do CSV przez pola CAS/WE — identyfikatory sa teraz
+  eksportowane jako zwykly tekst, nie jako konstrukcja `="..."`
+- ✅ Nieudana weryfikacja SVHC nie zapisuje juz falszywego „nie SVHC” — zapis
+  jest odrzucany zamiast zgadywany
+- ✅ Odznaczony checkbox nie kasuje auto-detekcji CMR/SVHC (substancja z
+  klasyfikacja `Carc. 1B` bez zwrotow H zapisywala sie jako nie-CMR)
+- ✅ Sprzatanie po nieudanym uploadzie SDS nie kasuje juz pliku, ktorego wpis
+  zostal poprawnie zapisany
 
 ## Co nowego w v2.4.0? 🎉
 
@@ -99,7 +111,7 @@ python -m pytest tests/ --cov=. --cov-report=html
   i martwych odnośników przy błędzie zapisu
 - ✅ Uprawnienie `can_update_databases` wreszcie działa (patrz niżej)
 - ✅ Atomowy import baz CLP/SVHC i uzupełniony łańcuch migracji
-- ✅ Wszystkie 351 testów przechodzi
+- ✅ Wszystkie 363 testy przechodzą
 
 ### 🔑 Naprawione uprawnienie „Aktualizacja baz"
 Uprawnienie `can_update_databases`, ogłoszone w v2.3.0, nie działało — trasy
@@ -174,7 +186,7 @@ nie uzyskując przy tym dostępu do zarządzania użytkownikami ani dziennika zm
 ### Przejście na PostgreSQL
 - ✅ Baza danych PostgreSQL (zamiast SQLite)
 - ✅ Obsługa wielu użytkowników jednocześnie
-- ✅ 242 testy automatyczne, 80% pokrycia kodu
+- ✅ 363 testy automatyczne, 84% pokrycia kodu
 - ✅ Kompletny przewodnik wdrożenia produkcyjnego
 </details>
 
@@ -221,7 +233,7 @@ chem-man/
 │   └── database_import.py # Import baz CLP/SVHC
 ├── static/                # CSS, JS
 ├── templates/             # Szablony HTML
-├── tests/                 # Testy pytest (242 testy)
+├── tests/                 # Testy pytest (363 testy)
 ├── migrations/            # Migracje bazy danych (Alembic)
 ├── instance/              # Baza danych i pliki SDS
 ├── substancje_baza.xlsx   # Baza CLP

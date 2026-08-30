@@ -24,7 +24,7 @@
 - Installed psycopg2-binary driver
 - Updated models.py with TEXT columns (for long CAS/EC numbers up to 484 chars)
 - Fixed import scripts to handle pandas type conversion (safe_str function)
-- All 242 tests passing with PostgreSQL ✅
+- All 363 tests passing with PostgreSQL ✅
 
 ### Completed Today (Part 1):
 ✅ **Export Routes Tests** - 20 tests, 28% coverage 📊
