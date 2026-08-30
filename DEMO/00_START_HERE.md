@@ -102,7 +102,7 @@ Po zbudowaniu będziesz mieć folder `dist/ChemMan_Demo/` (~150 MB) zawierający
 ```bash
 # Spakuj folder do ZIP
 # Windows PowerShell:
-Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.3.1.zip
+Compress-Archive -Path dist\ChemMan_Demo -DestinationPath ChemMan_Demo_v2.4.0.zip
 
 # Wyślij przez:
 # - Email (jeśli < 25 MB po kompresji)
@@ -247,7 +247,7 @@ Przed wysłaniem demo do innych:
 
 5. **Wersjonuj swoje demo** - Dodaj datę do nazwy pliku ZIP:
    ```
-   ChemMan_Demo_v2.3.1_2026-08-16.zip
+   ChemMan_Demo_v2.4.0_2026-08-30.zip
    ```
 
 ---
@@ -285,5 +285,5 @@ build_demo_package.bat
 
 ---
 
-**ChemMan v2.3.1 - System pakietu demo**
+**ChemMan v2.4.0 - System pakietu demo**
 © 2025-2026 NITROERG
