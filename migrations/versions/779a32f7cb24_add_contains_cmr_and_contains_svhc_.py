@@ -22,9 +22,25 @@ def upgrade():
     # Add contains_svhc column to substances table
     op.add_column('substances', sa.Column('contains_svhc', sa.Boolean(), nullable=True))
 
-    # Set default values to False for existing rows
-    op.execute('UPDATE substances SET contains_cmr = 0 WHERE contains_cmr IS NULL')
-    op.execute('UPDATE substances SET contains_svhc = 0 WHERE contains_svhc IS NULL')
+    # Set default values to False for existing rows.
+    # Uwaga: literał '0' jest poprawny w SQLite, ale PostgreSQL odrzuca go dla
+    # kolumny boolean. Budujemy UPDATE przez SQLAlchemy, aby każdy dialekt
+    # wyrenderował własny literał (0 dla SQLite, FALSE dla PostgreSQL).
+    substances = sa.table(
+        'substances',
+        sa.column('contains_cmr', sa.Boolean),
+        sa.column('contains_svhc', sa.Boolean),
+    )
+    op.execute(
+        substances.update()
+        .where(substances.c.contains_cmr.is_(None))
+        .values(contains_cmr=False)
+    )
+    op.execute(
+        substances.update()
+        .where(substances.c.contains_svhc.is_(None))
+        .values(contains_svhc=False)
+    )
 
 
 def downgrade():

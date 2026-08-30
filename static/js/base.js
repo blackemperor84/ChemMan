@@ -100,12 +100,18 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.className = `toast-message ${type}`;
     toast.role = 'alert';
     
-    // Wypełnij treścią
-    toast.innerHTML = `
-        <div class="toast-content">${message}</div>
-        <button type="button" class="toast-close-btn">&times;</button>
-    `;
-    
+    // Wypełnij treścią - textContent zamiast innerHTML (ochrona przed XSS)
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+    content.textContent = message;
+    toast.appendChild(content);
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'toast-close-btn';
+    closeButton.innerHTML = '&times;';
+    toast.appendChild(closeButton);
+
     // Dodaj alert do kontenera
     container.appendChild(toast);
     

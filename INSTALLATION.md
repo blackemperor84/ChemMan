@@ -147,8 +147,8 @@ FLASK_ENV=development
 SECRET_KEY=wygeneruj_losowy_klucz_tutaj
 FLASK_DEBUG=1
 
-# Admin User (first login)
-DEFAULT_PASSWORD=F23pADFE!
+# Admin User (first login) - brak wartości domyślnej, MUSISZ ustawić własne
+CHEM_MAN_ADMIN_PASSWORD=
 ```
 
 **Wygeneruj SECRET_KEY:**
@@ -241,14 +241,19 @@ python create_admin.py
 
 **Oczekiwany wynik:**
 ```
-Admin user created successfully!
-Username: admin
-Password: F23pADFE!
+Hasło pobrano z: zmiennej CHEM_MAN_ADMIN_PASSWORD.
+Tworzenie użytkownika 'admin'...
+SUKCES: Utworzono użytkownika 'admin'.
+        Nazwa użytkownika: admin
+        Hasło: (takie, jakie podano powyżej)
 ```
 
-**WAŻNE:** Zmień hasło po pierwszym logowaniu!
+**Hasło nie ma wartości domyślnej.** Skrypt pobierze je ze zmiennej
+`CHEM_MAN_ADMIN_PASSWORD` (np. z pliku `.env`), a jeśli jej nie ustawisz -
+zapyta interaktywnie. Bez hasła (i bez terminala, np. w CI) skrypt zakończy się błędem.
 
-Hasło jest pobierane z pliku `.env` (zmienna `DEFAULT_PASSWORD`). Możesz je zmienić przed utworzeniem admina.
+Minimalna długość hasła to 8 znaków. Hasło nigdy nie jest wypisywane na ekranie
+ani do logów.
 
 ---
 
@@ -309,7 +314,7 @@ Otwórz przeglądarkę: `http://127.0.0.1:5000`
 
 - **URL:** `http://127.0.0.1:5000`
 - **Login:** `admin`
-- **Hasło:** `F23pADFE!` (lub hasło z pliku `.env`)
+- **Hasło:** to, które ustawiłeś w `CHEM_MAN_ADMIN_PASSWORD` (Krok 8)
 
 ### Testy (opcjonalnie)
 

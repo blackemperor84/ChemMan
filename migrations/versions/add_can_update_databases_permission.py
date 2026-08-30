@@ -20,8 +20,15 @@ def upgrade():
     # Add can_update_databases column to users table
     op.add_column('users', sa.Column('can_update_databases', sa.Boolean(), nullable=True))
 
-    # Set default value to False for existing rows (PostgreSQL uses FALSE, SQLite uses 0)
-    op.execute('UPDATE users SET can_update_databases = FALSE WHERE can_update_databases IS NULL')
+    # Set default value to False for existing rows.
+    # Budujemy UPDATE przez SQLAlchemy, aby literał boolowski był renderowany
+    # zgodnie z dialektem (0 dla SQLite, FALSE dla PostgreSQL).
+    users = sa.table('users', sa.column('can_update_databases', sa.Boolean))
+    op.execute(
+        users.update()
+        .where(users.c.can_update_databases.is_(None))
+        .values(can_update_databases=False)
+    )
 
 
 def downgrade():

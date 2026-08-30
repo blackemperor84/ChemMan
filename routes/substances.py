@@ -419,6 +419,21 @@ def move_substances():
     try:
         substances_to_move = Substance.query.filter(Substance.id.in_(substance_ids)).all()
 
+        # Sprawdź czy użytkownik może modyfikować KAŻDĄ komórkę źródłową.
+        # Bez tego można byłoby "wyciągnąć" cudzą substancję do własnej komórki.
+        forbidden_sources = {
+            sub.location_id for sub in substances_to_move
+            if not current_user.can_modify_organizational_unit(sub.location_id)
+        }
+        if forbidden_sources:
+            current_app.logger.warning(
+                f"Użytkownik {current_user.username} próbował przenieść substancje z komórek bez uprawnień: {sorted(forbidden_sources)}"
+            )
+            return jsonify({
+                'status': 'error',
+                'message': 'Możesz przenosić tylko substancje ze swojej komórki organizacyjnej.'
+            }), 403
+
         # DODANE: Słownik do śledzenia zmodyfikowanych lokalizacji źródłowych
         source_locations_modified = {}
 

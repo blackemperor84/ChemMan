@@ -12,7 +12,8 @@ Instrukcja dla administratorów systemu - codzienne operacje, backup, aktualizac
 4. [Aktualizacja listy SVHC](#aktualizacja-listy-svhc)
 5. [Zarządzanie użytkownikami](#zarządzanie-użytkownikami)
 6. [Monitoring systemu](#monitoring-systemu)
-7. [Procedury awaryjne](#procedury-awaryjne)
+7. [Migracje bazy danych](#migracje-bazy-danych)
+8. [Procedury awaryjne](#procedury-awaryjne)
 
 ---
 
@@ -381,6 +382,76 @@ print(f'Lokalizacje: {Location.query.count()}')
 print(f'Baza CLP: {ExcelSourceSubstance.query.count()}')
 print(f'Lista SVHC: {SVHCSubstance.query.count()}')
 "
+```
+
+---
+
+## Migracje bazy danych
+
+### Nowa instalacja (pusta baza)
+
+Cały schemat da się zbudować z samych migracji:
+
+```bash
+flask db upgrade
+```
+
+Łańcuch startuje od rewizji `chemman_baseline`, która tworzy tabele
+`locations`, `users`, `substances`, `sds_files` i `audit_log`. Kolejne rewizje
+dokładają tabele referencyjne (CLP, SVHC) oraz późniejsze kolumny.
+
+> **Uwaga historyczna:** do sierpnia 2026 łańcuch migracji nie zawierał tych
+> podstawowych tabel - powstawały przez `db.create_all()`. `flask db upgrade`
+> na pustej bazie kończył się błędem `no such table: substances`.
+
+### Istniejąca baza założona przez `db.create_all()`
+
+**To dotyczy wszystkich instalacji sprzed sierpnia 2026.** Taka baza ma komplet
+tabel, ale nie ma tabeli `alembic_version`, więc Alembic uzna ją za pustą i
+spróbuje utworzyć tabele od nowa:
+
+```
+sqlite3.OperationalError: table locations already exists
+```
+
+Procedura:
+
+```bash
+# 1. BACKUP (obowiązkowo - patrz sekcja "Backup bazy danych")
+
+# 2. Sprawdź, czy baza ma już wszystkie kolumny z modeli
+python -c "import sqlite3; c=sqlite3.connect('instance/chem_man.db'); \
+print(sorted(r[0] for r in c.execute(\"SELECT name FROM sqlite_master WHERE type='table'\")))"
+
+# 3a. Jeśli komplet tabel i kolumn jest na miejscu - oznacz bazę jako aktualną:
+flask db stamp head
+
+# 3b. Jeśli czegoś brakuje (np. tabeli sds_files) - oznacz rewizją SPRZED
+#     brakującej zmiany i dograj resztę migracjami:
+flask db stamp chemman_baseline
+flask db upgrade
+```
+
+Po `flask db stamp head` kolejne aktualizacje działają już normalnie
+(`flask db upgrade`).
+
+### Sprawdzenie stanu
+
+```bash
+flask db current   # rewizja zapisana w bazie
+flask db heads     # najnowsza dostępna rewizja (powinna być dokładnie jedna)
+```
+
+Jeżeli `flask db heads` pokazuje więcej niż jedną pozycję, łańcuch się rozgałęził
+i `upgrade` nie zadziała - trzeba scalić gałęzie (`flask db merge`).
+
+### Testy migracji
+
+Zestaw testów zawiera smoke test, który uruchamia `flask db upgrade` na pustej
+bazie i porównuje wynikowy schemat z modelami:
+
+```bash
+python -m pytest tests/test_migrations.py -v
 ```
 
 ---
