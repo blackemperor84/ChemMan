@@ -1,6 +1,13 @@
 # Instrukcja Instalacji ChemMan
 
-Pełna instrukcja instalacji, konfiguracji i uruchomienia aplikacji ChemMan od zera.
+Pełna instrukcja instalacji, konfiguracji i uruchomienia aplikacji ChemMan od zera
+**na własnej maszynie — do pracy deweloperskiej lub testów.**
+
+> **Wdrażasz na serwer?** Nie idź tą drogą. Produkcja działa przez Docker
+> i sprowadza się do `docker compose up -d` — patrz
+> [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md). Poniższa procedura (ręczna
+> instalacja PostgreSQL, venv, uruchamianie przez `python app.py`) nie jest
+> konfiguracją produkcyjną.
 
 ## Wymagania systemowe
 
@@ -286,9 +293,9 @@ python import_svhc.py
 **Oczekiwany wynik:**
 ```
 📊 Wczytywanie SVHC z Excela...
-📝 Wczytano 492 wierszy
+📝 Wczytano 1029 wierszy
 📥 Importowanie SVHC...
-✅ Import SVHC ukończony! Dodano 492 substancji SVHC.
+✅ Import SVHC ukończony! Dodano 1029 substancji SVHC.
 ```
 
 ---

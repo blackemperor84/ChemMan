@@ -194,17 +194,28 @@ Zobacz [CHANGELOG.md](CHANGELOG.md) dla pełnej listy zmian.
 
 ## Wdrożenie produkcyjne
 
-Dla wdrożenia produkcyjnego na serwerze, zobacz kompletny przewodnik:
+Wdrożenie produkcyjne odbywa się przez **Docker** — serwer nie kompiluje niczego,
+tylko pobiera gotowy obraz z GitHub Container Registry:
 
-**[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Pełna instrukcja wdrożenia produkcyjnego
+```bash
+mkdir -p /opt/chemman && cd /opt/chemman
+curl -O https://raw.githubusercontent.com/blackemperor84/ChemMan/master/docker-compose.yml
+curl -O https://raw.githubusercontent.com/blackemperor84/ChemMan/master/.env.docker.example
+cp .env.docker.example .env    # uzupełnij SECRET_KEY, POSTGRES_PASSWORD, CHEM_MAN_ADMIN_PASSWORD
+docker compose up -d
+```
+
+**[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - pełna instrukcja wdrożenia
 
 Obejmuje:
-- Instalację PostgreSQL na Windows/Linux
-- Konfigurację serwera WSGI (Gunicorn/Waitress)
-- Reverse proxy (nginx/Apache)
-- Certyfikaty SSL/TLS
-- Automatyczne kopie zapasowe
-- Monitoring i utrzymanie
+- Uruchomienie przez `docker compose` (PostgreSQL i Redis w komplecie)
+- Import danych CLP/SVHC do świeżej instalacji
+- Reverse proxy (nginx) i certyfikaty SSL/TLS
+- Kopie zapasowe bazy i załączników SDS
+- Monitoring, health check i rozwiązywanie problemów
+
+> Instalacja bez Dockera (venv + Gunicorn/Waitress) nie jest już wspierana
+> produkcyjnie. Do pracy lokalnej służy [INSTALLATION.md](INSTALLATION.md).
 
 ## Dokumentacja
 
