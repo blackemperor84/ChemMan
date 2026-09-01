@@ -48,21 +48,20 @@ class Config:
     # Konfiguracja JSON
     JSON_AS_ASCII = False
     
-    # Hasło domyślne dla administratora - Lepiej czytać z zmiennej środowiskowej
-    # Hasło domyślne dla administratora - MUSISZ ustawić w zmiennych środowiskowych!
+    # Hasło konta 'admin' zakładanego przy pierwszym uruchomieniu.
+    # W produkcji MOŻE być puste: hasło jest potrzebne wyłącznie do ZAŁOŻENIA
+    # konta, a nie do jego używania, więc po pierwszym zalogowaniu wolno je
+    # usunąć z .env - dokładnie tak, jak radzi DEPLOYMENT_GUIDE.md.
+    # Zabezpieczenie działa w miejscu użycia, nie przy imporcie konfiguracji:
+    # create_admin.py (przez utils/admin_password.py) oraz komenda init-db
+    # odmawiają założenia konta, gdy hasła nie podano.
     DEFAULT_ADMIN_PASSWORD = os.environ.get('CHEM_MAN_ADMIN_PASSWORD')
-    if not DEFAULT_ADMIN_PASSWORD:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError(
-                "ERROR: Musisz ustawic zmienna srodowiskowa 'CHEM_MAN_ADMIN_PASSWORD' w produkcji! "
-                "Aplikacja nie bedzie dzialac bez ustawienia bezpiecznego hasla administratora."
-            )
-        else:
-            # W developmencie - wygeneruj losowe hasło
-            import secrets
-            DEFAULT_ADMIN_PASSWORD = secrets.token_urlsafe(16)
-            print(f"WARNING: DEVELOPMENT: Wygenerowano tymczasowe haslo admina: {DEFAULT_ADMIN_PASSWORD}")
-            print("         W produkcji ustaw CHEM_MAN_ADMIN_PASSWORD w zmiennych srodowiskowych!")
+    if not DEFAULT_ADMIN_PASSWORD and os.environ.get('FLASK_ENV') != 'production':
+        # W developmencie - wygeneruj losowe hasło
+        import secrets
+        DEFAULT_ADMIN_PASSWORD = secrets.token_urlsafe(16)
+        print(f"WARNING: DEVELOPMENT: Wygenerowano tymczasowe haslo admina: {DEFAULT_ADMIN_PASSWORD}")
+        print("         W produkcji ustaw CHEM_MAN_ADMIN_PASSWORD w zmiennych srodowiskowych!")
     
     # Liczba rekordów na stronie w widokach z paginacją
     ITEMS_PER_PAGE = 25

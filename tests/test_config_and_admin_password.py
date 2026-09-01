@@ -6,6 +6,9 @@ Pokrywa dwa problemy zgłoszone w audycie:
     nie aktywowało zabezpieczeń ProductionConfig (m.in. SESSION_COOKIE_SECURE),
   - skrypty administracyjne miały wbudowane hasła awaryjne ('F23pADFE!', 'admin').
 """
+import os
+from unittest import mock
+
 import pytest
 
 from app import resolve_config
@@ -125,10 +128,39 @@ class TestResolveAdminPassword:
         import pathlib
 
         project_root = pathlib.Path(__file__).resolve().parent.parent
-        for script in ('create_admin.py', 'update_admin_password.py'):
+        for script in ('create_admin.py', 'update_admin_password.py', 'commands.py'):
             source = io.open(project_root / script, encoding='utf-8').read()
             assert 'F23pADFE' not in source, f"{script} zawiera stare hasło awaryjne"
             assert 'DEFAULT_PASSWORD' not in source, f"{script} używa starej nazwy zmiennej"
             # getenv z drugim argumentem = ciche hasło domyślne
             assert ".getenv('CHEM_MAN_ADMIN_PASSWORD'," not in source
             assert '.environ.get(\'CHEM_MAN_ADMIN_PASSWORD\',' not in source
+            # config.get z drugim argumentem = to samo, tylko przez konfigurację
+            assert "config.get('DEFAULT_ADMIN_PASSWORD'," not in source, (
+                f"{script} ma ciche hasło awaryjne w config.get()"
+            )
+
+    def test_config_import_does_not_require_admin_password_in_production(self):
+        """
+        Obraz produkcyjny ma FLASK_ENV=production wpisane w Dockerfile. Import
+        konfiguracji NIE może się wtedy wywalać z powodu braku
+        CHEM_MAN_ADMIN_PASSWORD - inaczej aplikacji nie da się zrestartować po
+        usunięciu tej zmiennej z .env, co dokumentacja wprost zaleca.
+        """
+        import importlib
+        import io
+        import pathlib
+
+        project_root = pathlib.Path(__file__).resolve().parent.parent
+        source = io.open(project_root / 'config.py', encoding='utf-8').read()
+        assert 'raise ValueError' not in source.split('DEFAULT_ADMIN_PASSWORD')[1][:600], (
+            "config.py znowu przerywa import przy braku CHEM_MAN_ADMIN_PASSWORD"
+        )
+
+        env = {'FLASK_ENV': 'production', 'SECRET_KEY': 'x' * 32}
+        with mock.patch.dict(os.environ, env, clear=True):
+            config_module = importlib.reload(importlib.import_module('config'))
+            assert config_module.Config.DEFAULT_ADMIN_PASSWORD is None
+
+        # przywróć moduł do stanu zgodnego z resztą sesji testowej
+        importlib.reload(importlib.import_module('config'))
