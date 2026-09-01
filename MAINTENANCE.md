@@ -1,410 +1,276 @@
 # Przewodnik Konserwacji ChemMan
 
-Instrukcja dla administratorów systemu - codzienne operacje, backup, aktualizacje.
+Instrukcja dla administratorów - codzienne operacje, backup, aktualizacje list
+CLP/SVHC, migracje.
 
-> ### ⚠️ Wdrożenie produkcyjne działa w Dockerze
->
-> Procedury poniżej opisano dla instalacji lokalnej (uruchomienie z katalogu
-> projektu, część przykładów zakłada SQLite). **Na serwerze produkcyjnym
-> aplikacja działa w kontenerze i baza to PostgreSQL** — patrz
-> [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
->
-> Przelicznik poleceń (wykonuj z katalogu wdrożenia, np. `/opt/chemman`):
->
-> | Tutaj napisano | W Dockerze |
-> |---|---|
-> | `python skrypt.py` | `docker compose exec app python skrypt.py` |
-> | `flask db ...` | `docker compose exec app flask db ...` |
-> | odczyt logów z pliku | `docker compose logs -f app` |
-> | `pg_dump ...` | `docker compose exec -T db pg_dump -U chemman chemman` |
-> | ścieżka `instance/uploads/sds` | wolumen `chemman_uploads` (`/app/instance/uploads`) |
->
-> **Nie stosuj procedur SQLite** (`sqlite3`, `PRAGMA integrity_check`,
-> `instance/chem_man.db`) do wdrożenia produkcyjnego — tam bazą jest PostgreSQL.
-> Backup i przywracanie dla Dockera opisuje
-> [DEPLOYMENT_GUIDE.md → Backup i przywracanie](DEPLOYMENT_GUIDE.md#backup-i-przywracanie).
+**Zakłada wdrożenie produkcyjne w Dockerze** (patrz
+[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)). Wszystkie polecenia uruchamiaj
+z katalogu wdrożenia, czyli tam, gdzie leży `docker-compose.yml` i `.env`
+(np. `/opt/chemman`).
+
+> **Pracujesz lokalnie, bez Dockera?** Pomiń przedrostek
+> `docker compose exec app` i uruchamiaj polecenia z katalogu projektu przy
+> aktywnym `venv`. Instalację lokalną opisuje [INSTALLATION.md](INSTALLATION.md).
 
 ---
 
 ## 📋 Spis treści
 
 1. [Codzienne zadania](#codzienne-zadania)
-2. [Backup bazy danych](#backup-bazy-danych)
-3. [Aktualizacja bazy substancji](#aktualizacja-bazy-substancji)
+2. [Backup i przywracanie](#backup-i-przywracanie)
+3. [Aktualizacja bazy CLP](#aktualizacja-bazy-clp)
 4. [Aktualizacja listy SVHC](#aktualizacja-listy-svhc)
-5. [Zarządzanie użytkownikami](#zarządzanie-użytkownikami)
-6. [Monitoring systemu](#monitoring-systemu)
-7. [Migracje bazy danych](#migracje-bazy-danych)
-8. [Procedury awaryjne](#procedury-awaryjne)
+5. [Flagi CMR/SVHC w istniejących substancjach](#flagi-cmrsvhc-w-istniejacych-substancjach)
+6. [Zarządzanie użytkownikami](#zarzadzanie-uzytkownikami)
+7. [Monitoring systemu](#monitoring-systemu)
+8. [Migracje bazy danych](#migracje-bazy-danych)
+9. [Procedury awaryjne](#procedury-awaryjne)
+10. [Checklist okresowej konserwacji](#checklist-okresowej-konserwacji)
 
 ---
 
 ## Codzienne zadania
 
 ### Sprawdzenie logów
-```bash
-# Sprawdź logi aplikacji (jeśli są włączone)
-cat logs/chem_man.log | tail -n 50
 
-# Sprawdź ostatnie zmiany w dzienniku
-# Panel admina → "Dziennik Zmian"
+```bash
+docker compose logs --tail=100 app     # log kontenera
+docker compose ps                      # czy coś się restartuje w kółko
 ```
+
+Log aplikacji trafia też do wolumenu `chemman_logs`:
+
+```bash
+docker compose exec app tail -n 50 /app/logs/chem_man.log
+```
+
+Dziennik zmian użytkowników: **Panel admina → „Dziennik Zmian"**.
 
 ### Monitorowanie miejsca na dysku
-```bash
-# Windows
-dir instance\uploads\sds
 
-# Linux
-du -sh instance/uploads/sds/
+```bash
+docker system df                       # obrazy, kontenery, wolumeny
+df -h /var/lib/docker                  # dysk hosta pod Dockerem
+docker compose exec app du -sh /app/instance/uploads/sds
 ```
 
-**Zalecane:** Regularnie archiwizuj stare pliki SDS (co kwartał).
+**Zalecane:** archiwizuj stare karty SDS co kwartał — patrz
+[Procedury awaryjne](#procedury-awaryjne).
 
 ---
 
-## Backup bazy danych
+## Backup i przywracanie
 
-### Automatyczny backup (zalecany)
+Pełna procedura wraz z gotowym skryptem i wpisem do crona jest w
+[DEPLOYMENT_GUIDE.md → Backup i przywracanie](DEPLOYMENT_GUIDE.md#backup-i-przywracanie).
+Tu skrót do użycia „na już", np. przed aktualizacją list:
 
-**Skrypt `backup.py`:**
-```python
-import shutil
-import os
-from datetime import datetime
-
-# Katalogi
-DB_PATH = 'instance/chem_man.db'
-BACKUP_DIR = 'backups'
-SDS_DIR = 'instance/uploads/sds'
-
-# Utwórz folder backupów
-os.makedirs(BACKUP_DIR, exist_ok=True)
-
-# Data dla nazwy pliku
-timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-# Backup bazy danych
-db_backup = f'{BACKUP_DIR}/chem_man_db_{timestamp}.db'
-shutil.copy2(DB_PATH, db_backup)
-print(f'✓ Backup bazy danych: {db_backup}')
-
-# Backup plików SDS (opcjonalnie - może być duży!)
-sds_backup = f'{BACKUP_DIR}/sds_{timestamp}'
-if os.path.exists(SDS_DIR):
-    shutil.copytree(SDS_DIR, sds_backup)
-    print(f'✓ Backup plików SDS: {sds_backup}')
-
-print('✓ Backup zakończony!')
-```
-
-**Uruchomienie:**
 ```bash
-python backup.py
+# Baza
+docker compose exec -T db pg_dump -U chemman chemman | gzip > backup_$(date +%F).sql.gz
+
+# Załączniki SDS
+docker compose exec -T app tar -czf - -C /app/instance/uploads . > uploads_$(date +%F).tar.gz
 ```
 
-### Harmonogram backupów (Windows - Task Scheduler)
-
-1. Otwórz **Harmonogram zadań**
-2. Utwórz zadanie podstawowe
-3. **Nazwa:** ChemMan Backup
-4. **Wyzwalacz:** Codziennie o 2:00
-5. **Akcja:** Uruchom program
-   - **Program:** `C:\ścieżka\do\venv\Scripts\python.exe`
-   - **Argumenty:** `backup.py`
-   - **Katalog:** `C:\ścieżka\do\chem-man`
-
-### Harmonogram backupów (Linux - cron)
-```bash
-# Edytuj crontab
-crontab -e
-
-# Dodaj linię (backup codziennie o 2:00)
-0 2 * * * cd /ścieżka/do/chem-man && /ścieżka/do/venv/bin/python backup.py
-```
-
-### Przywracanie z backupu
-```bash
-# 1. ZATRZYMAJ aplikację
-# 2. Skopiuj backup
-cp backups/chem_man_db_20250117_120000.db instance/chem_man.db
-
-# 3. Przywróć pliki SDS (jeśli potrzeba)
-rm -rf instance/uploads/sds
-cp -r backups/sds_20250117_120000 instance/uploads/sds
-
-# 4. Uruchom aplikację ponownie
-```
+> **Zrób backup przed każdą aktualizacją list CLP/SVHC i przed migracją.**
+> Import nadpisuje całą tabelę referencyjną.
 
 ---
 
-## Aktualizacja bazy substancji CLP
+## Aktualizacja bazy CLP
 
-**Częstotliwość:** Co 6-12 miesięcy (gdy ECHA opublikuje nową wersję)
+**Częstotliwość:** co 6-12 miesięcy, gdy ECHA opublikuje nową wersję.
 
-### Metoda 1: Przez interfejs web (zalecane, od v2.3.0)
+### Metoda 1: przez interfejs web (zalecana, od v2.3.0)
 
-1. Pobierz najnowszą bazę CLP z ECHA (plik .xlsx)
-2. Zaloguj się jako administrator
-3. Przejdź do **Bazy Danych** w menu nawigacji
-4. W sekcji "Aktualizacja Bazy CLP" kliknij "Wybierz plik" i wskaż pobrany plik
-5. Kliknij **"Importuj bazę CLP"** i potwierdź w oknie dialogowym
-6. Zweryfikuj licznik rekordów na stronie
+1. Pobierz najnowszą bazę CLP z ECHA (plik `.xlsx`).
+2. Zaloguj się jako administrator.
+3. Przejdź do **Bazy Danych** w menu nawigacji.
+4. W sekcji „Aktualizacja Bazy CLP" wskaż pobrany plik.
+5. Kliknij **„Importuj bazę CLP"** i potwierdź.
+6. Zweryfikuj licznik rekordów na stronie.
 
-### Metoda 2: Przez linię komend (alternatywna)
+Ta droga nie wymaga dostępu do serwera ani restartu kontenera.
 
-### Przygotowanie
+### Metoda 2: z linii poleceń
 
-1. Pobierz najnowszą bazę CLP z ECHA
-2. Zapisz jako `substancje_baza_NEW.xlsx`
-3. **Sprawdź strukturę pliku Excel:**
+Komenda `flask import-excel` importuje plik wskazany przez `EXCEL_FILE_PATH`
+(domyślnie `substancje_baza.xlsx` w obrazie). Aby zaimportować **nowszy** plik,
+trzeba go najpierw skopiować do kontenera:
+
 ```bash
-python check_excel.py
+# 1. BACKUP (patrz wyzej)
+
+# 2. Wgraj nowy plik do dzialajacego kontenera
+docker compose cp substancje_baza_NEW.xlsx app:/app/substancje_baza.xlsx
+
+# 3. Import (nadpisuje tabele referencyjna CLP)
+docker compose exec app flask import-excel
+
+# 4. Weryfikacja
+docker compose exec -T db psql -U chemman -d chemman -tAc \
+  "SELECT count(*) FROM excel_source_substances"
 ```
 
-Jeśli kolumny się zmieniły, zaktualizuj `import_excel.py`.
+> **Plik skopiowany przez `docker compose cp` znika przy odtworzeniu
+> kontenera** (`docker compose up -d` po `pull`). Sama zaimportowana treść
+> zostaje — siedzi w bazie, a nie w pliku. Przy kolejnej aktualizacji obrazu
+> powtórz kopiowanie tylko wtedy, gdy znów importujesz.
 
-### Procedura aktualizacji (CLI)
-```bash
-# 1. BACKUP OBECNEJ BAZY!
-python backup.py
-
-# 2. Usuń stare dane
-python -c "from app import create_app, db, ExcelSourceSubstance; app=create_app(); app.app_context().push(); ExcelSourceSubstance.query.delete(); db.session.commit(); print('Stare dane usunięte')"
-
-# 3. Zamień plik
-mv substancje_baza.xlsx substancje_baza_OLD.xlsx
-mv substancje_baza_NEW.xlsx substancje_baza.xlsx
-
-# 4. Import nowych danych
-python import_excel.py
-
-# 5. Weryfikacja
-python -c "from app import create_app, db, ExcelSourceSubstance; app=create_app(); app.app_context().push(); print(f'Zaimportowano {ExcelSourceSubstance.query.count()} substancji')"
-```
-
-### Aktualizacja flag CMR w istniejących substancjach
-
-Po aktualizacji bazy CLP, zaktualizuj flagi CMR:
-
-**Skrypt `update_cmr_flags.py`:**
-```python
-from app import create_app, db
-from models import Substance
-from utils import is_cmr_substance
-
-app = create_app()
-
-with app.app_context():
-    substances = Substance.query.all()
-    updated = 0
-    
-    for sub in substances:
-        # Sprawdź czy jest CMR według nowej bazy
-        is_cmr = is_cmr_substance(
-            classification=sub.classification,
-            h_phrases=sub.h_phrases
-        )
-        
-        if sub.is_cmr != is_cmr:
-            sub.is_cmr = is_cmr
-            updated += 1
-    
-    db.session.commit()
-    print(f'Zaktualizowano {updated} substancji')
-```
-```bash
-python update_cmr_flags.py
-```
+Aktualnie w bazie: **4400** rekordów CLP.
 
 ---
 
 ## Aktualizacja listy SVHC
 
-**Częstotliwość:** Co 6 miesięcy (ECHA publikuje nowe listy w czerwcu i grudniu)
+**Częstotliwość:** co ok. 6 miesięcy (ECHA publikuje aktualizacje listy
+kandydackiej zwykle w czerwcu i grudniu).
 
-### Metoda 1: Przez interfejs web (zalecane, od v2.3.0)
+### Metoda 1: przez interfejs web (zalecana, od v2.3.0)
 
-1. Pobierz najnowszą listę SVHC z ECHA (plik .xlsx)
-2. Zaloguj się jako administrator
-3. Przejdź do **Bazy Danych** w menu nawigacji
-4. W sekcji "Aktualizacja Listy SVHC" kliknij "Wybierz plik" i wskaż pobrany plik
-5. Kliknij **"Importuj listę SVHC"** i potwierdź w oknie dialogowym
-6. Zweryfikuj licznik rekordów na stronie
+1. Pobierz najnowszą listę SVHC z ECHA (plik `.xlsx`).
+2. Zaloguj się jako administrator.
+3. Przejdź do **Bazy Danych**.
+4. W sekcji „Aktualizacja Listy SVHC" wskaż pobrany plik.
+5. Kliknij **„Importuj listę SVHC"** i potwierdź.
+6. Zweryfikuj licznik rekordów.
 
-### Metoda 2: Przez linię komend (alternatywna)
+### Metoda 2: z linii poleceń
 
 ```bash
-# 1. Pobierz nową listę SVHC z ECHA
-# Zapisz jako svhc_NEW.xlsx
+# 1. BACKUP
 
-# 2. BACKUP!
-python backup.py
+# 2. Wgraj nowa liste
+docker compose cp svhc_NEW.xlsx app:/app/svhc.xlsx
 
-# 3. Sprawdź strukturę
-python check_svhc.py
+# 3. Import
+docker compose exec app flask import-svhc
 
-# 4. Zamień plik
-mv svhc.xlsx svhc_OLD.xlsx
-mv svhc_NEW.xlsx svhc.xlsx
-
-# 5. Re-import
-flask import-svhc
-
-# 6. Weryfikacja
-python -c "from app import create_app, db, SVHCSubstance; app=create_app(); app.app_context().push(); print(f'Lista SVHC: {SVHCSubstance.query.count()} substancji')"
+# 4. Weryfikacja
+docker compose exec -T db psql -U chemman -d chemman -tAc \
+  "SELECT count(*) FROM svhc_substances"
 ```
 
-### Aktualizacja flag SVHC w istniejących substancjach
+Aktualnie w bazie: **1029** rekordów SVHC.
 
-**Skrypt `update_svhc_flags.py`:**
-```python
-from app import create_app, db
-from models import Substance
-from utils import is_svhc_substance
+> Po podmianie listy przeczytaj następny rozdział — **flagi przy już
+> wprowadzonych substancjach nie aktualizują się same.**
 
-app = create_app()
+---
 
-with app.app_context():
-    substances = Substance.query.all()
-    updated = 0
-    
-    for sub in substances:
-        svhc_reason = is_svhc_substance(
-            cas=sub.cas,
-            ec_number=sub.ec_number,
-            name=sub.name
-        )
-        
-        new_is_svhc = svhc_reason is not None
-        
-        if sub.is_svhc != new_is_svhc:
-            sub.is_svhc = new_is_svhc
-            updated += 1
-    
-    db.session.commit()
-    print(f'Zaktualizowano {updated} substancji')
-```
+## Flagi CMR/SVHC w istniejacych substancjach
+
+Import list CLP i SVHC podmienia **tabele referencyjne**. Nie przelicza pól
+`is_cmr` / `is_svhc` przy substancjach już wprowadzonych do lokalizacji — te
+wartości zapisano w chwili dodawania substancji. Po aktualizacji listy mogą
+więc być nieaktualne: substancja dopisana do listy kandydackiej nadal ma
+`is_svhc = false`.
+
+### Dlaczego nie ma skryptu „przelicz wszystko"
+
+Nie jest to przeoczenie, tylko świadome ograniczenie:
+
+1. **Nie da się odróżnić decyzji ręcznej od automatycznej.** Model
+   `Substance` ma jedno pole `is_svhc`. Jeśli administrator ustawił flagę
+   sam (formularz na to pozwala), masowe przeliczenie nadpisze jego decyzję,
+   bo nic w bazie nie zapamiętało, że była ręczna.
+2. **Nieudana weryfikacja nie może cicho oznaczyć „nie SVHC".** Aplikacja
+   wprost tego pilnuje (`check_svhc_substance` zwraca `verified`, a zapis jest
+   odrzucany, gdy weryfikacja się nie powiodła). Skrypt lecący po całej tabeli
+   musiałby to obejść — a fałszywe „nie SVHC" w rejestrze substancji jest
+   groźniejsze niż brak aktualizacji.
+
+### Zalecana procedura
+
+Po każdej aktualizacji listy:
+
+1. Wypisz substancje, których dotyczy zmiana — porównaj listę przed i po
+   imporcie (kopia z backupu) albo przejrzyj nowo dodane pozycje ECHA.
+2. Dla każdej z nich otwórz substancję w aplikacji i zapisz ponownie —
+   zapis uruchamia pełną, tę samą ścieżkę detekcji co przy dodawaniu.
+3. Odnotuj przegląd w dzienniku zmian.
+
+Substancje wprowadzone **po** imporcie są klasyfikowane już wobec nowej listy.
+
+Ile substancji ma dziś ustawione flagi:
+
 ```bash
-python update_svhc_flags.py
+docker compose exec -T db psql -U chemman -d chemman -tAc \
+  "SELECT count(*) FILTER (WHERE is_cmr)  AS cmr,
+          count(*) FILTER (WHERE is_svhc) AS svhc,
+          count(*)                        AS wszystkie
+   FROM substances"
 ```
 
 ---
 
-## Zarządzanie użytkownikami
+## Zarzadzanie uzytkownikami
 
-### Dodawanie użytkownika przez CLI
+Codzienne operacje rób w **Panelu admina → Zarządzaj użytkownikami** (dodawanie,
+uprawnienia, usuwanie). Poniżej tylko to, czego panel nie obejmuje.
+
+### Reset hasła administratora
+
 ```bash
-python -c "
-from app import create_app, db, User
-app = create_app()
-app.app_context().push()
-
-user = User(
-    username='jan.kowalski',
-    is_admin=False,
-    can_view=True,
-    can_add=True,
-    can_edit=False,
-    can_delete=False,
-    can_move=False,
-    can_copy=False,
-    can_upload_sds=True,
-    can_add_location=False,
-    can_delete_location=False
-)
-user.set_password('TymczasoweHaslo123!')
-db.session.add(user)
-db.session.commit()
-print(f'Utworzono użytkownika: {user.username}')
-"
+docker compose exec app python update_admin_password.py
 ```
 
-### Reset hasła użytkownika
+Skrypt pyta o hasło bez wyświetlania go (minimum 8 znaków). Można też podać je
+zmienną `CHEM_MAN_ADMIN_PASSWORD`.
+
+### Odtworzenie konta admin (gdy zostało usunięte)
+
 ```bash
-python -c "
-from app import create_app, db, User
-app = create_app()
-app.app_context().push()
-
-username = 'jan.kowalski'
-new_password = 'NoweHaslo123!'
-
-user = User.query.filter_by(username=username).first()
-if user:
-    user.set_password(new_password)
-    db.session.commit()
-    print(f'Hasło zmienione dla: {username}')
-else:
-    print(f'Nie znaleziono użytkownika: {username}')
-"
+docker compose exec -e CHEM_MAN_ADMIN_PASSWORD='NoweSilneHaslo' app python create_admin.py
 ```
 
-### Usuwanie nieaktywnych użytkowników
+Skrypt nic nie zmienia, jeśli konto `admin` już istnieje.
 
-**Panel admina → Zarządzaj użytkownikami → Usuń**
+### Przegląd kont z uprawnieniami administratora
 
-Lub przez CLI:
 ```bash
-python -c "
-from app import create_app, db, User
-app = create_app()
-app.app_context().push()
-
-username = 'stary.user'
-user = User.query.filter_by(username=username).first()
-if user:
-    db.session.delete(user)
-    db.session.commit()
-    print(f'Usunięto: {username}')
-"
+docker compose exec -T db psql -U chemman -d chemman -c \
+  "SELECT username, is_admin, can_delete, can_delete_location FROM users ORDER BY username"
 ```
 
 ---
 
 ## Monitoring systemu
 
-### Sprawdzanie rozmiaru bazy
-```bash
-# Windows
-dir instance\chem_man.db
+### Rozmiar bazy
 
-# Linux
-ls -lh instance/chem_man.db
+```bash
+docker compose exec -T db psql -U chemman -d chemman -tAc \
+  "SELECT pg_size_pretty(pg_database_size('chemman'))"
 ```
 
-**Zalecane:** Jeśli baza przekracza 500MB, rozważ czyszczenie dziennika zmian.
+### Liczba rekordów
+
+```bash
+docker compose exec -T db psql -U chemman -d chemman -c \
+  "SELECT
+     (SELECT count(*) FROM substances)               AS substancje,
+     (SELECT count(*) FROM locations)                AS lokalizacje,
+     (SELECT count(*) FROM excel_source_substances)  AS clp,
+     (SELECT count(*) FROM svhc_substances)          AS svhc,
+     (SELECT count(*) FROM users)                    AS uzytkownicy,
+     (SELECT count(*) FROM audit_log)                AS dziennik"
+```
 
 ### Czyszczenie starego dziennika zmian
-```bash
-python -c "
-from app import create_app, db, AuditLog
-from datetime import datetime, timedelta
-app = create_app()
-app.app_context().push()
 
-# Usuń wpisy starsze niż 1 rok
-cutoff = datetime.utcnow() - timedelta(days=365)
-deleted = AuditLog.query.filter(AuditLog.timestamp < cutoff).delete()
-db.session.commit()
-print(f'Usunięto {deleted} starych wpisów z dziennika')
-"
+Dziennik rośnie w nieskończoność. Gdy zajmuje zbyt dużo miejsca, usuń wpisy
+starsze niż rok:
+
+```bash
+# NAJPIERW backup, potem:
+docker compose exec -T db psql -U chemman -d chemman -c \
+  "DELETE FROM audit_log WHERE timestamp < now() - interval '1 year'"
 ```
 
-### Sprawdzanie liczby substancji
-```bash
-python -c "
-from app import create_app, db
-from models import Substance, Location, ExcelSourceSubstance, SVHCSubstance
-app = create_app()
-app.app_context().push()
-
-print(f'Substancje w lokalizacjach: {Substance.query.count()}')
-print(f'Lokalizacje: {Location.query.count()}')
-print(f'Baza CLP: {ExcelSourceSubstance.query.count()}')
-print(f'Lista SVHC: {SVHCSubstance.query.count()}')
-"
-```
+> Sprawdź wcześniej, jak długo musisz przechowywać dziennik na potrzeby
+> audytu BHP — usunięcie jest nieodwracalne.
 
 ---
 
@@ -412,10 +278,11 @@ print(f'Lista SVHC: {SVHCSubstance.query.count()}')
 
 ### Nowa instalacja (pusta baza)
 
-Cały schemat da się zbudować z samych migracji:
+Cały schemat da się zbudować z samych migracji — kontener robi to sam przy
+starcie (`RUN_MIGRATIONS=1`, domyślnie). Ręcznie:
 
 ```bash
-flask db upgrade
+docker compose exec app flask db upgrade
 ```
 
 Łańcuch startuje od rewizji `chemman_baseline`, która tworzy tabele
@@ -433,35 +300,34 @@ tabel, ale nie ma tabeli `alembic_version`, więc Alembic uzna ją za pustą i
 spróbuje utworzyć tabele od nowa:
 
 ```
-sqlite3.OperationalError: table locations already exists
+psycopg2.errors.DuplicateTable: relation "locations" already exists
 ```
 
-Procedura:
+Kontener zatrzyma się na tym błędzie. Wystartuj go z `RUN_MIGRATIONS=0`
+w `.env`, przeprowadź procedurę, potem usuń tę zmienną.
 
 ```bash
-# 1. BACKUP (obowiązkowo - patrz sekcja "Backup bazy danych")
+# 1. BACKUP (obowiazkowo)
 
-# 2. Sprawdź, czy baza ma już wszystkie kolumny z modeli
-python -c "import sqlite3; c=sqlite3.connect('instance/chem_man.db'); \
-print(sorted(r[0] for r in c.execute(\"SELECT name FROM sqlite_master WHERE type='table'\")))"
+# 2. Sprawdz, jakie tabele sa w bazie
+docker compose exec -T db psql -U chemman -d chemman -c '\dt'
 
-# 3a. Jeśli komplet tabel i kolumn jest na miejscu - oznacz bazę jako aktualną:
-flask db stamp head
+# 3a. Komplet tabel i kolumn jest na miejscu - oznacz baze jako aktualna:
+docker compose exec app flask db stamp head
 
-# 3b. Jeśli czegoś brakuje (np. tabeli sds_files) - oznacz rewizją SPRZED
-#     brakującej zmiany i dograj resztę migracjami:
-flask db stamp chemman_baseline
-flask db upgrade
+# 3b. Czegos brakuje (np. tabeli sds_files) - oznacz rewizja SPRZED
+#     brakujacej zmiany i dograj reszte migracjami:
+docker compose exec app flask db stamp chemman_baseline
+docker compose exec app flask db upgrade
 ```
 
-Po `flask db stamp head` kolejne aktualizacje działają już normalnie
-(`flask db upgrade`).
+Po `flask db stamp head` kolejne aktualizacje działają już normalnie.
 
 ### Sprawdzenie stanu
 
 ```bash
-flask db current   # rewizja zapisana w bazie
-flask db heads     # najnowsza dostępna rewizja (powinna być dokładnie jedna)
+docker compose exec app flask db current   # rewizja zapisana w bazie
+docker compose exec app flask db heads     # najnowsza dostepna (powinna byc jedna)
 ```
 
 Jeżeli `flask db heads` pokazuje więcej niż jedną pozycję, łańcuch się rozgałęził
@@ -470,7 +336,8 @@ i `upgrade` nie zadziała - trzeba scalić gałęzie (`flask db merge`).
 ### Testy migracji
 
 Zestaw testów zawiera smoke test, który uruchamia `flask db upgrade` na pustej
-bazie i porównuje wynikowy schemat z modelami:
+bazie i porównuje wynikowy schemat z modelami (uruchamiany z repozytorium, nie
+z wdrożenia):
 
 ```bash
 python -m pytest tests/test_migrations.py -v
@@ -480,61 +347,52 @@ python -m pytest tests/test_migrations.py -v
 
 ## Procedury awaryjne
 
-### Aplikacja nie startuje
+### Kontener nie startuje
+
 ```bash
-# 1. Sprawdź logi błędów
-python app.py
-
-# 2. Sprawdź czy baza istnieje
-ls instance/chem_man.db
-
-# 3. Jeśli brak bazy, przywróć z backupu
-cp backups/chem_man_db_[DATA].db instance/chem_man.db
-
-# 4. Sprawdź uprawnienia do plików
-# Windows: Właściwości → Zabezpieczenia
-# Linux: chmod 644 instance/chem_man.db
+docker compose logs --tail=50 app
 ```
+
+Najczęstsze przyczyny i rozwiązania zebrano w
+[DEPLOYMENT_GUIDE.md → Rozwiązywanie problemów](DEPLOYMENT_GUIDE.md#rozwiazywanie-problemow).
 
 ### Uszkodzona baza danych
+
+PostgreSQL nie ma odpowiednika `PRAGMA integrity_check`. Podstawowa weryfikacja
+to pełny zrzut - jeśli przechodzi bez błędu, dane są czytelne:
+
 ```bash
-# 1. Sprawdź integralność
-sqlite3 instance/chem_man.db "PRAGMA integrity_check;"
-
-# 2. Jeśli uszkodzona, przywróć z backupu
-mv instance/chem_man.db instance/chem_man_USZKODZONA.db
-cp backups/chem_man_db_[DATA].db instance/chem_man.db
-
-# 3. Jeśli brak backupu, spróbuj naprawić
-sqlite3 instance/chem_man_USZKODZONA.db ".dump" | sqlite3 instance/chem_man_NAPRAWIONA.db
+docker compose exec -T db pg_dump -U chemman chemman > /dev/null && echo "zrzut OK"
 ```
+
+Przy podejrzeniu uszkodzenia przywróć z backupu — procedura w
+[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md#backup-i-przywracanie).
 
 ### Brak miejsca na dysku
+
 ```bash
-# 1. Sprawdź rozmiar plików SDS
-du -sh instance/uploads/sds/
+# 1. Co zajmuje miejsce po stronie Dockera
+docker system df
 
-# 2. Archiwizuj stare pliki SDS
-tar -czf sds_archive_$(date +%Y%m%d).tar.gz instance/uploads/sds/
-mv sds_archive_*.tar.gz /ścieżka/do/archiwum/
+# 2. Usun nieuzywane warstwy obrazow (nie rusza wolumenow z danymi)
+docker image prune -f
 
-# 3. Opcjonalnie usuń oryginały (UWAGA!)
-# rm instance/uploads/sds/*.pdf
+# 3. Rozmiar zalacznikow SDS
+docker compose exec app du -sh /app/instance/uploads/sds
+
+# 4. Archiwizacja starych kart SDS
+docker compose exec -T app tar -czf - -C /app/instance/uploads/sds . \
+  > sds_archiwum_$(date +%Y%m%d).tar.gz
 ```
 
-### Zapomniałem hasła admina
-```bash
-# Reset hasła admina
-python -c "
-from app import create_app, db, User
-app = create_app()
-app.app_context().push()
+> Usuwanie plików SDS z wolumenu rozspójnia je z rekordami w bazie —
+> aplikacja będzie pokazywać załącznik, którego nie ma. Usuwaj tylko
+> załączniki substancji, które również usunięto z rejestru.
 
-admin = User.query.filter_by(username='admin').first()
-admin.set_password('NoweHaslo123!')
-db.session.commit()
-print('Hasło admina zresetowane!')
-"
+### Zapomniane hasło administratora
+
+```bash
+docker compose exec app python update_admin_password.py
 ```
 
 ---
@@ -542,33 +400,31 @@ print('Hasło admina zresetowane!')
 ## Checklist okresowej konserwacji
 
 ### Co tydzień
-- [ ] Backup bazy danych
-- [ ] Sprawdzenie logów błędów
-- [ ] Monitorowanie miejsca na dysku
+- [ ] Backup bazy wykonał się i ma sensowny rozmiar
+- [ ] Przegląd logów pod kątem błędów
+- [ ] Miejsce na dysku hosta
 
 ### Co miesiąc
 - [ ] Przegląd dziennika zmian
-- [ ] Sprawdzenie nieaktywnych użytkowników
+- [ ] Przegląd kont użytkowników i uprawnień
 - [ ] Test przywracania z backupu
 
 ### Co 6 miesięcy
-- [ ] Aktualizacja listy SVHC
-- [ ] Aktualizacja flag SVHC w substancjach
-- [ ] Archiwizacja starych plików SDS
-- [ ] Czyszczenie starego dziennika zmian (>1 rok)
+- [ ] Aktualizacja listy SVHC (ECHA)
+- [ ] Przegląd flag SVHC przy substancjach objętych zmianą
+- [ ] Archiwizacja starych kart SDS
+- [ ] Czyszczenie dziennika zmian starszego niż rok
 
 ### Co rok
-- [ ] Aktualizacja bazy CLP
-- [ ] Aktualizacja flag CMR w substancjach
-- [ ] Przegląd uprawnień użytkowników
-- [ ] Sprawdzenie integralności bazy danych
+- [ ] Aktualizacja bazy CLP (ECHA)
+- [ ] Przegląd flag CMR przy substancjach objętych zmianą
+- [ ] Przegląd uprawnień i kont administratorów
+- [ ] Weryfikacja, że backup da się odtworzyć na czystym środowisku
 
 ---
 
 ## Kontakt w razie problemów
 
-Jeśli powyższe procedury nie rozwiązują problemu:
-
-1. Sprawdź [BACKEND_GUIDE.md](BACKEND_GUIDE.md) - sekcja "Rozwiązywanie problemów"
-2. Sprawdź logi: `logs/chem_man.log`
-3. Zachowaj kopię błędu (screenshot/treść)
+1. [DEPLOYMENT_GUIDE.md → Rozwiązywanie problemów](DEPLOYMENT_GUIDE.md#rozwiazywanie-problemow)
+2. [BACKEND_GUIDE.md](BACKEND_GUIDE.md) - sekcja „Rozwiązywanie problemów"
+3. Logi: `docker compose logs app` oraz `/app/logs/chem_man.log` w kontenerze

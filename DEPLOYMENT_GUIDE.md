@@ -82,9 +82,13 @@ nie ma na czym pracowac. Pliki `substancje_baza.xlsx` i `svhc.xlsx` sa
 w obrazie, wiec import uruchamia sie bez kopiowania czegokolwiek na serwer:
 
 ```bash
-docker compose exec app python import_excel.py    # 4400 substancji CLP
-docker compose exec app python import_svhc.py     # 1029 substancji SVHC
+docker compose exec app flask import-excel    # 4400 substancji CLP
+docker compose exec app flask import-svhc     # 1029 substancji SVHC
 ```
+
+> Te komendy korzystaja z tej samej sciezki kodu, co import z panelu admina,
+> wiec wynik jest identyczny. Rownowazne skrypty `python import_excel.py`
+> i `python import_svhc.py` tez dzialaja — sa starsze i utrzymywane osobno.
 
 Weryfikacja:
 
