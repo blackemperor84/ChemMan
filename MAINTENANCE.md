@@ -2,6 +2,28 @@
 
 Instrukcja dla administratorów systemu - codzienne operacje, backup, aktualizacje.
 
+> ### ⚠️ Wdrożenie produkcyjne działa w Dockerze
+>
+> Procedury poniżej opisano dla instalacji lokalnej (uruchomienie z katalogu
+> projektu, część przykładów zakłada SQLite). **Na serwerze produkcyjnym
+> aplikacja działa w kontenerze i baza to PostgreSQL** — patrz
+> [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+>
+> Przelicznik poleceń (wykonuj z katalogu wdrożenia, np. `/opt/chemman`):
+>
+> | Tutaj napisano | W Dockerze |
+> |---|---|
+> | `python skrypt.py` | `docker compose exec app python skrypt.py` |
+> | `flask db ...` | `docker compose exec app flask db ...` |
+> | odczyt logów z pliku | `docker compose logs -f app` |
+> | `pg_dump ...` | `docker compose exec -T db pg_dump -U chemman chemman` |
+> | ścieżka `instance/uploads/sds` | wolumen `chemman_uploads` (`/app/instance/uploads`) |
+>
+> **Nie stosuj procedur SQLite** (`sqlite3`, `PRAGMA integrity_check`,
+> `instance/chem_man.db`) do wdrożenia produkcyjnego — tam bazą jest PostgreSQL.
+> Backup i przywracanie dla Dockera opisuje
+> [DEPLOYMENT_GUIDE.md → Backup i przywracanie](DEPLOYMENT_GUIDE.md#backup-i-przywracanie).
+
 ---
 
 ## 📋 Spis treści
