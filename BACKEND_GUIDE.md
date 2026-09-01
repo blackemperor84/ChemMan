@@ -638,12 +638,12 @@ def import_svhc_command():
 
 **Rozwiązanie:**
 ```bash
-# 1. Sprawdź strukturę pliku
-python check_excel.py
+# 1. Sprawdz naglowki pliku
+python -c "import pandas as pd; print(list(pd.read_excel('substancje_baza.xlsx', header=0, skiprows=[1]).columns))"
 
-# 2. Upewnij się że w import_excel.py jest: skiprows=[1]
+# 2. Upewnij sie ze w import_excel.py jest: skiprows=[1]
 # 3. Re-import
-python import_excel.py
+flask import-excel
 ```
 
 ### Problem: SVHC nie są oznaczane
@@ -652,17 +652,19 @@ python import_excel.py
 
 **Diagnoza:**
 ```bash
-python -c "from app import create_app, db, SVHCSubstance; app=create_app(); app.app_context().push(); print(SVHCSubstance.query.count())"
+python -c "from app import create_app; from models import SVHCSubstance; app=create_app(); app.app_context().push(); print(SVHCSubstance.query.count())"
 ```
 
 **Rozwiązanie:**
 ```bash
-# Jeśli 0 - import SVHC
+# Jesli 0 - import SVHC
 flask import-svhc
-
-# Aktualizuj flagi w istniejących substancjach
-python update_svhc_flags.py
 ```
+
+Flagi `is_svhc` przy juz wprowadzonych substancjach **nie aktualizuja sie**
+po imporcie listy i nie ma skryptu, ktory przeliczylby je masowo — powod
+i zalecana procedura sa w
+[MAINTENANCE.md](MAINTENANCE.md#flagi-cmrsvhc-w-istniejacych-substancjach).
 
 ### Problem: Wyszukiwarka nie znajduje substancji
 
