@@ -1,62 +1,50 @@
+"""
+Import bazy CLP z pliku Excel do tabeli `excel_source_substances`.
+
+Skrypt jest cienką nakładką na `utils.database_import.import_clp_data` —
+tę samą funkcję, z której korzystają panel admina i komenda
+`flask import-excel`. Wszystkie trzy drogi dają identyczny wynik.
+
+Wcześniej skrypt miał własną pętlę importu, która kasowała tabelę
+referencyjną i zatwierdzała dane paczkami po 50/100 rekordów. Błąd w połowie
+zostawiał bazę CLP częściowo wypełnioną, bez możliwości cofnięcia — DELETE
+był już zatwierdzony. Pomijał też walidację pliku i zachowywanie
+uzupełnionych ręcznie kolumn (SCL / M-factor), które nowsze eksporty ECHA
+potrafią wyczyścić.
+
+Użycie:
+    python import_excel.py [ścieżka/do/pliku.xlsx]
+
+Bez argumentu importowany jest plik wskazany przez EXCEL_FILE_PATH
+w konfiguracji (domyślnie substancje_baza.xlsx w katalogu projektu).
+"""
+import os
+import sys
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from app import create_app
-from models import db, ExcelSourceSubstance
-import pandas as pd
+from utils.database_import import import_clp_data
 
-app = create_app()
 
-with app.app_context():
-    print("Rozpoczynam import...")
-    
-    # Wczytaj Excel - POMIŃ pierwszy pusty wiersz!
-    df = pd.read_excel('substancje_baza.xlsx', header=0, skiprows=[1])
-    print(f"Wczytano {len(df)} wierszy z Excel")
-    print(f"Kolumny: {list(df.columns)}")
-    
-    # Mapowanie kolumn
-    column_map = {
-        'International Chemical Identification': 'name',
-        'CAS No': 'cas',
-        'EC No': 'ec_number',
-        'Classification': 'classification',
-        'Unnamed: 5': 'h_phrases',
-        'Specific Conc. Limits, M-factors': 'scl_mfactor'
-    }
-    
-    # Usuń stare dane
-    deleted = ExcelSourceSubstance.query.delete()
-    print(f"Usunięto {deleted} starych rekordów")
-    
-    # Zmapuj nazwy kolumn
-    df.rename(columns=column_map, inplace=True)
-    
-    # Zachowaj tylko zmapowane kolumny
-    df = df[list(column_map.values())]
-    
-    # Import - convert all values to strings, handle NaN
-    count = 0
-    for idx, row in df.iterrows():
-        # Convert to string and handle NaN/None
-        def safe_str(val):
-            if pd.isna(val):
-                return None
-            return str(val)
+def main(argv):
+    app = create_app()
 
-        substance = ExcelSourceSubstance(
-            name=safe_str(row['name']),
-            cas=safe_str(row['cas']),
-            ec_number=safe_str(row['ec_number']),
-            classification=safe_str(row['classification']),
-            h_phrases=safe_str(row['h_phrases']),
-            scl_mfactor=safe_str(row['scl_mfactor'])
-        )
-        db.session.add(substance)
-        count += 1
-        if count % 100 == 0:
-            print(f"Zaimportowano {count}...")
-            db.session.commit()  # Commit in batches
+    with app.app_context():
+        excel_path = argv[1] if len(argv) > 1 else app.config.get('EXCEL_FILE_PATH')
 
-    # Final commit for remaining records
-    if count % 100 != 0:
-        db.session.commit()
+        if not excel_path or not os.path.exists(excel_path):
+            sys.exit(f"BŁĄD: Plik Excel nie istnieje pod ścieżką: {excel_path}")
 
-    print(f"Gotowe! Zaimportowano {count} substancji!")
+        print(f"Rozpoczynam import CLP z: {excel_path}...")
+        with open(excel_path, 'rb') as stream:
+            success, message, count = import_clp_data(stream)
+
+        print(message)
+        return 0 if success else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

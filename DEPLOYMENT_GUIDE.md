@@ -86,9 +86,11 @@ docker compose exec app flask import-excel    # 4400 substancji CLP
 docker compose exec app flask import-svhc     # 1029 substancji SVHC
 ```
 
-> Te komendy korzystaja z tej samej sciezki kodu, co import z panelu admina,
-> wiec wynik jest identyczny. Rownowazne skrypty `python import_excel.py`
-> i `python import_svhc.py` tez dzialaja — sa starsze i utrzymywane osobno.
+> Wszystkie trzy drogi importu — panel admina, komendy `flask import-*`
+> i skrypty `python import_excel.py` / `python import_svhc.py` — wolaja te
+> sama funkcje z `utils/database_import.py`, wiec daja identyczny wynik:
+> walidacja pliku, podmiana danych w jednej transakcji i zachowanie
+> uzupelnionych recznie kolumn (SCL / M-factor).
 
 Weryfikacja:
 

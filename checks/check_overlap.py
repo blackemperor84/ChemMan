@@ -1,4 +1,5 @@
-from app import create_app, db, ExcelSourceSubstance, SVHCSubstance
+from app import create_app, db
+from models import ExcelSourceSubstance, SVHCSubstance
 
 app = create_app()
 

@@ -222,10 +222,16 @@ zmienną `CHEM_MAN_ADMIN_PASSWORD`.
 ### Odtworzenie konta admin (gdy zostało usunięte)
 
 ```bash
-docker compose exec -e CHEM_MAN_ADMIN_PASSWORD='NoweSilneHaslo' app python create_admin.py
+docker compose exec app python create_admin.py
 ```
 
-Skrypt nic nie zmienia, jeśli konto `admin` już istnieje.
+Skrypt zapyta o hasło i jego powtórzenie, nie wyświetlając go na ekranie.
+Nic nie zmienia, jeśli konto `admin` już istnieje.
+
+> **Nie podawaj hasła w wierszu poleceń** (`-e CHEM_MAN_ADMIN_PASSWORD=...`).
+> Trafia wtedy do historii powłoki i do listy procesów. Zmiennej używaj
+> wyłącznie tam, gdzie nie ma terminala — przy pierwszym uruchomieniu
+> kontenera czyta ją z pliku `.env`, który ma uprawnienia `600`.
 
 ### Przegląd kont z uprawnieniami administratora
 
