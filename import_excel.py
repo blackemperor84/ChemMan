@@ -1,4 +1,5 @@
-from app import create_app, db, ExcelSourceSubstance
+from app import create_app
+from models import db, ExcelSourceSubstance
 import pandas as pd
 
 app = create_app()

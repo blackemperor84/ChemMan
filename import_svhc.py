@@ -1,4 +1,5 @@
-from app import create_app, db, SVHCSubstance
+from app import create_app
+from models import db, SVHCSubstance
 import pandas as pd
 
 app = create_app()
