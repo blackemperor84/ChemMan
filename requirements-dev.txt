@@ -1,0 +1,10 @@
+# Zaleznosci potrzebne wylacznie do uruchamiania testow.
+# Instalacja:  pip install -r requirements-dev.txt
+# (plik zaciaga takze pelne requirements.txt)
+#
+# Trzymane osobno, bo obraz produkcyjny ich nie zawiera — katalog tests/
+# jest w .dockerignore.
+
+-r requirements.txt
+
+pytest==9.1.1
