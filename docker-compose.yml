@@ -4,6 +4,10 @@
 #   2. uzupelnij SECRET_KEY, POSTGRES_PASSWORD i CHEM_MAN_ADMIN_PASSWORD
 #   3. docker compose up -d
 #
+# Rob to w osobnym katalogu (np. /opt/chemman), NIE w kopii roboczej repo:
+# compose czyta `.env` z katalogu biezacego, a deweloperski `.env` z repozytorium
+# ma wlasne DATABASE_URL (localhost = sam kontener) i nie ma COMPOSE_PROFILES.
+#
 # Domyslnie stawiany jest komplet: aplikacja + PostgreSQL + Redis. Decyduje o tym
 # COMPOSE_PROFILES=bundled w pliku .env (patrz .env.docker.example) — uslugi `db`
 # i `redis` naleza do profilu `bundled`.
@@ -64,7 +68,13 @@ services:
     environment:
       POSTGRES_DB: chemman
       POSTGRES_USER: chemman
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ustaw POSTGRES_PASSWORD w pliku .env}
+      # BEZ skladni ${VAR:?...}. Compose interpoluje CALY plik zanim odfiltruje
+      # profile, wiec wymagana zmienna w uslugie `db` (profil `bundled`)
+      # przerywala `docker compose up` takze przy bazie zewnetrznej, gdy ta
+      # usluga w ogole nie startuje. Pusta wartosc zatrzymuje sam obraz
+      # postgresa z czytelnym bledem ("you must specify POSTGRES_PASSWORD"),
+      # wiec szybkie i glosne padniecie nadal dziala.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
       # Wymuszenie scram-sha-256 zamiast slabszego domyslnego uwierzytelniania.
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
