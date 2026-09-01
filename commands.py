@@ -4,6 +4,7 @@ from flask import current_app
 from flask.cli import with_appcontext
 from sqlalchemy import text
 from models import db, User, SVHCSubstance
+from utils.admin_password import MIN_PASSWORD_LENGTH as MIN_ADMIN_PASSWORD_LENGTH
 
 @click.command('init-db')
 @with_appcontext
@@ -22,8 +23,20 @@ def init_db_command():
         
         # Tworzenie domyślnego konta administratora
         try:
-            # Pobierz hasło administratora z konfiguracji (z .env)
-            admin_password = current_app.config.get('DEFAULT_ADMIN_PASSWORD', 'admin')
+            # Pobierz hasło administratora z konfiguracji (z .env).
+            # Bez hasła NIE zakładamy konta - żadnej wartości awaryjnej,
+            # bo trafiłaby do produkcji jako powszechnie znane hasło.
+            admin_password = current_app.config.get('DEFAULT_ADMIN_PASSWORD')
+            if not admin_password:
+                raise ValueError(
+                    "Nie ustawiono CHEM_MAN_ADMIN_PASSWORD - pomijam zakladanie konta 'admin'. "
+                    "Ustaw te zmienna i uruchom ponownie init-db albo create_admin.py."
+                )
+            if len(admin_password) < MIN_ADMIN_PASSWORD_LENGTH:
+                raise ValueError(
+                    f"CHEM_MAN_ADMIN_PASSWORD jest za krotkie (minimum "
+                    f"{MIN_ADMIN_PASSWORD_LENGTH} znakow) - pomijam zakladanie konta 'admin'."
+                )
 
             admin_user = User.query.filter_by(username='admin').first()
             if not admin_user:

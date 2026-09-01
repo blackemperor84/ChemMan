@@ -56,6 +56,14 @@ docker compose ps
 docker compose logs -f app
 ```
 
+> **Uruchamiaj compose w osobnym katalogu (`/opt/chemman`), nigdy w kopii
+> roboczej repozytorium.** `docker compose` czyta plik `.env` z katalogu
+> biezacego, a w repozytorium lezy juz deweloperski `.env`. Compose po cichu
+> uzyje go zamiast konfiguracji wdrozeniowej: bez `COMPOSE_PROFILES` nie wstana
+> `db` ani `redis`, a `DATABASE_URL` z `localhost` w kontenerze wskazuje na sam
+> kontener, nie na hosta. Krok 2 (`cp .env.docker.example .env`) nadpisalby
+> przy okazji deweloperski `.env`.
+
 Aplikacja slucha na `127.0.0.1:8000`. Skieruj na nia nginx z TLS —
 patrz [Reverse Proxy](#konfiguracja-reverse-proxy) i [SSL/TLS](#konfiguracja-ssltls).
 
